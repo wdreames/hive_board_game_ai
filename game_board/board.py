@@ -27,7 +27,6 @@ class HiveGameBoard(object):
                 'Grasshopper': 5
             }
 
-            # TODO: [Turns] Would be able to automatically know which player's turn it is with turn_number via odd/even
             cls.turn_number = 1
             cls.white_locations_to_place = set()
             cls.black_locations_to_place = set()
@@ -42,59 +41,72 @@ class HiveGameBoard(object):
 
         return cls.instance
 
-    # TODO: [Turns] Need to allow all empty spaces for placement on turns 1 and 2
-    def place_piece(self, player, piece_type, location):
-        if player == 'white':
-            if self.white_pieces_to_place[piece_type] > 0 and location in self.white_locations_to_place:
-                self.white_pieces_to_place[piece_type] -= 1
-                if piece_type == 'Ant':
-                    Ant(location[0], location[1], is_white=True)
-                elif piece_type == 'Queen Bee':
-                    QueenBee(location[0], location[1], is_white=True)
-                elif piece_type == 'Grasshopper':
-                    Grasshopper(location[0], location[1], is_white=True)
-            else:
-                print('Error: You either do not have any more of this type of piece or cannot place a piece there.')
-        elif player == 'black':
-            if self.black_pieces_to_place[piece_type] > 0:  # and location in self.black_locations_to_place:
-                self.black_pieces_to_place[piece_type] -= 1
-                if piece_type == 'Ant':
-                    Ant(location[0], location[1], is_white=False)
-                elif piece_type == 'Queen Bee':
-                    QueenBee(location[0], location[1], is_white=False)
-                elif piece_type == 'Grasshopper':
-                    Grasshopper(location[0], location[1], is_white=False)
-            else:
-                print('Error: You either do not have any more of this type of piece or cannot place a piece there.')
-
-    # TODO: [Turns] Remember that the queen bee must be placed <= move 4
-    def get_all_possible_actions(self, player):
-        pieces_to_play, locations_to_place = self.get_all_possible_placements(player)
-
-        # TODO: [Movement] Add movement actions
-
-        return pieces_to_play, locations_to_place
-
-    def get_all_possible_placements(self, player):
-        if player == 'white':
-            pieces_to_play = self.white_pieces_to_place
-            locations_to_place = self.white_locations_to_place
-        else:
-            pieces_to_play = self.black_pieces_to_place
-            locations_to_place = self.black_locations_to_place
-
-        return pieces_to_play, locations_to_place
-
-    def calc_all_possible_actions(self):
-        pass
-
-    def calc_possible_moves(self, player):
-        pass
-
+    # TODO: [Turns] Implement and add `self.turn_number += 1`; remove `self.turn_number += 1` from other methods
     def perform_action(self):
         pass
 
-    def move_piece(self, player, piece, new_location):
+    def place_piece(self, piece_type, location):
+        # Gather the valid pieces and locations for each player
+        if self.is_white_turn():
+            locations_to_place = self.white_locations_to_place
+            pieces_to_place = self.white_pieces_to_place
+        else:
+            locations_to_place = self.black_locations_to_place
+            pieces_to_place = self.black_pieces_to_place
+
+        # All open spots are available on moves 1 and 2 for both players
+        if self.turn_number == 1 or self.turn_number == 2:
+            locations_to_place = self.white_locations_to_place.union(self.black_locations_to_place)
+
+        # Ensure the move is legal then place the piece
+        if pieces_to_place[piece_type] > 0 and location in locations_to_place:
+            pieces_to_place[piece_type] -= 1
+            if piece_type == 'Ant':
+                Ant(location[0], location[1], is_white=self.is_white_turn())
+            elif piece_type == 'Queen Bee':
+                QueenBee(location[0], location[1], is_white=self.is_white_turn())
+            elif piece_type == 'Grasshopper':
+                Grasshopper(location[0], location[1], is_white=self.is_white_turn())
+        else:
+            print('Error: You either do not have any more of this type of piece or cannot place a piece there.')
+            return
+
+        self.turn_number += 1
+
+    def move_piece(self, piece, new_location):
+        pass
+
+    def get_all_possible_actions(self):
+        pieces_to_play, locations_to_place = self.get_all_possible_placements()
+
+        # TODO: [Movement] Add movement actions
+        # TODO: [Turns] Remember that the queen bee must be placed <= move 4
+
+        return pieces_to_play, locations_to_place
+
+    def get_all_possible_placements(self):
+
+        if self.is_white_turn():
+            # The queen bee must be placed before move 4
+            if (self.turn_number + 1) // 2 == 4 and self.white_queen_location is None:
+                pieces_to_play = {'Queen Bee': 1}
+            else:
+                pieces_to_play = self.white_pieces_to_place
+            locations_to_place = self.white_locations_to_place
+        else:
+            # The queen bee must be placed before move 4
+            if (self.turn_number + 1) // 2 == 4 and self.black_queen_location is None:
+                pieces_to_play = {'Queen Bee': 1}
+            else:
+                pieces_to_play = self.black_pieces_to_place
+            locations_to_place = self.black_locations_to_place
+
+        if self.turn_number == 1 or self.turn_number == 2:
+            locations_to_place = self.white_locations_to_place.union(self.black_locations_to_place)
+
+        return pieces_to_play, locations_to_place
+
+    def calc_possible_moves(self):
         pass
 
     def _black_queen_surrounded(self):
@@ -108,6 +120,9 @@ class HiveGameBoard(object):
             return len(self.pieces[self.white_queen_location].connected_pieces) == 6
         else:
             return False
+
+    def is_white_turn(self):
+        return self.turn_number % 2 == 1
 
     def determine_winner(self):
         if self._black_queen_surrounded() and self._white_queen_surrounded():
