@@ -49,22 +49,32 @@ class HiveGameBoard(object):
         # Gather the valid pieces and locations for each player
         if self.is_white_turn():
             locations_to_place = self.white_locations_to_place
-            pieces_to_place = self.white_pieces_to_place
+            if (self.turn_number + 1) // 2 == 4 and self.white_queen_location is None:
+                pieces_to_place = {'Queen Bee': 1}
+            else:
+                pieces_to_place = self.white_pieces_to_place
         else:
             locations_to_place = self.black_locations_to_place
-            pieces_to_place = self.black_pieces_to_place
+            if (self.turn_number + 1) // 2 == 4 and self.black_queen_location is None:
+                pieces_to_place = {'Queen Bee': 1}
+            else:
+                pieces_to_place = self.black_pieces_to_place
 
         # All open spots are available on moves 1 and 2 for both players
         if self.turn_number == 1 or self.turn_number == 2:
             locations_to_place = self.white_locations_to_place.union(self.black_locations_to_place)
 
         # Ensure the move is legal then place the piece
-        if pieces_to_place[piece_type] > 0 and location in locations_to_place:
+        if pieces_to_place.get(piece_type, 0) > 0 and location in locations_to_place:
             pieces_to_place[piece_type] -= 1
             if piece_type == 'Ant':
                 Ant(location[0], location[1], is_white=self.is_white_turn())
             elif piece_type == 'Queen Bee':
                 QueenBee(location[0], location[1], is_white=self.is_white_turn())
+                if self.is_white_turn():
+                    self.white_queen_location = location
+                else:
+                    self.black_queen_location = location
             elif piece_type == 'Grasshopper':
                 Grasshopper(location[0], location[1], is_white=self.is_white_turn())
         else:
