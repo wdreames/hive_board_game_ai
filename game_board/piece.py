@@ -14,7 +14,7 @@ class Piece(HexSpace):
 
         if self.location not in board.HiveGameBoard().empty_spaces:
             print('Error: No empty space at {} to place a piece'.format(self.location))
-            # TODO: throw an actual error
+            # TODO: [UI] throw an actual error
             return
 
         # Add this piece to the board dictionary

@@ -57,7 +57,7 @@ class EmptySpace(HexSpace):
         if self.location in board.HiveGameBoard().black_locations_to_place:
             board.HiveGameBoard().black_locations_to_place.remove(self.location)
 
-        # TODO: Logic for pieces that can move here
+        # TODO: [Movement] Logic for pieces that can move here
 
         for point in self.connected_pieces:
             board.HiveGameBoard().pieces[point].connected_empty_spaces.remove(self.location)

@@ -8,8 +8,8 @@ class HiveGameBoard(object):
 
     def __new__(cls):
 
-        # TODO: I'll probably need to trash the singleton design pattern when I start simulating moves...
-        # TODO: Although I could create a main class as a singleton and have the same effect
+        # TODO: [NOTE] I'll probably need to trash the singleton design pattern when I start simulating moves...
+        # TODO: [NOTE] Although I could create a main class as a singleton and have the same effect
         # Singleton design pattern
         if not hasattr(cls, 'instance'):
             cls.instance = super(HiveGameBoard, cls).__new__(cls)
@@ -27,7 +27,8 @@ class HiveGameBoard(object):
                 'Grasshopper': 5
             }
 
-            cls.turn_number = 1  # TODO: Would be able to automatically know which player's turn it is via odd/even
+            # TODO: [Turns] Would be able to automatically know which player's turn it is with turn_number via odd/even
+            cls.turn_number = 1
             cls.white_locations_to_place = set()
             cls.black_locations_to_place = set()
             cls.white_possible_moves = set()
@@ -41,7 +42,7 @@ class HiveGameBoard(object):
 
         return cls.instance
 
-    # TODO: Need to allow all empty spaces for placement on turns 1 and 2
+    # TODO: [Turns] Need to allow all empty spaces for placement on turns 1 and 2
     def place_piece(self, player, piece_type, location):
         if player == 'white':
             if self.white_pieces_to_place[piece_type] > 0 and location in self.white_locations_to_place:
@@ -55,7 +56,7 @@ class HiveGameBoard(object):
             else:
                 print('Error: You either do not have any more of this type of piece or cannot place a piece there.')
         elif player == 'black':
-            if self.black_pieces_to_place[piece_type] > 0: #  and location in self.black_locations_to_place:
+            if self.black_pieces_to_place[piece_type] > 0:  # and location in self.black_locations_to_place:
                 self.black_pieces_to_place[piece_type] -= 1
                 if piece_type == 'Ant':
                     Ant(location[0], location[1], is_white=False)
@@ -66,11 +67,11 @@ class HiveGameBoard(object):
             else:
                 print('Error: You either do not have any more of this type of piece or cannot place a piece there.')
 
-    # TODO: Remember that the queen bee must be placed <= move 4
+    # TODO: [Turns] Remember that the queen bee must be placed <= move 4
     def get_all_possible_actions(self, player):
         pieces_to_play, locations_to_place = self.get_all_possible_placements(player)
 
-        # TODO: Add movement actions
+        # TODO: [Movement] Add movement actions
 
         return pieces_to_play, locations_to_place
 
