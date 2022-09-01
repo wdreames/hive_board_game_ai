@@ -148,7 +148,7 @@ class TestSampleGameWithNoMovement(unittest.TestCase):
         self.assertEqual(expected_turn_number, actual_turn_number)
 
         # Check for a winner
-        expected_winner = 'white---'
+        expected_winner = 'white'
         actual_winner = board.HiveGameBoard().determine_winner()
         self.assertEqual(expected_winner, actual_winner)
 
