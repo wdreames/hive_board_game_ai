@@ -1,5 +1,12 @@
-test_hive_board_game:
-        variables:
-                UNITTEST: "test/test_*.py"
-        script:
-                - PYTHONPATH=. python3 $UNITTEST
+default:
+    image: python:3.8
+    before_script:
+       - apt-get update
+       - apt-get install -y python3-pip
+       - pip install -r requirements.txt
+stages:
+    - test
+test:
+    script:
+        - coverage run -m unittest test/test_*.py
+        - coverage report
