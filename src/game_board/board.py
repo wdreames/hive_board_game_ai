@@ -1,17 +1,17 @@
-from game_board.empty_space import EmptySpace
-from game_board.pieces.ant import Ant
-from game_board.pieces.grasshopper import Grasshopper
-from game_board.pieces.queen_bee import QueenBee
+from src.game_board.empty_space import EmptySpace
+from src.game_board.pieces.ant import Ant
+from src.game_board.pieces.grasshopper import Grasshopper
+from src.game_board.pieces.queen_bee import QueenBee
 
 
 class HiveGameBoard(object):
 
-    def __new__(cls):
+    def __new__(cls, new_board=False):
 
         # TODO: [NOTE] I'll probably need to trash the singleton design pattern when I start simulating moves...
         # TODO: [NOTE] Although I could create a main class as a singleton and have the same effect
         # Singleton design pattern
-        if not hasattr(cls, 'instance'):
+        if not hasattr(cls, 'instance') or new_board:
             cls.instance = super(HiveGameBoard, cls).__new__(cls)
 
             cls.pieces = dict()
@@ -72,9 +72,9 @@ class HiveGameBoard(object):
             elif piece_type == 'Queen Bee':
                 QueenBee(location[0], location[1], is_white=self.is_white_turn())
                 if self.is_white_turn():
-                    self.white_queen_location = location
+                    self.white_pieces_to_place['Queen Bee'] = 0
                 else:
-                    self.black_queen_location = location
+                    self.black_pieces_to_place['Queen Bee'] = 0
             elif piece_type == 'Grasshopper':
                 Grasshopper(location[0], location[1], is_white=self.is_white_turn())
         else:
@@ -143,6 +143,38 @@ class HiveGameBoard(object):
             return 'black'
         else:
             return None
+
+    # TODO: This is a temporary solution. Do not use this in the final product...
+    def print_board(self):
+        if not self.pieces:
+            return
+
+        piece_coords = list(self.pieces.keys())
+        piece_coords.sort(key=lambda x: x[0])
+        min_x = piece_coords[0][0]
+        max_x = piece_coords[-1][0]
+        piece_coords.sort(key=lambda y: y[1])
+        min_y = piece_coords[0][1]
+        max_y = piece_coords[-1][1]
+
+        board_str = ''
+        for x in range(0, max_x - min_x + 1):
+            for y in range(0, max_y - min_y + 1):
+                # Actual points are (x + min_x, y + min_y)
+                if (x + min_x, y + min_y) in self.pieces:
+                    current_piece = self.pieces[(x + min_x, y + min_y)]
+                    piece_char = str(type(current_piece)).split('.')[-1][:1]
+                    if not current_piece.is_white:
+                        piece_char = '(' + piece_char + ')'
+                    else:
+                        piece_char = ' ' + piece_char + ' '
+                else:
+                    piece_char = '   '
+                board_str += '{} | '.format(piece_char)
+            board_str += '\n'
+        print(board_str)
+
+
 
     def __str__(self):
         # Used to print the board state

@@ -1,6 +1,6 @@
-import game_board.board as board
+import src.game_board.board as board
 
-from game_board.hex_space import HexSpace
+from src.game_board.hex_space import HexSpace
 
 
 class EmptySpace(HexSpace):
@@ -60,9 +60,13 @@ class EmptySpace(HexSpace):
         # TODO: [Movement] Logic for pieces that can move here
 
         for point in self.connected_pieces:
-            board.HiveGameBoard().pieces[point].connected_empty_spaces.remove(self.location)
+            related_connections = board.HiveGameBoard().pieces[point].connected_empty_spaces
+            if point in related_connections:
+                related_connections.remove(self.location)
         for point in self.connected_empty_spaces:
-            board.HiveGameBoard().empty_spaces[point].connected_empty_spaces.remove(self.location)
+            related_connections = board.HiveGameBoard().empty_spaces[point].connected_empty_spaces
+            if point in related_connections:
+                related_connections.remove(self.location)
 
         del self
 

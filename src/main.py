@@ -6,19 +6,29 @@ AI for the Hive Board Game
 """
 # TODO: [Formatting] Refactor imports across all files. Import system feels inconsistent across files
 # TODO: [Formatting] Add comments for all classes and methods
-from game_board.board import HiveGameBoard
-from game_board.empty_space import EmptySpace
-from game_board.pieces.ant import Ant
-from game_board.pieces.queen_bee import QueenBee
-from game_board.pieces.grasshopper import Grasshopper
+import traceback
+from src.game_board.board import HiveGameBoard
+from src.game_board.empty_space import EmptySpace
+from src.game_board.pieces.ant import Ant
+from src.game_board.pieces.queen_bee import QueenBee
+from src.game_board.pieces.grasshopper import Grasshopper
 
 if __name__ == '__main__':
     # Initialize the game board
     board = HiveGameBoard()
 
+    # ant1 = Ant(0, 0)
+    # ant1.lock()
+    # board.pieces[(0, 0)].unlock()
+    # Grasshopper(0, 1)
+    # board.pieces[(0, 1)].lock()
+    # board.pieces[(0, 0)].lock()
+    # exit(0)
+
     while board.determine_winner() is None:
         print('-' * 50)
-        print(board)
+        # print(board)
+        board.print_board()
 
         if board.is_white_turn():
             current_player = 'white'
@@ -42,7 +52,7 @@ if __name__ == '__main__':
             print('placing {} at ({}, {})'.format(piece_input, x_val, y_val))
 
             HiveGameBoard().place_piece(piece_input, (x_val, y_val))
-        except KeyError as exception:
-            print('Error in processing input: ', exception)
+        except KeyError:
+            print('Error in processing input: ', traceback.format_exc())
 
     # TODO: [UI] Implementation after winner has been determined
