@@ -10,7 +10,7 @@ import src.game_board.empty_space as emt_spc
 class TestInitializationAndPlacements(unittest.TestCase):
     def test_board_is_singleton(self):
         board1 = board.HiveGameBoard()
-        board1.test_attribute = 'Test Attribute Values'
+        board1.test_attribute = 'Test Attribute Value'
         board2 = board.HiveGameBoard()
         self.assertEqual('Test Attribute Value', board2.test_attribute)
 
