@@ -1,0 +1,5 @@
+test_hive_board_game:
+        variables:
+                UNITTEST: "test/test_placements.py"
+        script:
+                - PYTHONPATH=. python3 $UNITTEST
