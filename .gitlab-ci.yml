@@ -1,11 +1,8 @@
 default:
     image: python:3.10
-    before_script:
-       - pip install coverage
 stages:
     - test
 test:
     script:
-        - pip list
         - coverage run -m unittest test/test_*.py
-        - coverage report
+        - coverage report -m
