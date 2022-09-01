@@ -59,6 +59,7 @@ class EmptySpace(HexSpace):
 
         # TODO: [Movement] Logic for pieces that can move here
 
+        # TODO: [Efficiency] Think about whether or not this section is necessary. It is missing in code coverage
         for point in self.connected_pieces:
             related_connections = board.HiveGameBoard().pieces[point].connected_empty_spaces
             if point in related_connections:

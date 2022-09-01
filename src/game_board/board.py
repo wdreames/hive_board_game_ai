@@ -46,23 +46,8 @@ class HiveGameBoard(object):
         pass
 
     def place_piece(self, piece_type, location):
-        # Gather the valid pieces and locations for each player
-        if self.is_white_turn():
-            locations_to_place = self.white_locations_to_place
-            if (self.turn_number + 1) // 2 == 4 and self.white_queen_location is None:
-                pieces_to_place = {'Queen Bee': 1}
-            else:
-                pieces_to_place = self.white_pieces_to_place
-        else:
-            locations_to_place = self.black_locations_to_place
-            if (self.turn_number + 1) // 2 == 4 and self.black_queen_location is None:
-                pieces_to_place = {'Queen Bee': 1}
-            else:
-                pieces_to_place = self.black_pieces_to_place
-
-        # All open spots are available on moves 1 and 2 for both players
-        if self.turn_number == 1 or self.turn_number == 2:
-            locations_to_place = self.white_locations_to_place.union(self.black_locations_to_place)
+        # Gather the valid pieces and locations
+        pieces_to_place, locations_to_place = self.get_all_possible_placements()
 
         # Ensure the move is legal then place the piece
         if pieces_to_place.get(piece_type, 0) > 0 and location in locations_to_place:
@@ -158,8 +143,8 @@ class HiveGameBoard(object):
         max_y = piece_coords[-1][1]
 
         board_str = ''
-        for x in range(0, max_x - min_x + 1):
-            for y in range(0, max_y - min_y + 1):
+        for y in range(0, max_y - min_y + 1):
+            for x in range(0, max_x - min_x + 1):
                 # Actual points are (x + min_x, y + min_y)
                 if (x + min_x, y + min_y) in self.pieces:
                     current_piece = self.pieces[(x + min_x, y + min_y)]
@@ -173,8 +158,6 @@ class HiveGameBoard(object):
                 board_str += '{} | '.format(piece_char)
             board_str += '\n'
         print(board_str)
-
-
 
     def __str__(self):
         # Used to print the board state

@@ -13,8 +13,8 @@
 - No implementation for subclasses yet
 
 ### Board
-- Initialize
-- Universal access to the board state (singleton)
-- Place a piece
+- X Initialize
+- X Universal access to the board state (singleton)
+- X Place a piece
 - Determine the winner
 - get_all_possible_placements()
