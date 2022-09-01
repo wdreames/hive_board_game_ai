@@ -6,5 +6,6 @@ stages:
     - test
 test:
     script:
+        - pip list
         - coverage run -m unittest test/test_*.py
         - coverage report
