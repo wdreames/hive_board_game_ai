@@ -8,22 +8,11 @@ AI for the Hive Board Game
 # TODO: [Formatting] Add comments for all classes and methods
 import traceback
 from src.game_board.board import HiveGameBoard
-from src.game_board.empty_space import EmptySpace
-from src.game_board.pieces.ant import Ant
-from src.game_board.pieces.queen_bee import QueenBee
-from src.game_board.pieces.grasshopper import Grasshopper
 
+# TODO: [UI] Make this nicer later on
 if __name__ == '__main__':
     # Initialize the game board
     board = HiveGameBoard()
-
-    # ant1 = Ant(0, 0)
-    # ant1.lock()
-    # board.pieces[(0, 0)].unlock()
-    # Grasshopper(0, 1)
-    # board.pieces[(0, 1)].lock()
-    # board.pieces[(0, 0)].lock()
-    # exit(0)
 
     while board.determine_winner() is None:
         print('-' * 50)
@@ -37,7 +26,7 @@ if __name__ == '__main__':
         print('Game turn: {}, Player to Move: {}, Player Turn: {}'.format(board.turn_number, current_player,
                                                                           (board.turn_number + 1) // 2))
 
-        pieces_to_play, locations_to_place = HiveGameBoard().get_all_possible_actions()
+        pieces_to_play, locations_to_place = board.get_all_possible_actions()
 
         print('{} has the following pieces to play: {}'.format(current_player, pieces_to_play))
         print('{} has the following locations to place a piece: {}'.format(current_player, locations_to_place))
@@ -51,8 +40,8 @@ if __name__ == '__main__':
             y_val = int(location_input[1][:-1])
             print('placing {} at ({}, {})'.format(piece_input, x_val, y_val))
 
-            HiveGameBoard().place_piece(piece_input, (x_val, y_val))
+            board.place_piece(piece_input, (x_val, y_val))
         except KeyError:
             print('Error in processing input: ', traceback.format_exc())
 
-    # TODO: [UI] Implementation after winner has been determined
+    print('Winner: {}'.format(board.determine_winner()))

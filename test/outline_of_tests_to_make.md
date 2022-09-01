@@ -1,14 +1,14 @@
 # Plan for testing
 
 ### Empty Space functions
-- Placing new empty space
-- Updating placement options
-- Remove an empty space
-- white_can_place()
-- black_can_place()
+- X Placing new empty space
+- X Updating placement options
+- X Remove an empty space
+- X white_can_place()
+- X black_can_place()
 
 ### Piece
-- Placing a new piece
+- X Placing a new piece
 - Locking pieces at correct times
 - No implementation for subclasses yet
 
@@ -16,5 +16,5 @@
 - X Initialize
 - X Universal access to the board state (singleton)
 - X Place a piece
-- Determine the winner
-- get_all_possible_placements()
+- X Determine the winner
+- X get_all_possible_placements()
