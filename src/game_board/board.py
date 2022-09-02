@@ -20,7 +20,6 @@ class HiveGameBoard(object):
         :param new_board: boolean
             When this parameter is set to True, the game board is reset. False by default
         """
-
         # TODO: [NOTE] I'll probably need to trash the singleton design pattern when I start simulating moves...
         # TODO: [NOTE] Although I could create a main class as a singleton and have the same effect
         # Singleton design pattern
@@ -112,7 +111,6 @@ class HiveGameBoard(object):
             tuple containing a dictionary of the remaining pieces to play, and a set containing the coordinates
             at which the player can place pieces.
         """
-
         if self.is_white_turn():
             # The queen bee must be placed before move 4
             if (self.turn_number + 1) // 2 == 4 and self.white_queen_location is None:

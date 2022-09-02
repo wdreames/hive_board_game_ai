@@ -6,8 +6,22 @@ from src.game_board.hex_space import HexSpace
 
 
 class Piece(HexSpace):
+    """
+    Used to represent a piece on the game board. This is an abstract class.
+    Superclass for Ant, Grasshopper, and QueenBee.
+    """
 
     def __init__(self, x=0, y=0, is_white=True):
+        """
+        Create a new piece.
+
+        :param x: int
+            x location
+        :param y: int
+            y location
+        :param is_white: boolean
+            True if this piece belongs to White; False if this piece belongs to Black
+        """
         super().__init__(x, y)
         self.is_white = is_white
         self.possible_moves = set()
@@ -17,6 +31,14 @@ class Piece(HexSpace):
         self.move_to(self.location)
 
     def move_to(self, new_location):
+        """
+        Moves this piece to a new location. This also updates any previous/new connections to other pieces. No movement
+        will happen if the move is invalid.
+
+        :param new_location: tuple
+            (x, y) location where the piece will be placed
+        """
+        # TODO: [Movement] Also need to ensure it's in the list of moves
         if new_location not in board.HiveGameBoard().empty_spaces:
             print('Error: No empty space at {} to place a piece'.format(new_location))
             # TODO: [UI] Raise an actual error
@@ -72,17 +94,29 @@ class Piece(HexSpace):
         # Check if two pieces are on opposite sides after being places
         return False
 
-    @abstractmethod
-    def calc_possible_moves(self):
-        pass
-
     # TODO: [Movement] Implement lock method; currently have a placeholder for testing
     def lock(self):
+        """
+        Called when the piece is put into a position where it can no longer move. This function clears the set of
+        all possible moves
+        """
         type_of_piece = str(type(self)).split('.')[-1][:-2]
         print('{} located at {} has been locked'.format(type_of_piece, self.location))
 
     # TODO: [Movement] Implement unlock method; currently have a placeholder for testing
     def unlock(self):
+        """
+        Called when the piece goes from a position where it cannot move, to a position where it can.
+        This function calculates a new list of possible moves for this piece.
+        """
         type_of_piece = str(type(self)).split('.')[-1][:-2]
         print('{} located at {} has been unlocked'.format(type_of_piece, self.location))
+
+    @abstractmethod
+    def calc_possible_moves(self):
+        """
+        This is an abstract method that is meant to be implemented in the Piece subclasses. This method calculates
+        all possible moves for a given piece based on the current board state.
+        """
+        pass
 
