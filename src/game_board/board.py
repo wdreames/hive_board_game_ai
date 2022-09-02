@@ -5,8 +5,21 @@ from src.game_board.pieces.queen_bee import QueenBee
 
 
 class HiveGameBoard(object):
+    """
+    This class is used to store the board state of the game. A singleton design pattern is used for this class so there
+    can only ever be one instance of the game board. This can be accessed across all files.
+    """
 
     def __new__(cls, new_board=False):
+        """
+        Method used to get an instance of the game board. A singleton design pattern is used here so the class is
+        only initialized the first time it is called.
+
+        This begins the game with an empty space at (0, 0), with white having the first move.
+
+        :param new_board: boolean
+            When this parameter is set to True, the game board is reset. False by default
+        """
 
         # TODO: [NOTE] I'll probably need to trash the singleton design pattern when I start simulating moves...
         # TODO: [NOTE] Although I could create a main class as a singleton and have the same effect
@@ -46,6 +59,19 @@ class HiveGameBoard(object):
         pass
 
     def place_piece(self, piece_type, location):
+        """
+        Place a piece on the game board.
+
+        :param piece_type: string
+            String represenation of the type of piece being placed. If there are no more pieces of this type to place,
+            the piece will not be placed. These are the options currently implemented:
+            - 'Ant'
+            - 'Grasshopper'
+            - 'Queen Bee'
+        :param location: tuple
+            Coordinate of the location this piece will be placed. This location must be in the list of possible
+            locations for the current player to place a piece or it will not be placed.
+        """
         # Gather the valid pieces and locations
         pieces_to_place, locations_to_place = self.get_all_possible_placements()
 
@@ -80,6 +106,12 @@ class HiveGameBoard(object):
         return pieces_to_play, locations_to_place
 
     def get_all_possible_placements(self):
+        """
+        Gathers the pieces the current player can place as well as all the possible placement locations for that player.
+        :return: (dict, set)
+            tuple containing a dictionary of the remaining pieces to play, and a set containing the coordinates
+            at which the player can place pieces.
+        """
 
         if self.is_white_turn():
             # The queen bee must be placed before move 4
@@ -105,21 +137,42 @@ class HiveGameBoard(object):
         pass
 
     def _black_queen_surrounded(self):
+        """
+        Determines if the black queen is surrounded (white has met the win condition)
+        :return: bool
+        """
         if self.black_queen_location is not None:
             return len(self.pieces[self.black_queen_location].connected_pieces) == 6
         else:
             return False
 
     def _white_queen_surrounded(self):
+        """
+        Determines if the white queen is surrounded (black has met the win condition)
+        :return: bool
+        """
         if self.white_queen_location is not None:
             return len(self.pieces[self.white_queen_location].connected_pieces) == 6
         else:
             return False
 
     def is_white_turn(self):
+        """
+        Used to determine if it is white or black's turn
+        :return: bool
+            True if it is white's turn; False if it is black's turn
+        """
         return self.turn_number % 2 == 1
 
     def determine_winner(self):
+        """
+        Determines if either player has won the game. Also determines if a draw has been made
+        :return: string or None
+            Returns None if neither player has won yet
+            Returns 'white' if White has won
+            Returns 'black' if Black has won
+            Returns 'draw' if the game is a draw
+        """
         if self._black_queen_surrounded() and self._white_queen_surrounded():
             return 'draw'
         elif self._black_queen_surrounded():
