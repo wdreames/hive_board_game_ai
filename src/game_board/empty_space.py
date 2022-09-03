@@ -20,7 +20,6 @@ class EmptySpace(HexSpace):
             y location
         """
         super().__init__(x, y)
-        self.can_slide_to = set()
         self.pieces_that_can_move_here = set()
         self.num_white_connected = 0
         self.num_black_connected = 0
@@ -94,9 +93,6 @@ class EmptySpace(HexSpace):
         #         related_connections.remove(self.location)
 
         del self
-
-    def calc_can_slide_to(self):
-        pass
 
     def white_can_place(self):
         """
