@@ -44,7 +44,6 @@ class EmptySpace(HexSpace):
                 self.connected_empty_spaces.add(point)
                 board.HiveGameBoard().empty_spaces[point].connected_empty_spaces.add(self.location)
 
-        self.calc_can_slide_to()
         self.update_placement_options()
 
     def update_placement_options(self):
