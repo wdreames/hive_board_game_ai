@@ -4,33 +4,17 @@ import src.game_board.board as board
 
 class TestSampleGameWithNoMovement(unittest.TestCase):
 
-    # Goals with this test:
-    # Only use the board to interact with / alter pieces and empty spaces
-    # X Check turn order
-    # X Ensure piece colors are correct
-    # X Ensure queen bee on 4th move
-    # X Ensure all empty spaces are available for placement on moves 1 and 2
-    # Assert that all empty spaces and their connections are correct
-    # Assert that all pieces and their connections are correct
-    # X Assert correct locations for placement
-    # NOTE: Assertions will not need to happen on every turn, use once in middle and once at end
-    # X Ensure piece limits
-    # Check for locking pieces
-    # X Check for game won (player will need to surround their own queen)
-
-    # TODO: [Testing] I could probably split a lot of these into multiple test cases
-
     @classmethod
     def setUpClass(cls):
         board.HiveGameBoard(new_board=True)
         cls.expected_white_pieces_to_place = board.HiveGameBoard().white_pieces_to_place
         cls.expected_black_pieces_to_place = board.HiveGameBoard().black_pieces_to_place
 
-    def test_0_players_have_same_pieces(self):
+    def test_a_players_have_same_pieces(self):
         board.HiveGameBoard(new_board=True)
         self.assertEqual(board.HiveGameBoard().white_pieces_to_place, board.HiveGameBoard().black_pieces_to_place)
 
-    def test_1_start_game(self):
+    def test_b_all_moves_first_two_turns(self):
         board.HiveGameBoard(new_board=True)
 
         # Check that white has all moves available
@@ -47,6 +31,7 @@ class TestSampleGameWithNoMovement(unittest.TestCase):
 
         board.HiveGameBoard().place_piece('Grasshopper', (-1, -1))  # Black
 
+    def test_c_limited_set_of_moves(self):
         # Ensure move lists are limited past turn 2
         expected_white_available_moves = {(0, 1), (1, 1), (1, 0)}
         _, actual_white_available_moves = board.HiveGameBoard().get_all_possible_placements()
@@ -57,7 +42,7 @@ class TestSampleGameWithNoMovement(unittest.TestCase):
         _, actual_black_available_moves = board.HiveGameBoard().get_all_possible_placements()
         self.assertEqual(expected_black_available_moves, actual_black_available_moves)
 
-    def test_2_mid_game(self):
+    def test_d_correct_number_of_turns(self):
         # Continue placing pieces
         board.HiveGameBoard().place_piece('Ant', (-1, -2))  # Black
         board.HiveGameBoard().place_piece('Ant', (1, 2))  # White
@@ -68,6 +53,7 @@ class TestSampleGameWithNoMovement(unittest.TestCase):
         actual_turn_number = board.HiveGameBoard().turn_number
         self.assertEqual(expected_turn_number, actual_turn_number)
 
+    def test_e_correct_num_pieces(self):
         # Ensure correct number of remaining pieces to place
         self.expected_white_pieces_to_place['Ant'] -= 2
         self.expected_white_pieces_to_place['Queen Bee'] -= 1
@@ -78,6 +64,7 @@ class TestSampleGameWithNoMovement(unittest.TestCase):
         self.assertEqual(self.expected_white_pieces_to_place, actual_white_pieces_to_place)
         self.assertEqual(self.expected_black_pieces_to_place, actual_black_pieces_to_place)
 
+    def test_f_correct_locations(self):
         # Check piece locations on the board
         expected_piece_locations = {(0, 0), (-1, -1), (-1, -2), (0, 1), (1, 2), (-2, -3)}
         actual_piece_locations = board.HiveGameBoard().pieces.keys()
@@ -109,6 +96,10 @@ class TestSampleGameWithNoMovement(unittest.TestCase):
         actual_emt_spc_locations = board.HiveGameBoard().empty_spaces.keys()
         self.assertEqual(expected_emt_spc_locations, actual_emt_spc_locations)
 
+    def test_g_correct_avail_moves(self):
+        expected_white_available_moves = {(-1, 1), (0, 2), (1, 3), (2, 3), (2, 2), (1, 1), (1, 0)}
+        expected_black_available_moves = {(0, -2), (-1, -3), (-2, -4), (-3, -4), (-3, -3), (-2, -2), (-2, -1)}
+
         # Check available moves for white
         actual_white_pieces_to_place, actual_white_available_moves = board.HiveGameBoard().get_all_possible_placements()
         self.assertEqual(self.expected_white_pieces_to_place, actual_white_pieces_to_place)
@@ -123,32 +114,50 @@ class TestSampleGameWithNoMovement(unittest.TestCase):
         self.assertEqual(expected_black_pieces_to_place, actual_black_pieces_to_place)
         self.assertEqual(expected_black_available_moves, actual_black_available_moves)
 
+    def test_h_no_winner_yet(self):
         # Ensure no winner yet
         expected_winner = None
         actual_winner = board.HiveGameBoard().determine_winner()
         self.assertEqual(expected_winner, actual_winner)
 
-    def test_3_end_game(self):
+    def test_i_end_game_correct_num_turns(self):
         # Continue making moves
         # TODO: [Errors] Maybe make these raise errors and test for those here
-        board.HiveGameBoard().place_piece('Ant', (-2, -2))          # Black; Meant to fail & be skipped
-        board.HiveGameBoard().place_piece('Queen Bee', (-1, 0))     # Black; Meant to fail & be skipped
-        board.HiveGameBoard().place_piece('Queen Bee', (-2, -2))    # Black
-        board.HiveGameBoard().place_piece('Queen Bee', (1, 1))      # White; Meant to fail & be skipped
-        board.HiveGameBoard().place_piece('Ant', (1, 1))            # White
+        board.HiveGameBoard().place_piece('Ant', (-2, -2))  # Black; Meant to fail & be skipped
+        board.HiveGameBoard().place_piece('Queen Bee', (-1, 0))  # Black; Meant to fail & be skipped
+        board.HiveGameBoard().place_piece('Queen Bee', (-2, -2))  # Black
+        board.HiveGameBoard().place_piece('Queen Bee', (1, 1))  # White; Meant to fail & be skipped
+        board.HiveGameBoard().place_piece('Ant', (1, 1))  # White
         board.HiveGameBoard().place_piece('Grasshopper', (-3, -3))  # Black
-        board.HiveGameBoard().place_piece('Grasshopper', (2, 1))    # White
+        board.HiveGameBoard().place_piece('Grasshopper', (2, 1))  # White
         board.HiveGameBoard().place_piece('Grasshopper', (-3, -2))  # Black
-        board.HiveGameBoard().place_piece('Grasshopper', (3, 2))    # White
-        board.HiveGameBoard().place_piece('Ant', (-2, -1))          # Black
+        board.HiveGameBoard().place_piece('Grasshopper', (3, 2))  # White
+        board.HiveGameBoard().place_piece('Ant', (-2, -1))  # Black
 
         # Each player has made 7 moves; Should be turn 15 now
         expected_turn_number = 15
         actual_turn_number = board.HiveGameBoard().turn_number
         self.assertEqual(expected_turn_number, actual_turn_number)
 
-        # TODO: [Testing] Add more test cases here
+    def test_j_correct_piece_connections(self):
+        # Sample piece at (0,0) (Ant):
+        expected_piece_connections = {(0, 1), (1, 1), (-1, -1)}
+        expected_emt_spc_connections = {(-1, 0), (0, -1), (1, 0)}
+        actual_piece_connections = board.HiveGameBoard().pieces[(0, 0)].connected_pieces
+        actual_emt_spc_connections = board.HiveGameBoard().pieces[(0, 0)].connected_empty_spaces
+        self.assertEqual(expected_piece_connections, actual_piece_connections)
+        self.assertEqual(expected_emt_spc_connections, actual_emt_spc_connections)
 
+    def test_k_correct_emt_spc_connections(self):
+        # Sample empty space at (1, 0):
+        expected_piece_connections = {(0, 0), (1, 1), (2, 1)}
+        expected_emt_spc_connections = {(0, -1), (2, 0)}
+        actual_piece_connections = board.HiveGameBoard().empty_spaces[(1, 0)].connected_pieces
+        actual_emt_spc_connections = board.HiveGameBoard().empty_spaces[(1, 0)].connected_empty_spaces
+        self.assertEqual(expected_piece_connections, actual_piece_connections)
+        self.assertEqual(expected_emt_spc_connections, actual_emt_spc_connections)
+
+    def test_l_has_winner(self):
         # Check for a winner
         expected_winner = 'white'
         actual_winner = board.HiveGameBoard().determine_winner()
