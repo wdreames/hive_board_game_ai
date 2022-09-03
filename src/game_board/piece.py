@@ -59,8 +59,12 @@ class Piece(HexSpace):
             connected_piece = board.HiveGameBoard().pieces[point]
             connected_piece.connected_empty_spaces.remove(self.location)
             connected_piece.connected_pieces.add(self.location)
+
+            # TODO: [Movement] This rule only applies to sliding pieces
             if len(connected_piece.connected_pieces) == 5:
                 connected_piece.lock()
+            else:
+                connected_piece.update_can_slide_to()
 
         self.connected_empty_spaces = related_empty_space.connected_empty_spaces
         for point in self.connected_empty_spaces:
@@ -72,6 +76,7 @@ class Piece(HexSpace):
             else:
                 connected_empty_space.num_black_connected += 1
             connected_empty_space.update_placement_options()
+            connected_empty_space.update_can_slide_to()
 
         # TODO: [Movement] Lock any relevant pieces connected to the new location
         if len(self.connected_pieces) == 1:
@@ -90,6 +95,8 @@ class Piece(HexSpace):
         for point in locations_for_new_empty_spaces:
             emt.EmptySpace(point[0], point[1])
 
+        self.update_can_slide_to()
+
     def formed_loop(self):
         # Check if two pieces are on opposite sides after being places
         return False
@@ -100,6 +107,8 @@ class Piece(HexSpace):
         Called when the piece is put into a position where it can no longer move. This function clears the set of
         all possible moves
         """
+        self.can_slide_to.clear()
+        self.possible_moves.clear()
         type_of_piece = str(type(self)).split('.')[-1][:-2]
         print('{} located at {} has been locked'.format(type_of_piece, self.location))
 
@@ -119,4 +128,3 @@ class Piece(HexSpace):
         all possible moves for a given piece based on the current board state.
         """
         pass
-

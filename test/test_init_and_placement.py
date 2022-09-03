@@ -9,12 +9,13 @@ import src.game_board.empty_space as emt_spc
 
 class TestInitializationAndPlacements(unittest.TestCase):
     def test_board_is_singleton(self):
-        board1 = board.HiveGameBoard()
+        board1 = board.HiveGameBoard(new_board=True)
         board1.test_attribute = 'Test Attribute Value'
         board2 = board.HiveGameBoard()
         self.assertEqual('Test Attribute Value', board2.test_attribute)
 
     def test_board_initialization(self):
+        board.HiveGameBoard(new_board=True)
         expected_pieces = dict()
         expected_empty_spaces = {(0, 0): 'Placeholder'}
         expected_white_locs_to_place = {(0, 0)}

@@ -180,7 +180,7 @@ class HiveGameBoard(object):
         else:
             return None
 
-    # TODO: This is a temporary solution. Do not use this in the final product...
+    # TODO: [UI] This is a temporary solution. Do not use this in the final product...
     def print_board(self):
         if not self.pieces:
             return
