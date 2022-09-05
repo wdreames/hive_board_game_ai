@@ -52,7 +52,7 @@ class Piece(HexSpace):
         self.location = new_location
         board.HiveGameBoard().pieces[new_location] = self
 
-        # Update all the connections
+        # Update all the piece connections
         related_empty_space = board.HiveGameBoard().empty_spaces[new_location]
         self.connected_pieces = related_empty_space.connected_pieces
         for point in self.connected_pieces:
@@ -63,9 +63,8 @@ class Piece(HexSpace):
             # TODO: [Movement] This rule only applies to sliding pieces
             if len(connected_piece.connected_pieces) == 5:
                 connected_piece.lock()
-            else:
-                connected_piece.update_can_slide_to()
 
+        # Update all the empty space connections
         self.connected_empty_spaces = related_empty_space.connected_empty_spaces
         for point in self.connected_empty_spaces:
             connected_empty_space = board.HiveGameBoard().empty_spaces[point]
@@ -76,7 +75,6 @@ class Piece(HexSpace):
             else:
                 connected_empty_space.num_black_connected += 1
             connected_empty_space.update_placement_options()
-            connected_empty_space.update_can_slide_to()
 
         # TODO: [Movement] Lock any relevant pieces connected to the new location
         if len(self.connected_pieces) == 1:
@@ -95,7 +93,46 @@ class Piece(HexSpace):
         for point in locations_for_new_empty_spaces:
             emt.EmptySpace(point[0], point[1])
 
-        self.update_can_slide_to()
+        # Check if any cannot_slide_to sets need to be updated
+        self._update_cannot_slide_to_sets()
+
+    def _update_cannot_slide_to_sets(self):
+        x = self.x
+        y = self.y
+        if (x - 2, y - 1) in board.HiveGameBoard().pieces:
+            # Spaces at (x - 1, y - 1) and (x - 1, y) cannot slide to each other
+            self._set_spaces_cannot_slide_to((x - 1, y - 1), (x - 1, y))
+        if (x - 1, y + 1) in board.HiveGameBoard().pieces:
+            # Spaces at (x - 1, y) and (x, y + 1) cannot slide to each other
+            self._set_spaces_cannot_slide_to((x - 1, y), (x, y + 1))
+        if (x + 1, y + 2) in board.HiveGameBoard().pieces:
+            # Spaces at (x, y + 1) and (x + 1, y + 1) cannot slide to each other
+            self._set_spaces_cannot_slide_to((x, y + 1), (x + 1, y + 1))
+        if (x + 2, y + 1) in board.HiveGameBoard().pieces:
+            # Spaces at (x + 1, y + 1) and (x + 1, y) cannot slide to each other
+            self._set_spaces_cannot_slide_to((x + 1, y + 1), (x + 1, y))
+        if (x + 1, y - 1) in board.HiveGameBoard().pieces:
+            # Spaces at (x + 1, y) and (x, y - 1) cannot slide to each other
+            self._set_spaces_cannot_slide_to((x + 1, y), (x, y - 1))
+        if (x - 1, y - 2) in board.HiveGameBoard().pieces:
+            # Spaces at (x, y - 1) and (x - 1, y - 1) cannot slide to each other
+            self._set_spaces_cannot_slide_to((x, y - 1), (x - 1, y - 1))
+
+    @staticmethod
+    def _set_spaces_cannot_slide_to(location1, location2):
+        # Helper function
+        # Spaces at (location1) and (location2) cannot slide to each other
+        game_board = board.HiveGameBoard()
+
+        if location1 in game_board.pieces:
+            game_board.pieces[location1].cannot_slide_to.add(location2)
+        else:
+            game_board.empty_spaces[location1].cannot_slide_to.add(location2)
+
+        if location2 in game_board.pieces:
+            game_board.pieces[location2].cannot_slide_to.add(location1)
+        else:
+            game_board.empty_spaces[location2].cannot_slide_to.add(location1)
 
     def formed_loop(self):
         # Check if two pieces are on opposite sides after being places
@@ -107,7 +144,6 @@ class Piece(HexSpace):
         Called when the piece is put into a position where it can no longer move. This function clears the set of
         all possible moves
         """
-        self.can_slide_to.clear()
         self.possible_moves.clear()
         type_of_piece = str(type(self)).split('.')[-1][:-2]
         print('{} located at {} has been locked'.format(type_of_piece, self.location))

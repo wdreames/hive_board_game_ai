@@ -17,9 +17,9 @@ class HexSpace:
         self.location = (self.x, self.y)
         self.connected_pieces = set()
         self.connected_empty_spaces = set()
-        self.can_slide_to = set()
+        self.cannot_slide_to = set()
 
-    def update_can_slide_to(self):
+    def _update_can_slide_to(self):
         """
         Method used to determine which spaces this space can slide into. Comment diagrams are displayed
         for each type of movement to help show the conditions required to slide in that direction.

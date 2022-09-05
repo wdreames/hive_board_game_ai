@@ -33,7 +33,6 @@ class EmptySpace(HexSpace):
                 related_piece = board.HiveGameBoard().pieces[point]
                 self.connected_pieces.add(point)
                 related_piece.connected_empty_spaces.add(self.location)
-                related_piece.update_can_slide_to()
 
                 # Add to count of that piece's color
                 if related_piece.is_white:
@@ -44,10 +43,8 @@ class EmptySpace(HexSpace):
             elif point in board.HiveGameBoard().empty_spaces:
                 self.connected_empty_spaces.add(point)
                 board.HiveGameBoard().empty_spaces[point].connected_empty_spaces.add(self.location)
-                board.HiveGameBoard().empty_spaces[point].update_can_slide_to()
 
         self.update_placement_options()
-        self.update_can_slide_to()
 
     def update_placement_options(self):
         """
