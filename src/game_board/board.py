@@ -53,6 +53,9 @@ class HiveGameBoard(object):
 
         return cls.instance
 
+    def get_all_spaces(self):
+        return self.empty_spaces | self.pieces
+
     # TODO: [Turns] Implement and add `self.turn_number += 1`; remove `self.turn_number += 1` from other methods
     def perform_action(self):
         pass

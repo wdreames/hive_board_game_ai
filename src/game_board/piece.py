@@ -30,6 +30,7 @@ class Piece(HexSpace):
         board.HiveGameBoard().pieces[self.location] = self
         self.move_to(self.location)
 
+    # TODO: [Formatting] Reformat this function for added readability
     def move_to(self, new_location):
         """
         Moves this piece to a new location. This also updates any previous/new connections to other pieces. No movement
@@ -45,6 +46,7 @@ class Piece(HexSpace):
             return
 
         # TODO: [Movement] Unlock & disconnect from any relevant pieces that used to be connected
+        #       Also need to see if any cannot_move_to sets need to be updated
 
         # Move this piece in the board dictionary
         board.HiveGameBoard().pieces.pop(self.location)
@@ -52,37 +54,29 @@ class Piece(HexSpace):
         self.location = new_location
         board.HiveGameBoard().pieces[new_location] = self
 
-        # Update all the piece connections
+        # Copy the connections from the empty space at the new location
         related_empty_space = board.HiveGameBoard().empty_spaces[new_location]
         self.connected_pieces = related_empty_space.connected_pieces
-        for point in self.connected_pieces:
-            connected_piece = board.HiveGameBoard().pieces[point]
-            connected_piece.connected_empty_spaces.remove(self.location)
-            connected_piece.connected_pieces.add(self.location)
-
-            # TODO: [Movement] This rule only applies to sliding pieces
-            if len(connected_piece.connected_pieces) == 5:
-                connected_piece.lock()
-
-        # Update all the empty space connections
         self.connected_empty_spaces = related_empty_space.connected_empty_spaces
-        for point in self.connected_empty_spaces:
-            connected_empty_space = board.HiveGameBoard().empty_spaces[point]
-            connected_empty_space.connected_empty_spaces.remove(self.location)
-            connected_empty_space.connected_pieces.add(self.location)
-            if self.is_white:
-                connected_empty_space.num_white_connected += 1
-            else:
-                connected_empty_space.num_black_connected += 1
-            connected_empty_space.update_placement_options()
 
-        # TODO: [Movement] Lock any relevant pieces connected to the new location
+        # Update all the piece and empty space connections
+        all_connected_spaces = self.connected_empty_spaces.union(self.connected_pieces)
+        for space_location in all_connected_spaces:
+            board.HiveGameBoard().get_all_spaces()[space_location].add_connection_to_piece(self.location)
+
         if len(self.connected_pieces) == 1:
             board.HiveGameBoard().pieces[list(self.connected_pieces)[0]].lock()
 
         # Delete the empty space at this location
         related_empty_space.remove()
 
+        self._create_surrounding_emt_spcs()
+
+        # Check if any cannot_slide_to sets need to be updated
+        self._update_cannot_slide_to_sets()
+
+    def _create_surrounding_emt_spcs(self):
+        # Helper function
         # Add new empty spaces
         all_connected_spaces = self.connected_empty_spaces.union(self.connected_pieces)
         surrounding_locations = {(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x - 1, self.y),
@@ -93,49 +87,36 @@ class Piece(HexSpace):
         for point in locations_for_new_empty_spaces:
             emt.EmptySpace(point[0], point[1])
 
-        # Check if any cannot_slide_to sets need to be updated
-        self._update_cannot_slide_to_sets()
-
+    # TODO: [Movement] Not fully functional... see notebook
+    #       Oh an I also need to set this pieces' cannot_slide to values...
+    #       Idk if that's something that is already implemented with the current algorithm
     def _update_cannot_slide_to_sets(self):
+        # Helper function
         x = self.x
         y = self.y
         if (x - 2, y - 1) in board.HiveGameBoard().pieces:
-            # Spaces at (x - 1, y - 1) and (x - 1, y) cannot slide to each other
             self._set_spaces_cannot_slide_to((x - 1, y - 1), (x - 1, y))
         if (x - 1, y + 1) in board.HiveGameBoard().pieces:
-            # Spaces at (x - 1, y) and (x, y + 1) cannot slide to each other
             self._set_spaces_cannot_slide_to((x - 1, y), (x, y + 1))
         if (x + 1, y + 2) in board.HiveGameBoard().pieces:
-            # Spaces at (x, y + 1) and (x + 1, y + 1) cannot slide to each other
             self._set_spaces_cannot_slide_to((x, y + 1), (x + 1, y + 1))
         if (x + 2, y + 1) in board.HiveGameBoard().pieces:
-            # Spaces at (x + 1, y + 1) and (x + 1, y) cannot slide to each other
             self._set_spaces_cannot_slide_to((x + 1, y + 1), (x + 1, y))
         if (x + 1, y - 1) in board.HiveGameBoard().pieces:
-            # Spaces at (x + 1, y) and (x, y - 1) cannot slide to each other
             self._set_spaces_cannot_slide_to((x + 1, y), (x, y - 1))
         if (x - 1, y - 2) in board.HiveGameBoard().pieces:
-            # Spaces at (x, y - 1) and (x - 1, y - 1) cannot slide to each other
             self._set_spaces_cannot_slide_to((x, y - 1), (x - 1, y - 1))
 
     @staticmethod
     def _set_spaces_cannot_slide_to(location1, location2):
         # Helper function
         # Spaces at (location1) and (location2) cannot slide to each other
-        game_board = board.HiveGameBoard()
-
-        if location1 in game_board.pieces:
-            game_board.pieces[location1].cannot_slide_to.add(location2)
-        else:
-            game_board.empty_spaces[location1].cannot_slide_to.add(location2)
-
-        if location2 in game_board.pieces:
-            game_board.pieces[location2].cannot_slide_to.add(location1)
-        else:
-            game_board.empty_spaces[location2].cannot_slide_to.add(location1)
+        all_spaces = board.HiveGameBoard().get_all_spaces()
+        all_spaces[location1].cannot_slide_to.add(location2)
+        all_spaces[location2].cannot_slide_to.add(location1)
 
     def formed_loop(self):
-        # Check if two pieces are on opposite sides after being places
+        # Check if two pieces are on opposite sides after being placed w/ 1+ empty spaces in between
         return False
 
     # TODO: [Movement] Implement lock method; currently have a placeholder for testing
@@ -164,3 +145,20 @@ class Piece(HexSpace):
         all possible moves for a given piece based on the current board state.
         """
         pass
+
+    # TODO: [Formatting] Should some of the code in these functions stay in the HexSpace superclass?
+    def add_connection_to_piece(self, location):
+        self.connected_pieces.add(location)
+
+    def remove_connection_to_piece(self, location):
+        pass
+
+    def add_connection_to_empty_space(self, location):
+        self.connected_empty_spaces.add(location)
+        board.HiveGameBoard().empty_spaces[location].add_connection_to_piece(self.location)
+
+    def remove_connection_to_empty_space(self, location):
+        # If an error occurs here, the program can likely be made to be more efficient. Don't use the following if stmt
+        # if location in self.connected_empty_spaces:
+        self.connected_empty_spaces.remove(location)
+

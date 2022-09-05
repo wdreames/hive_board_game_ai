@@ -4,6 +4,8 @@ import src.game_board.board as board
 
 class MyTestCase(unittest.TestCase):
 
+    # TODO: [Testing] Will need to add more sliding test cases
+
     @classmethod
     def setUpClass(cls):
         board.HiveGameBoard(new_board=True)

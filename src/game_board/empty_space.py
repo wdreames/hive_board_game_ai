@@ -27,24 +27,11 @@ class EmptySpace(HexSpace):
         board.HiveGameBoard().empty_spaces[self.location] = self
 
         # Check surrounding spaces and connect to them
-        for point in [(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x - 1, self.y), (self.x + 1, self.y),
-                      (self.x, self.y + 1), (self.x + 1, self.y + 1)]:
-            if point in board.HiveGameBoard().pieces:
-                related_piece = board.HiveGameBoard().pieces[point]
-                self.connected_pieces.add(point)
-                related_piece.connected_empty_spaces.add(self.location)
-
-                # Add to count of that piece's color
-                if related_piece.is_white:
-                    self.num_white_connected += 1
-                else:
-                    self.num_black_connected += 1
-
-            elif point in board.HiveGameBoard().empty_spaces:
-                self.connected_empty_spaces.add(point)
-                board.HiveGameBoard().empty_spaces[point].connected_empty_spaces.add(self.location)
-
-        self.update_placement_options()
+        for space_location in [(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x - 1, self.y),
+                               (self.x + 1, self.y), (self.x, self.y + 1), (self.x + 1, self.y + 1)]:
+            all_spaces = board.HiveGameBoard().get_all_spaces()
+            if space_location in all_spaces:
+                all_spaces[space_location].add_connection_to_empty_space(self.location)
 
     def update_placement_options(self):
         """
@@ -78,18 +65,10 @@ class EmptySpace(HexSpace):
         if self.location in board.HiveGameBoard().black_locations_to_place:
             board.HiveGameBoard().black_locations_to_place.remove(self.location)
 
-        # TODO: [Movement] Logic for pieces that can move here
+        for space_location in self.connected_pieces.union(self.connected_empty_spaces):
+            board.HiveGameBoard().get_all_spaces()[space_location].remove_connection_to_empty_space(self.location)
 
-        # TODO: [Efficiency] Think about whether or not this section is necessary. It is missing in code coverage.
-        #       Assuming that this method is only called after piece is placed or moved, this won't be needed.
-        # for point in self.connected_pieces:
-        #     related_connections = board.HiveGameBoard().pieces[point].connected_empty_spaces
-        #     if point in related_connections:
-        #         related_connections.remove(self.location)
-        # for point in self.connected_empty_spaces:
-        #     related_connections = board.HiveGameBoard().empty_spaces[point].connected_empty_spaces
-        #     if point in related_connections:
-        #         related_connections.remove(self.location)
+        # TODO: [Movement] Logic for pieces that can move here
 
         del self
 
@@ -100,7 +79,7 @@ class EmptySpace(HexSpace):
         :return: bool
             True if white can place a piece here; False otherwise
         """
-        return not self.num_black_connected and self.num_white_connected > 0
+        return not self.num_black_connected
 
     def black_can_place(self):
         """
@@ -109,4 +88,24 @@ class EmptySpace(HexSpace):
         :return: bool
             True if black can place a piece here; False otherwise
         """
-        return not self.num_white_connected and self.num_black_connected > 0
+        return not self.num_white_connected
+
+    def add_connection_to_piece(self, location):
+        self.connected_pieces.add(location)
+        if board.HiveGameBoard().pieces[location].is_white:
+            self.num_white_connected += 1
+        else:
+            self.num_black_connected += 1
+        self.update_placement_options()
+
+    def remove_connection_to_piece(self, location):
+        pass
+
+    def add_connection_to_empty_space(self, location):
+        self.connected_empty_spaces.add(location)
+        board.HiveGameBoard().empty_spaces[location].connected_empty_spaces.add(self.location)
+
+    def remove_connection_to_empty_space(self, location):
+        # If an error occurs here, the program can likely be made to be more efficient. Don't use the following if stmt
+        # if location in self.connected_empty_spaces:
+        self.connected_empty_spaces.remove(location)
