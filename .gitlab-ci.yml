@@ -11,10 +11,11 @@ stages:
 test:
     script:
         - |   
+            uname -a
             pyenv install -l
-            pyenv install 3.10.6
+            pyenv install 3.10.4
             pyenv versions
-            pyenv global 3.10.6
+            pyenv global 3.10.4
             pyenv prefix
             python -V
             
