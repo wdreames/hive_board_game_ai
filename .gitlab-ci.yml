@@ -2,22 +2,22 @@ default:
     image: python:latest
     before_script:
         - |
-            export PATH="/home/gitlab-runner/.pyenv/bin:$PATH"
-            eval "$(pyenv init -)"
-            eval "$(pyenv virtualenv-init -)"
+#            export PATH="/home/gitlab-runner/.pyenv/bin:$PATH"
+#            eval "$(pyenv init -)"
+#            eval "$(pyenv virtualenv-init -)"
 
 stages:
     - test
 test:
     script:
         - |   
-            uname -a
-            pyenv install -l
-            pyenv install 3.10.4
-            pyenv versions
-            pyenv global 3.10.4
-            pyenv prefix
-            python -V
+#            uname -a
+#            pyenv install -l
+#            pyenv install 3.10.4
+#            pyenv versions
+#            pyenv global 3.10.4
+#            pyenv prefix
+#            python -V
             
             whoami
             pwd
