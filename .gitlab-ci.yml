@@ -2,10 +2,6 @@ default:
     image: python:latest
     before_script:
         - |
-            echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-            echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-            echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n eval "$(pyenv init -)"\nfi' >> ~/.bashrc
-            
             export PATH="/home/gitlab-runner/.pyenv/bin:$PATH"
             eval "$(pyenv init -)"
             eval "$(pyenv virtualenv-init -)"
@@ -15,9 +11,9 @@ stages:
 test:
     script:
         - |   
-            pyenv install 3.10
+            pyenv install latest
             pyenv versions
-            pyenv global 3.10
+            pyenv global latest
             pyenv prefix
             python -V
             
