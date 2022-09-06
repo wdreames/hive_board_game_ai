@@ -6,7 +6,7 @@ test:
     image: python:latest
     script:
         - whoami
-        - which python3.10
+        - pwd
         - python3 --version
         - coverage run -m unittest test/test_*.py
         - coverage report -m
