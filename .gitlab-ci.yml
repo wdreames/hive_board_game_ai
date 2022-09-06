@@ -4,5 +4,6 @@ stages:
     - test
 test:
     script:
+        - python --version
         - coverage run -m unittest test/test_*.py
         - coverage report -m
