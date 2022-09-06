@@ -12,12 +12,7 @@ test:
     script:
         - |   
             uname -a
-            pyenv install -l
-            pyenv install anaconda3:latest
-            pyenv versions
-            pyenv global anaconda3:latest
-            pyenv prefix
-            python -V
+            ls -ls /usr/bin/python*
             
             whoami
             pwd
@@ -25,3 +20,9 @@ test:
             coverage run -m unittest test/test_*.py
             coverage report -m
 
+#pyenv install -l
+#            pyenv install anaconda3:latest
+#            pyenv versions
+#            pyenv global anaconda3:latest
+#            pyenv prefix
+#            python -V
