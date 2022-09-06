@@ -13,9 +13,9 @@ test:
         - |   
             uname -a
             pyenv install -l
-            pyenv install miniconda3:latest
+            pyenv install 3.10.7
             pyenv versions
-            pyenv global miniconda3:latest
+            pyenv global 3.10.7
             pyenv prefix
             python -V
             
