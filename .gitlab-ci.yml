@@ -13,9 +13,9 @@ test:
         - |   
             uname -a
             pyenv install -l
-            pyenv install miniconda:latest
+            pyenv install miniconda3:latest
             pyenv versions
-            pyenv global miniconda:latest
+            pyenv global miniconda3:latest
             pyenv prefix
             python -V
             
