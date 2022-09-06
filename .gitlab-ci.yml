@@ -1,21 +1,27 @@
 default:
     image: python:latest
-before_script:
-    - echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-    - echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-    - echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n eval "$(pyenv init -)"\nfi' >> ~/.bashrc
-    - pyenv install 3.10
-    - pyenv versions
-    - pyenv global 3.10
-    - pyenv prefix
-    - python -V
+    before_script:
+        - echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+        - echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+        - echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n eval "$(pyenv init -)"\nfi' >> ~/.bashrc
+        - exec "$SHELL"
 stages:
     - test
 test:
     image: python:latest
     script:
-        - whoami
-        - pwd
-        - python3 --version
-        - coverage run -m unittest test/test_*.py
-        - coverage report -m
+        """
+        #!/bin/bash
+        
+        pyenv install 3.10
+        pyenv versions
+        pyenv global 3.10
+        pyenv prefix
+        python -V
+        
+        whoami
+        pwd
+        python3 --version
+        coverage run -m unittest test/test_*.py
+        coverage report -m
+        """
