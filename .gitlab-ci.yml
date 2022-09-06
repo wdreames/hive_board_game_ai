@@ -11,7 +11,13 @@ stages:
 test:
     script:
         - |   
-            
+            uname -a
+            pyenv install -l
+            pyenv install miniconda:latest
+            pyenv versions
+            pyenv global miniconda:latest
+            pyenv prefix
+            python -V
             
             whoami
             pwd
@@ -19,10 +25,3 @@ test:
             coverage run -m unittest test/test_*.py
             coverage report -m
 
-#uname -a
-#pyenv install -l
-#pyenv install 3.10.4
-#pyenv versions
-#pyenv global 3.10.4
-#pyenv prefix
-#python -V
