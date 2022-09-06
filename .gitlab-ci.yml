@@ -10,18 +10,15 @@ stages:
 test:
     image: python:latest
     script:
-        """
-        #!/bin/bash
-        
-        pyenv install 3.10
-        pyenv versions
-        pyenv global 3.10
-        pyenv prefix
-        python -V
-        
-        whoami
-        pwd
-        python3 --version
-        coverage run -m unittest test/test_*.py
-        coverage report -m
-        """
+        - |            
+            pyenv install 3.10
+            pyenv versions
+            pyenv global 3.10
+            pyenv prefix
+            python -V
+            
+            whoami
+            pwd
+            python3 --version
+            coverage run -m unittest test/test_*.py
+            coverage report -m
