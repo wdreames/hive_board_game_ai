@@ -2,24 +2,24 @@ default:
     image: python:latest
     before_script:
         - |
-            export PATH="/home/gitlab-runner/.pyenv/bin:$PATH"
-            eval "$(pyenv init -)"
-            eval "$(pyenv virtualenv-init -)"
-
 stages:
     - test
 test:
     script:
         - |   
-            uname -a
-            ls -ls /usr/bin/python*
-            
-            whoami
-            pwd
-            python3 --version
             coverage run -m unittest test/test_*.py
             coverage report -m
 
+#export PATH="/home/gitlab-runner/.pyenv/bin:$PATH"
+#            eval "$(pyenv init -)"
+#            eval "$(pyenv virtualenv-init -)"
+
+#uname -a
+#            ls -ls /usr/bin/python*
+#
+#            whoami
+#            pwd
+#            python3 --version
 #pyenv install -l
 #            pyenv install anaconda3:latest
 #            pyenv versions
