@@ -5,6 +5,7 @@ stages:
 test:
     image: python:latest
     script:
+        - docker --help
         - python3 --version
         - coverage run -m unittest test/test_*.py
         - coverage report -m
