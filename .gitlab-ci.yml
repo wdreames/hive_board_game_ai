@@ -1,10 +1,9 @@
 default:
-    image: python:3.10.6-alpine3.16
+    image: python:latest
 stages:
     - test
 test:
     script:
         - python3 --version
-        - apt-get install python3.10
         - coverage run -m unittest test/test_*.py
         - coverage report -m
