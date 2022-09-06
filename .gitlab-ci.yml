@@ -11,9 +11,9 @@ stages:
 test:
     script:
         - |   
-            pyenv install latest
+            pyenv install miniconda3-latest
             pyenv versions
-            pyenv global latest
+            pyenv global miniconda3-latest
             pyenv prefix
             python -V
             
