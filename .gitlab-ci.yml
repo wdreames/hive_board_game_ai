@@ -1,9 +1,11 @@
 default:
     image: python:3.10
+before_script:
+    - cmd apt-get install python3-dev && apt-get install python-dev
+    - python3 --version
 stages:
     - test
 test:
     script:
-        - python3 --version
         - coverage run -m unittest test/test_*.py
         - coverage report -m
