@@ -3,6 +3,7 @@ default:
 stages:
     - test
 test:
+    image: python:latest
     script:
         - python3 --version
         - coverage run -m unittest test/test_*.py
