@@ -11,9 +11,9 @@ stages:
 test:
     script:
         - |   
-            pyenv install 3.10.4
             pyenv versions
-            pyenv global 3.10.4
+            pyenv install 3.10.6
+            pyenv global 3.10.6
             pyenv prefix
             python -V
             
