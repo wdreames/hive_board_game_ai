@@ -47,12 +47,12 @@ class HexSpace:
     @abstractmethod
     def add_connection_to_piece(self, location):
         self.connected_pieces.add(location)
-        # self.update_cannot_move_to()
+        self.update_cannot_move_to()
 
     @abstractmethod
     def remove_connection_to_piece(self, location):
         self.connected_pieces.remove(location)
-        # self.update_cannot_move_to()
+        self.update_cannot_move_to()
 
     @abstractmethod
     def add_connection_to_empty_space(self, location):

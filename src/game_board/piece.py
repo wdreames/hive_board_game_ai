@@ -59,6 +59,8 @@ class Piece(HexSpace):
         related_empty_space = board.HiveGameBoard().empty_spaces[new_location]
         self.connected_pieces = related_empty_space.connected_pieces
         self.connected_empty_spaces = related_empty_space.connected_empty_spaces
+        self.sliding_prevented_to = related_empty_space.sliding_prevented_to
+        self.cannot_move_to = related_empty_space.cannot_move_to
 
         # Update all the piece and empty space connections
         all_connected_spaces = self.connected_empty_spaces.union(self.connected_pieces)
