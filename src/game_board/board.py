@@ -54,6 +54,8 @@ class HiveGameBoard(object):
         return cls.instance
 
     def get_all_spaces(self):
+        # Merges the dictionaries
+        # Pieces will overwrite empty spaces at the same location
         return {**self.empty_spaces, **self.pieces}
 
     # TODO: [Turns] Implement and add `self.turn_number += 1`; remove `self.turn_number += 1` from other methods

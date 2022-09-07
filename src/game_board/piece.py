@@ -25,6 +25,7 @@ class Piece(HexSpace):
         super().__init__(x, y)
         self.is_white = is_white
         self.possible_moves = set()
+        self.preventing_sliding_for = {}
 
         # TODO: [Efficiency] There are some redundant actions here to reduce the amount of written code
         board.HiveGameBoard().pieces[self.location] = self
@@ -73,10 +74,10 @@ class Piece(HexSpace):
         self._create_surrounding_emt_spcs()
 
         # Check if any cannot_slide_to sets need to be updated
-        self._update_cannot_slide_to_sets()
+        self._update_sliding()
 
     def _create_surrounding_emt_spcs(self):
-        # Helper function
+        # Helper function for move_to(location)
         # Add new empty spaces
         all_connected_spaces = self.connected_empty_spaces.union(self.connected_pieces)
         surrounding_locations = {(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x - 1, self.y),
@@ -90,34 +91,50 @@ class Piece(HexSpace):
     # TODO: [Movement] Not fully functional... see notebook
     #       Oh an I also need to set this pieces' cannot_slide to values...
     #       Idk if that's something that is already implemented with the current algorithm
-    def _update_cannot_slide_to_sets(self):
-        # Helper function
+    def _update_sliding(self):
+        # Helper function for move_to(location)
         x = self.x
         y = self.y
-        if (x - 2, y - 1) in board.HiveGameBoard().pieces:
-            self._set_spaces_cannot_slide_to((x - 1, y - 1), (x - 1, y))
-        if (x - 1, y + 1) in board.HiveGameBoard().pieces:
-            self._set_spaces_cannot_slide_to((x - 1, y), (x, y + 1))
-        if (x + 1, y + 2) in board.HiveGameBoard().pieces:
-            self._set_spaces_cannot_slide_to((x, y + 1), (x + 1, y + 1))
-        if (x + 2, y + 1) in board.HiveGameBoard().pieces:
-            self._set_spaces_cannot_slide_to((x + 1, y + 1), (x + 1, y))
-        if (x + 1, y - 1) in board.HiveGameBoard().pieces:
-            self._set_spaces_cannot_slide_to((x + 1, y), (x, y - 1))
-        if (x - 1, y - 2) in board.HiveGameBoard().pieces:
-            self._set_spaces_cannot_slide_to((x, y - 1), (x - 1, y - 1))
+        self._check_if_preventing_sliding((x - 2, y - 1), (x - 1, y - 1), (x - 1, y))
+        self._check_if_preventing_sliding((x - 1, y + 1), (x - 1, y), (x, y + 1))
+        self._check_if_preventing_sliding((x + 1, y + 2), (x, y + 1), (x + 1, y + 1))
+        self._check_if_preventing_sliding((x + 2, y + 1), (x + 1, y + 1), (x + 1, y))
+        self._check_if_preventing_sliding((x + 1, y - 1), (x + 1, y), (x, y - 1))
+        self._check_if_preventing_sliding((x - 1, y - 2), (x, y - 1), (x - 1, y - 1))
 
-    @staticmethod
-    def _set_spaces_cannot_slide_to(location1, location2):
+    def _check_if_preventing_sliding(self, other_piece_loc, space1_loc, space2_loc):
         # Helper function
         # Spaces at (location1) and (location2) cannot slide to each other
-        all_spaces = board.HiveGameBoard().get_all_spaces()
-        all_spaces[location1].cannot_slide_to.add(location2)
-        all_spaces[location2].cannot_slide_to.add(location1)
+        game_board = board.HiveGameBoard()
+        if other_piece_loc in board.HiveGameBoard().pieces:
+            all_spaces = game_board.get_all_spaces()
 
-    def formed_loop(self):
-        # Check if two pieces are on opposite sides after being placed w/ 1+ empty spaces in between
-        return False
+            other_piece = game_board.pieces[other_piece_loc]
+            space1 = all_spaces[space1_loc]
+            space2 = all_spaces[space2_loc]
+
+            self._helper_add_to_dict_set(self.preventing_sliding_for, space1_loc, space2_loc)
+            self._helper_add_to_dict_set(other_piece.preventing_sliding_for, space1_loc, space2_loc)
+
+            self._helper_add_to_dict_set(self.preventing_sliding_for, space2_loc, space1_loc)
+            self._helper_add_to_dict_set(other_piece.preventing_sliding_for, space2_loc, space1_loc)
+
+            self._helper_add_to_dict_set(space1.sliding_prevented_to, space2_loc, self.location)
+            self._helper_add_to_dict_set(space1.sliding_prevented_to, space2_loc, other_piece_loc)
+            self._helper_add_to_dict_set(space2.sliding_prevented_to, space1_loc, self.location)
+            self._helper_add_to_dict_set(space2.sliding_prevented_to, space1_loc, other_piece_loc)
+
+    # TODO: [Formatting] Put this function into a utils class
+    @staticmethod
+    def _helper_add_to_dict_set(dictionary, key, value):
+        if key in dictionary:
+            dictionary[key].add(value)
+        else:
+            dictionary[key] = {value}
+
+    # def formed_loop(self):
+    #     # Check if two pieces are on opposite sides after being placed w/ 1+ empty spaces in between
+    #     return False
 
     # TODO: [Movement] Implement lock method; currently have a placeholder for testing
     def lock(self):
@@ -148,17 +165,14 @@ class Piece(HexSpace):
 
     # TODO: [Formatting] Should some of the code in these functions stay in the HexSpace superclass?
     def add_connection_to_piece(self, location):
-        self.connected_pieces.add(location)
+        HexSpace.add_connection_to_piece(self, location)
 
     def remove_connection_to_piece(self, location):
-        pass
+        HexSpace.remove_connection_to_piece(self, location)
 
     def add_connection_to_empty_space(self, location):
-        self.connected_empty_spaces.add(location)
+        HexSpace.add_connection_to_empty_space(self, location)
         board.HiveGameBoard().empty_spaces[location].add_connection_to_piece(self.location)
 
     def remove_connection_to_empty_space(self, location):
-        # If an error occurs here, the program can likely be made to be more efficient. Don't use the following if stmt
-        # if location in self.connected_empty_spaces:
-        self.connected_empty_spaces.remove(location)
-
+        HexSpace.remove_connection_to_empty_space(self, location)

@@ -91,7 +91,7 @@ class EmptySpace(HexSpace):
         return not self.num_white_connected
 
     def add_connection_to_piece(self, location):
-        self.connected_pieces.add(location)
+        HexSpace.add_connection_to_piece(self, location)
         if board.HiveGameBoard().pieces[location].is_white:
             self.num_white_connected += 1
         else:
@@ -99,13 +99,17 @@ class EmptySpace(HexSpace):
         self.update_placement_options()
 
     def remove_connection_to_piece(self, location):
-        pass
+        HexSpace.remove_connection_to_piece(self, location)
+        if board.HiveGameBoard().pieces[location].is_white:
+            self.num_white_connected -= 1
+        else:
+            self.num_black_connected -= 1
+        self.update_placement_options()
 
     def add_connection_to_empty_space(self, location):
-        self.connected_empty_spaces.add(location)
+        HexSpace.add_connection_to_empty_space(self, location)
         board.HiveGameBoard().empty_spaces[location].connected_empty_spaces.add(self.location)
 
     def remove_connection_to_empty_space(self, location):
-        # If an error occurs here, the program can likely be made to be more efficient. Don't use the following if stmt
-        # if location in self.connected_empty_spaces:
-        self.connected_empty_spaces.remove(location)
+        HexSpace.remove_connection_to_empty_space(self, location)
+
