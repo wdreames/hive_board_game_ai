@@ -6,9 +6,14 @@ class QueenBee(Piece):
 
     def __init__(self, x=0, y=0, is_white=True):
         super().__init__(x, y, is_white)
+        self.name = 'Queen Bee'
+        self.update_board_location()
 
     def move_to(self, new_location):
         Piece.move_to(self, new_location)
+        self.update_board_location()
+
+    def update_board_location(self):
         if self.is_white:
             board.HiveGameBoard().white_queen_location = self.location
         else:
@@ -16,4 +21,6 @@ class QueenBee(Piece):
 
     def calc_possible_moves(self):
         # Can move to any open space that it can slide to
-        self.possible_moves = self.connected_empty_spaces.difference(self.cannot_slide_to)
+        unavailable_moves = self.cannot_move_to.union(self.sliding_prevented_to.keys())
+        self.possible_moves = self.connected_empty_spaces.difference(unavailable_moves)
+        return self.possible_moves

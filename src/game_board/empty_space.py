@@ -9,7 +9,8 @@ class EmptySpace(HexSpace):
     where pieces can be placed or moved.
     """
 
-    def __init__(self, x=0, y=0):
+    def __init__(self, x=0, y=0, connected_pcs=None, connected_emt_spcs=None, sliding_prevented_to=None,
+                 cannot_move_to=None):
         """
         Create a new Empty Space at (x, y). This method also allows the Empty Space to connect to any other surrounding
         spaces on the board.
@@ -18,6 +19,11 @@ class EmptySpace(HexSpace):
             x location
         :param y: int
             y location
+        :param connected_pcs: set
+            Connected pieces to assign to this empty space. If this is None, connected pieces will be calculated
+        :param connected_emt_spcs: set
+                Connected empty pieces to assign to this empty space. If this is None, connected empty spaces will be
+                calculated.
         """
         super().__init__(x, y)
         self.pieces_that_can_move_here = set()
@@ -26,12 +32,31 @@ class EmptySpace(HexSpace):
 
         board.HiveGameBoard().empty_spaces[self.location] = self
 
-        # Check surrounding spaces and connect to them
-        for space_location in [(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x - 1, self.y),
-                               (self.x + 1, self.y), (self.x, self.y + 1), (self.x + 1, self.y + 1)]:
-            all_spaces = board.HiveGameBoard().get_all_spaces()
-            if space_location in all_spaces:
-                all_spaces[space_location].add_connection_to_empty_space(self.location)
+        # TODO: [Formatting] Clean this up
+
+        if connected_pcs is None or connected_emt_spcs is None:
+            # Check surrounding spaces and connect to them
+            for space_location in [(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x - 1, self.y),
+                                   (self.x + 1, self.y), (self.x, self.y + 1), (self.x + 1, self.y + 1)]:
+                all_spaces = board.HiveGameBoard().get_all_spaces()
+                if space_location in all_spaces:
+                    all_spaces[space_location].add_connection_to_empty_space(self.location)
+        else:
+            # Update connections
+            # Assumes the other pieces/empty_spaces will be connected to this empty space on their own
+            self.connected_pieces = connected_pcs
+            self.connected_empty_spaces = connected_emt_spcs
+            self.sliding_prevented_to = sliding_prevented_to
+            self.cannot_move_to = cannot_move_to
+
+            # TODO: [Efficiency] If the pieces also store this info, this loop would be unecessary
+            # Check which player can place here
+            for piece in self.connected_pieces:
+                if board.HiveGameBoard().pieces[piece].is_white:
+                    self.num_white_connected += 1
+                else:
+                    self.num_black_connected += 1
+            self.update_placement_options()
 
     def update_placement_options(self):
         """
@@ -100,6 +125,12 @@ class EmptySpace(HexSpace):
 
     def remove_connection_to_piece(self, location):
         HexSpace.remove_connection_to_piece(self, location)
+
+        # If this empty space does not have any pieces connected to it, remove it
+        if not self.connected_pieces:
+            self.remove()
+            return
+
         if board.HiveGameBoard().pieces[location].is_white:
             self.num_white_connected -= 1
         else:
@@ -112,4 +143,3 @@ class EmptySpace(HexSpace):
 
     def remove_connection_to_empty_space(self, location):
         HexSpace.remove_connection_to_empty_space(self, location)
-

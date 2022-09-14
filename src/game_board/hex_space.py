@@ -45,6 +45,10 @@ class HexSpace:
             self.cannot_move_to.remove(loc)
 
     @abstractmethod
+    def remove(self):
+        pass
+
+    @abstractmethod
     def add_connection_to_piece(self, location):
         self.connected_pieces.add(location)
         self.update_cannot_move_to()

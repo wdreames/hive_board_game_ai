@@ -38,9 +38,12 @@ if __name__ == '__main__':
             location_input = location_input.split(',')
             x_val = int(location_input[0][1:])
             y_val = int(location_input[1][:-1])
-            print('placing {} at ({}, {})'.format(piece_input, x_val, y_val))
 
-            board.place_piece(piece_input, (x_val, y_val))
+            if (x_val, y_val) in locations_to_place:
+                print('placing {} at ({}, {})'.format(piece_input, x_val, y_val))
+                board.place_piece(piece_input, (x_val, y_val))
+            else:
+                print('Invalid location. Please select from the list of available locations to place a piece')
         except KeyError:
             print('Error in processing input: ', traceback.format_exc())
 

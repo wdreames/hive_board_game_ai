@@ -93,8 +93,7 @@ class HiveGameBoard(object):
             elif piece_type == 'Grasshopper':
                 Grasshopper(location[0], location[1], is_white=self.is_white_turn())
         else:
-            print('Error: You either do not have any more of this type of piece or cannot place a piece there.')
-            return
+            raise ValueError('You either do not have any more of this type of piece or cannot place a piece there.')
 
         self.turn_number += 1
 

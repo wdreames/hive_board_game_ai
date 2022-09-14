@@ -23,16 +23,60 @@ class Piece(HexSpace):
             True if this piece belongs to White; False if this piece belongs to Black
         """
         super().__init__(x, y)
+        self.name = 'Generic Piece'
         self.is_white = is_white
         self.possible_moves = set()
         self.preventing_sliding_for = {}
 
-        # TODO: [Efficiency] There are some redundant actions here to reduce the amount of written code
-        board.HiveGameBoard().pieces[self.location] = self
-        self.move_to(self.location)
+        # TODO: [Organization] This assumes that this color piece can be placed here without issue
+        if self.location in board.HiveGameBoard().empty_spaces:
+            self._set_location_to(self.location)
+        else:
+            raise ValueError('No empty space at {} to place a new {}'.format(self.location, self.name))
+
+    def remove(self):
+        # TODO: [Movement] Unlock any relevant pieces that used to be connected
+        #       Also need to see if any cannot_move_to sets need to be updated
+
+        # Remove this piece from the board dictionary
+        board.HiveGameBoard().pieces.pop(self.location)
+
+        # Create an empty space here
+        emt.EmptySpace(self.x, self.y, self.connected_empty_spaces, self.connected_pieces)
+
+        all_board_spaces = board.HiveGameBoard().get_all_spaces()
+        for space in self.connected_pieces.union(self.connected_empty_spaces):
+            all_board_spaces[space].remove_connection_to_piece(self.location)
+            all_board_spaces[space].add_connection_to_empty_space(self.location)
+
+        # Update pieces that are no longer prevented from sliding
+        all_spaces = board.HiveGameBoard().get_all_spaces()
+        for space_loc, locations in self.preventing_sliding_for.items():
+            limited_space = all_spaces[space_loc]
+
+            for loc in locations:
+                # The limited space is no longer blocked by this piece
+                limited_space.sliding_prevented_to[loc].remove(self.location)
+
+                # There are always two pieces preventing sliding. The other piece no longer has a pair and can
+                # remove this block
+                other_limiting_piece_loc = limited_space.sliding_prevented_to[loc].pop()
+                all_spaces[other_limiting_piece_loc].preventing_sliding_for[limited_space].remove(loc)
+
+                # The limited space is able to slide into the specified location now
+                limited_space.sliding_prevented_to.remove(loc)
+        self.preventing_sliding_for.clear()
+
+    def move_to(self, new_location):
+        # TODO: [Movement] Ensure this location is in list of possible moves
+        if new_location in self.possible_moves:
+            self.remove()
+            self._set_location_to(new_location)
+        else:
+            raise ValueError('Cannot move {} at {} to {}'.format(self.name, self.location, new_location))
 
     # TODO: [Formatting] Reformat this function for added readability
-    def move_to(self, new_location):
+    def _set_location_to(self, new_location):
         """
         Moves this piece to a new location. This also updates any previous/new connections to other pieces. No movement
         will happen if the move is invalid.
@@ -40,19 +84,11 @@ class Piece(HexSpace):
         :param new_location: tuple
             (x, y) location where the piece will be placed
         """
-        # TODO: [Movement] Also need to ensure it's in the list of moves
-        if new_location not in board.HiveGameBoard().empty_spaces:
-            print('Error: No empty space at {} to place a piece'.format(new_location))
-            # TODO: [UI] Raise an actual error
-            return
-
-        # TODO: [Movement] Unlock & disconnect from any relevant pieces that used to be connected
-        #       Also need to see if any cannot_move_to sets need to be updated
 
         # Move this piece in the board dictionary
-        board.HiveGameBoard().pieces.pop(self.location)
-        old_location = self.location
         self.location = new_location
+        self.x = new_location[0]
+        self.y = new_location[1]
         board.HiveGameBoard().pieces[new_location] = self
 
         # Copy the connections from the empty space at the new location
@@ -165,7 +201,6 @@ class Piece(HexSpace):
         """
         pass
 
-    # TODO: [Formatting] Should some of the code in these functions stay in the HexSpace superclass?
     def add_connection_to_piece(self, location):
         HexSpace.add_connection_to_piece(self, location)
 
