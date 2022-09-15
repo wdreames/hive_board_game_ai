@@ -24,6 +24,11 @@ class HexSpace:
         self.cannot_move_to = set()
         self.sliding_prevented_to = dict()
 
+    # TODO: [Movement] This could be used to update cannot_move_to and sliding_prevented_to at the same time.
+    #       This would ideally be invoked by the game board on any pieces that require updating at the end of a turn
+    def update_movement_options(self):
+        pass
+
     def update_cannot_move_to(self):
         # If pieces at specific locations do not exist, you cannot slide in certain directions without disconnecting
         # from the Hive
