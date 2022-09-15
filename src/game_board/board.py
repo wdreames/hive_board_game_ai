@@ -42,8 +42,8 @@ class HiveGameBoard(object):
             cls.turn_number = 1
             cls.white_locations_to_place = set()
             cls.black_locations_to_place = set()
-            cls.white_possible_moves = set()
-            cls.black_possible_moves = set()
+            cls.white_possible_moves = dict()
+            cls.black_possible_moves = dict()
             cls.white_queen_location = None
             cls.black_queen_location = None
 
@@ -98,7 +98,7 @@ class HiveGameBoard(object):
         self.turn_number += 1
 
     def move_piece(self, piece, new_location):
-        pass
+        self.pieces[piece].move_to(new_location)
 
     def get_all_possible_actions(self):
         pieces_to_play, locations_to_place = self.get_all_possible_placements()
@@ -203,14 +203,17 @@ class HiveGameBoard(object):
                 # Actual points are (x + min_x, y + min_y)
                 if (x + min_x, y + min_y) in self.pieces:
                     current_piece = self.pieces[(x + min_x, y + min_y)]
-                    piece_char = str(type(current_piece)).split('.')[-1][:1]
+                    piece_char = current_piece.name[:1]
                     if not current_piece.is_white:
                         piece_char = '(' + piece_char + ')'
                     else:
                         piece_char = ' ' + piece_char + ' '
                 else:
                     piece_char = '   '
-                board_str += '{} | '.format(piece_char)
+                if (x + min_x, y + min_y) == (0, 0):
+                    board_str += '*{}*|'.format(piece_char)
+                else:
+                    board_str += ' {} |'.format(piece_char)
             board_str += '\n'
         print(board_str)
 
@@ -225,6 +228,8 @@ class HiveGameBoard(object):
         return_str += 'black_possible_moves: {}\n'.format(self.black_possible_moves)
         return_str += 'white_queen_location: {}\n'.format(self.white_queen_location)
         return_str += 'black_queen_location: {}\n'.format(self.black_queen_location)
-        return_str += 'pieces: {}\n'.format(self.pieces)
-        return_str += 'empty_spaces: {}\n'.format(self.empty_spaces)
+        return_str += 'pieces: {}\n'.format(
+            [(location, self.pieces[location].name, 'White' if self.pieces[location].is_white else 'Black') for location
+             in self.pieces])
+        return_str += 'empty_spaces: {}\n'.format(set(self.empty_spaces.keys()))
         return return_str

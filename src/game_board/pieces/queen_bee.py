@@ -23,4 +23,5 @@ class QueenBee(Piece):
         # Can move to any open space that it can slide to
         unavailable_moves = self.cannot_move_to.union(self.sliding_prevented_to.keys())
         self.possible_moves = self.connected_empty_spaces.difference(unavailable_moves)
+        self.update_board_moves()
         return self.possible_moves
