@@ -7,5 +7,10 @@ class Grasshopper(Piece):
         super().__init__(x, y, is_white)
         self.name = 'Grasshopper'
 
+    # TODO: [Movement] Update this to Ant movement (rather than QB mvt)
     def calc_possible_moves(self):
-        pass
+        # Can move to any open space that it can slide to
+        unavailable_moves = self.cannot_move_to.union(self.sliding_prevented_to.keys())
+        self.possible_moves = self.connected_empty_spaces.difference(unavailable_moves)
+        self.update_board_moves()
+        return self.possible_moves
