@@ -58,40 +58,6 @@ class TestInitializationAndPlacements(unittest.TestCase):
         type_of_piece = str(type(new_piece)).split('.')[-1][:-2]
         self.assertEqual('Grasshopper', type_of_piece)
 
-    def test_create_white_queen_bee(self):
-        # Resets the board
-        board.HiveGameBoard(new_board=True)
-
-        qb.QueenBee(0, 0)
-
-        expected_stored_qb_loc = (0, 0)
-        actual_stored_qb_loc = board.HiveGameBoard().white_queen_location
-        self.assertEqual(expected_stored_qb_loc, actual_stored_qb_loc)
-
-        self._test_new_piece_at_0_0()
-
-        # piece is of type Ant
-        new_piece = board.HiveGameBoard().pieces[(0, 0)]
-        type_of_piece = str(type(new_piece)).split('.')[-1][:-2]
-        self.assertEqual('QueenBee', type_of_piece)
-
-    def test_create_black_queen_bee(self):
-        # Resets the board
-        board.HiveGameBoard(new_board=True)
-
-        qb.QueenBee(0, 0, is_white=False)
-
-        expected_stored_qb_loc = (0, 0)
-        actual_stored_qb_loc = board.HiveGameBoard().black_queen_location
-        self.assertEqual(expected_stored_qb_loc, actual_stored_qb_loc)
-
-        self._test_new_piece_at_0_0(expected_num_white_connected=0, expected_num_black_connected=1)
-
-        # piece is of type Ant
-        new_piece = board.HiveGameBoard().pieces[(0, 0)]
-        type_of_piece = str(type(new_piece)).split('.')[-1][:-2]
-        self.assertEqual('QueenBee', type_of_piece)
-
     def _test_new_piece_at_0_0(self, expected_num_white_connected=1, expected_num_black_connected=0):
         # Empty space at (0, 0) was removed
         self.assertFalse((0, 0) in board.HiveGameBoard().empty_spaces)

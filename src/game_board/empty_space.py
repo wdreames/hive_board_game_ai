@@ -58,6 +58,10 @@ class EmptySpace(HexSpace):
                     self.num_black_connected += 1
             self.update_placement_options()
 
+    def update(self):
+        super().update()
+        self.update_placement_options()
+
     def update_placement_options(self):
         """
         Determines if white or black pieces can be placed here based on the number of connected pieces.
@@ -121,7 +125,6 @@ class EmptySpace(HexSpace):
             self.num_white_connected += 1
         else:
             self.num_black_connected += 1
-        self.update_placement_options()
 
     def remove_connection_to_piece(self, location):
         HexSpace.remove_connection_to_piece(self, location)
@@ -135,7 +138,6 @@ class EmptySpace(HexSpace):
             self.num_white_connected -= 1
         else:
             self.num_black_connected -= 1
-        self.update_placement_options()
 
     def add_connection_to_empty_space(self, location):
         HexSpace.add_connection_to_empty_space(self, location)

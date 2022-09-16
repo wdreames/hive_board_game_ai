@@ -24,10 +24,8 @@ class HexSpace:
         self.cannot_move_to = set()
         self.sliding_prevented_to = dict()
 
-    # TODO: [Movement] This could be used to update cannot_move_to and sliding_prevented_to at the same time.
-    #       This would ideally be invoked by the game board on any pieces that require updating at the end of a turn
-    def update_movement_options(self):
-        pass
+    def update(self):
+        self.update_cannot_move_to()
 
     def update_cannot_move_to(self):
         # If pieces at specific locations do not exist, you cannot slide in certain directions without disconnecting
@@ -35,12 +33,12 @@ class HexSpace:
         x = self.x
         y = self.y
 
-        self._add_to_cannot_move_to((x, y - 1),     (x - 1, y - 1), (x + 1, y))
-        self._add_to_cannot_move_to((x + 1, y),     (x, y - 1),     (x + 1, y + 1))
-        self._add_to_cannot_move_to((x + 1, y + 1), (x + 1, y),     (x, y + 1))
-        self._add_to_cannot_move_to((x, y + 1),     (x - 1, y),     (x + 1, y + 1))
-        self._add_to_cannot_move_to((x - 1, y),     (x - 1, y - 1), (x, y + 1))
-        self._add_to_cannot_move_to((x - 1, y - 1), (x, y - 1),     (x - 1, y))
+        self._add_to_cannot_move_to((x, y - 1), (x - 1, y - 1), (x + 1, y))
+        self._add_to_cannot_move_to((x + 1, y), (x, y - 1), (x + 1, y + 1))
+        self._add_to_cannot_move_to((x + 1, y + 1), (x + 1, y), (x, y + 1))
+        self._add_to_cannot_move_to((x, y + 1), (x - 1, y), (x + 1, y + 1))
+        self._add_to_cannot_move_to((x - 1, y), (x - 1, y - 1), (x, y + 1))
+        self._add_to_cannot_move_to((x - 1, y - 1), (x, y - 1), (x - 1, y))
 
     def _add_to_cannot_move_to(self, loc, loc_check1, loc_check2):
         pieces = board.HiveGameBoard().pieces
@@ -56,19 +54,21 @@ class HexSpace:
     @abstractmethod
     def add_connection_to_piece(self, location):
         self.connected_pieces.add(location)
-        self.update_cannot_move_to()
+        board.HiveGameBoard().spaces_requiring_updates.add(self.location)
 
     @abstractmethod
     def remove_connection_to_piece(self, location):
         self.connected_pieces.remove(location)
-        self.update_cannot_move_to()
+        board.HiveGameBoard().spaces_requiring_updates.add(self.location)
 
     @abstractmethod
     def add_connection_to_empty_space(self, location):
         self.connected_empty_spaces.add(location)
+        board.HiveGameBoard().spaces_requiring_updates.add(self.location)
 
     @abstractmethod
     def remove_connection_to_empty_space(self, location):
         # If an error occurs here, the program can likely be made to be more efficient. Don't use the following if stmt
         # if location in self.connected_empty_spaces:
         self.connected_empty_spaces.remove(location)
+        board.HiveGameBoard().spaces_requiring_updates.add(self.location)

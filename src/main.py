@@ -8,6 +8,7 @@ AI for the Hive Board Game
 # TODO: [Formatting] Add comments for all classes and methods
 import traceback
 from src.game_board.board import HiveGameBoard
+from src.game_board.piece import Piece
 
 
 def play_game():
@@ -72,14 +73,15 @@ def play_game():
 
 def test_game():
     board = HiveGameBoard()
-    board.place_piece(board.Piece.ANT, (0, 0))
+    board.place_piece(Piece.ANT, (0, 0))
     board.print_board()
-    board.place_piece(board.Piece.QUEEN_BEE, (-1, 0))
+    board.place_piece(Piece.QUEEN_BEE, (-1, 0))
     board.print_board()
-    board.place_piece(board.Piece.ANT, (1, 1))
+    board.place_piece(Piece.ANT, (1, 1))
     board.print_board()
     print(board)
     print(board.pieces[(-1, 0)])
+    print(board.pieces[(0, 0)])
     board.move_piece((-1, 0), (0, 1))
     board.print_board()
     print(board)

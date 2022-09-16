@@ -67,6 +67,14 @@ class HiveGameBoard(object):
         else:
             raise ValueError('Action type can only be MOVE_PIECE or PLACE_PIECE')
 
+        # TODO: [Organization] Test cases will need to be restructured in order to call the following here
+        # End of action bookkeeping
+        # for space in self.spaces_requiring_updates:
+        #     space.update()
+        # self.spaces_requiring_updates.clear()
+        #
+        # self.turn_number += 1
+
     def get_all_possible_actions(self):
         pieces_to_play, locations_to_place = self.get_all_possible_placements()
         possible_moves_dict = self.get_all_possible_moves()
@@ -135,13 +143,30 @@ class HiveGameBoard(object):
                     self.black_pieces_to_place[Piece.QUEEN_BEE] = 0
             elif piece_type == Piece.GRASSHOPPER:
                 Grasshopper(location[0], location[1], is_white=self.is_white_turn())
+            else:
+                raise ValueError(f'{piece_type} is not a valid type of piece.')
         else:
             raise ValueError('You either do not have any more of this type of piece or cannot place a piece there.')
+
+        # End of action bookkeeping
+        all_spaces = self.get_all_spaces()
+        for space in self.spaces_requiring_updates:
+            if space in all_spaces:
+                all_spaces[space].update()
+        self.spaces_requiring_updates.clear()
 
         self.turn_number += 1
 
     def move_piece(self, piece, new_location):
         self.pieces[piece].move_to(new_location)
+
+        # End of action bookkeeping
+        all_spaces = self.get_all_spaces()
+        for space in self.spaces_requiring_updates:
+            if space in all_spaces:
+                all_spaces[space].update()
+        self.spaces_requiring_updates.clear()
+
         self.turn_number += 1
 
     def get_all_spaces(self):

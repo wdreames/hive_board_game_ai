@@ -11,6 +11,7 @@ class Piece(HexSpace):
     Superclass for Ant, Grasshopper, and QueenBee.
     """
 
+    GENERIC = 'Generic'
     ANT = 'Ant'
     BEETLE = 'Beetle'
     GRASSHOPPER = 'Grasshopper'
@@ -39,6 +40,12 @@ class Piece(HexSpace):
             self._set_location_to(self.location)
         else:
             raise ValueError('No empty space at {} to place a new {}'.format(self.location, self.name))
+
+    def update(self):
+        super().update()
+        # Check if any cannot_slide_to sets need to be updated
+        self.update_cannot_move_to()
+        self.calc_possible_moves()
 
     def remove(self):
         # TODO: [Movement] Unlock any relevant pieces that used to be connected
@@ -121,11 +128,7 @@ class Piece(HexSpace):
 
         self._create_surrounding_emt_spcs()
 
-        # Check if any cannot_slide_to sets need to be updated
         self._update_sliding()
-        self.update_cannot_move_to()
-
-        self.calc_possible_moves()
 
     def _create_surrounding_emt_spcs(self):
         # Helper function for move_to(location)
@@ -139,9 +142,6 @@ class Piece(HexSpace):
         for point in locations_for_new_empty_spaces:
             emt.EmptySpace(point[0], point[1])
 
-    # TODO: [Movement] Not fully functional... see notebook
-    #       Oh an I also need to set this pieces' cannot_slide to values...
-    #       Idk if that's something that is already implemented with the current algorithm
     def _update_sliding(self):
         # Helper function for move_to(location)
         x = self.x
@@ -219,20 +219,16 @@ class Piece(HexSpace):
 
     def add_connection_to_piece(self, location):
         HexSpace.add_connection_to_piece(self, location)
-        self.calc_possible_moves()
 
     def remove_connection_to_piece(self, location):
         HexSpace.remove_connection_to_piece(self, location)
-        self.calc_possible_moves()
 
     def add_connection_to_empty_space(self, location):
         HexSpace.add_connection_to_empty_space(self, location)
         board.HiveGameBoard().empty_spaces[location].add_connection_to_piece(self.location)
-        self.calc_possible_moves()
 
     def remove_connection_to_empty_space(self, location):
         HexSpace.remove_connection_to_empty_space(self, location)
-        self.calc_possible_moves()
 
     def __str__(self):
         return_str = 'Piece information for {} at {}:\n'.format(self.name, self.location)
