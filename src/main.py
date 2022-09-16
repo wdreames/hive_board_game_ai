@@ -21,14 +21,12 @@ def play_game():
 
         if board.is_white_turn():
             current_player = 'white'
-            possible_moves = board.white_possible_moves
         else:
             current_player = 'black'
-            possible_moves = board.black_possible_moves
         print('Game turn: {}, Player to Move: {}, Player Turn: {}'.format(board.turn_number, current_player,
                                                                           (board.turn_number + 1) // 2))
 
-        pieces_to_play, locations_to_place = board.get_all_possible_actions()
+        pieces_to_play, locations_to_place, possible_moves = board.get_all_possible_actions()
 
         print('{} has the following pieces to play: {}'.format(current_player, pieces_to_play))
         print('{} has the following locations to place a piece: {}'.format(current_player, locations_to_place))
@@ -74,11 +72,11 @@ def play_game():
 
 def test_game():
     board = HiveGameBoard()
-    board.place_piece('Ant', (0, 0))
+    board.place_piece(board.Piece.ANT, (0, 0))
     board.print_board()
-    board.place_piece('Queen Bee', (-1, 0))
+    board.place_piece(board.Piece.QUEEN_BEE, (-1, 0))
     board.print_board()
-    board.place_piece('Ant', (1, 1))
+    board.place_piece(board.Piece.ANT, (1, 1))
     board.print_board()
     print(board)
     print(board.pieces[(-1, 0)])

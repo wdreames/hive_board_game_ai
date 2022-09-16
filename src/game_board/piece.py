@@ -11,6 +11,12 @@ class Piece(HexSpace):
     Superclass for Ant, Grasshopper, and QueenBee.
     """
 
+    ANT = 'Ant'
+    BEETLE = 'Beetle'
+    GRASSHOPPER = 'Grasshopper'
+    QUEEN_BEE = 'Queen Bee'
+    SPIDER = 'Spider'
+
     def __init__(self, x=0, y=0, is_white=True):
         """
         Create a new piece.
@@ -73,7 +79,6 @@ class Piece(HexSpace):
         board.HiveGameBoard().pieces.pop(self.location)
 
     def move_to(self, new_location):
-        # TODO: [Movement] Ensure this location is in list of possible moves
         if new_location in self.possible_moves:
             self.remove()
             self._set_location_to(new_location)

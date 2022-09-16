@@ -1,4 +1,5 @@
 from src.game_board.empty_space import EmptySpace
+from src.game_board.piece import Piece
 from src.game_board.pieces.ant import Ant
 from src.game_board.pieces.grasshopper import Grasshopper
 from src.game_board.pieces.queen_bee import QueenBee
@@ -9,6 +10,9 @@ class HiveGameBoard(object):
     This class is used to store the board state of the game. A singleton design pattern is used for this class so there
     can only ever be one instance of the game board. This can be accessed across all files.
     """
+
+    MOVE_PIECE = 'move'
+    PLACE_PIECE = 'place'
 
     def __new__(cls, new_board=False):
         """
@@ -29,14 +33,14 @@ class HiveGameBoard(object):
             cls.pieces = dict()
             cls.empty_spaces = dict()
             cls.white_pieces_to_place = {
-                'Ant': 5,
-                'Queen Bee': 1,
-                'Grasshopper': 5
+                Piece.ANT: 5,
+                Piece.QUEEN_BEE: 1,
+                Piece.GRASSHOPPER: 5
             }
             cls.black_pieces_to_place = {
-                'Ant': 5,
-                'Queen Bee': 1,
-                'Grasshopper': 5
+                Piece.ANT: 5,
+                Piece.QUEEN_BEE: 1,
+                Piece.GRASSHOPPER: 5
             }
 
             cls.turn_number = 1
@@ -51,62 +55,22 @@ class HiveGameBoard(object):
             EmptySpace(0, 0)
             cls.white_locations_to_place = {(0, 0)}
 
+            cls.spaces_requiring_updates = set()
+
         return cls.instance
 
-    def get_all_spaces(self):
-        # Merges the dictionaries
-        # Pieces will overwrite empty spaces at the same location
-        return {**self.empty_spaces, **self.pieces}
-
-    # TODO: [Turns] Implement and add `self.turn_number += 1`; remove `self.turn_number += 1` from other methods
-    def perform_action(self):
-        pass
-
-    def place_piece(self, piece_type, location):
-        """
-        Place a piece on the game board.
-
-        :param piece_type: string
-            String represenation of the type of piece being placed. If there are no more pieces of this type to place,
-            the piece will not be placed. These are the options currently implemented:
-            - 'Ant'
-            - 'Grasshopper'
-            - 'Queen Bee'
-        :param location: tuple
-            Coordinate of the location this piece will be placed. This location must be in the list of possible
-            locations for the current player to place a piece or it will not be placed.
-        """
-        # Gather the valid pieces and locations
-        pieces_to_place, locations_to_place = self.get_all_possible_placements()
-
-        # Ensure the move is legal then place the piece
-        if pieces_to_place.get(piece_type, 0) > 0 and location in locations_to_place:
-            pieces_to_place[piece_type] -= 1
-            if piece_type == 'Ant':
-                Ant(location[0], location[1], is_white=self.is_white_turn())
-            elif piece_type == 'Queen Bee':
-                QueenBee(location[0], location[1], is_white=self.is_white_turn())
-                if self.is_white_turn():
-                    self.white_pieces_to_place['Queen Bee'] = 0
-                else:
-                    self.black_pieces_to_place['Queen Bee'] = 0
-            elif piece_type == 'Grasshopper':
-                Grasshopper(location[0], location[1], is_white=self.is_white_turn())
+    def perform_action(self, action_type, piece_type, piece_location, new_piece_location):
+        if action_type == HiveGameBoard.MOVE_PIECE:
+            self.move_piece(piece_location, new_piece_location)
+        elif action_type == HiveGameBoard.PLACE_PIECE:
+            self.place_piece(piece_type, piece_location)
         else:
-            raise ValueError('You either do not have any more of this type of piece or cannot place a piece there.')
-
-        self.turn_number += 1
-
-    def move_piece(self, piece, new_location):
-        self.pieces[piece].move_to(new_location)
+            raise ValueError('Action type can only be MOVE_PIECE or PLACE_PIECE')
 
     def get_all_possible_actions(self):
         pieces_to_play, locations_to_place = self.get_all_possible_placements()
-
-        # TODO: [Movement] Add movement actions
-        # TODO: [Turns] Remember that the queen bee must be placed <= move 4
-
-        return pieces_to_play, locations_to_place
+        possible_moves_dict = self.get_all_possible_moves()
+        return pieces_to_play, locations_to_place, possible_moves_dict
 
     def get_all_possible_placements(self):
         """
@@ -135,8 +99,55 @@ class HiveGameBoard(object):
 
         return pieces_to_play, locations_to_place
 
-    def calc_possible_moves(self):
-        pass
+    def get_all_possible_moves(self):
+        if self.is_white_turn():
+            return self.white_possible_moves
+        else:
+            return self.black_possible_moves
+
+    def place_piece(self, piece_type, location):
+        """
+        Place a piece on the game board.
+
+        :param piece_type: string
+            String represenation of the type of piece being placed. If there are no more pieces of this type to place,
+            the piece will not be placed. These are the options currently implemented:
+            - Piece.ANT
+            - Piece.GRASSHOPPER
+            - Piece.QUEEN_BEE
+        :param location: tuple
+            Coordinate of the location this piece will be placed. This location must be in the list of possible
+            locations for the current player to place a piece or it will not be placed.
+        """
+        # Gather the valid pieces and locations
+        pieces_to_place, locations_to_place = self.get_all_possible_placements()
+
+        # Ensure the move is legal then place the piece
+        if pieces_to_place.get(piece_type, 0) > 0 and location in locations_to_place:
+            pieces_to_place[piece_type] -= 1
+            if piece_type == Piece.ANT:
+                Ant(location[0], location[1], is_white=self.is_white_turn())
+            elif piece_type == Piece.QUEEN_BEE:
+                QueenBee(location[0], location[1], is_white=self.is_white_turn())
+                if self.is_white_turn():
+                    self.white_pieces_to_place[Piece.QUEEN_BEE] = 0
+                else:
+                    self.black_pieces_to_place[Piece.QUEEN_BEE] = 0
+            elif piece_type == Piece.GRASSHOPPER:
+                Grasshopper(location[0], location[1], is_white=self.is_white_turn())
+        else:
+            raise ValueError('You either do not have any more of this type of piece or cannot place a piece there.')
+
+        self.turn_number += 1
+
+    def move_piece(self, piece, new_location):
+        self.pieces[piece].move_to(new_location)
+        self.turn_number += 1
+
+    def get_all_spaces(self):
+        # Merges the dictionaries
+        # Pieces will overwrite empty spaces at the same location
+        return {**self.empty_spaces, **self.pieces}
 
     def _black_queen_surrounded(self):
         """

@@ -6,7 +6,7 @@ class QueenBee(Piece):
 
     def __init__(self, x=0, y=0, is_white=True):
         super().__init__(x, y, is_white)
-        self.name = 'Queen Bee'
+        self.name = Piece.QUEEN_BEE
         self.update_board_location()
 
     def move_to(self, new_location):
