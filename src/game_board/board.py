@@ -11,8 +11,8 @@ class HiveGameBoard(object):
     can only ever be one instance of the game board. This can be accessed across all files.
     """
 
-    MOVE_PIECE = 'move'
-    PLACE_PIECE = 'place'
+    MOVE_PIECE = 'Move piece'
+    PLACE_PIECE = 'Place piece'
 
     def __new__(cls, new_board=False):
         """

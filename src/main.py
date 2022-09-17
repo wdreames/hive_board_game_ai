@@ -17,15 +17,15 @@ def play_game():
 
     while board.determine_winner() is None:
         print('-' * 50)
-        print(board)
+        # print(board)
         board.print_board()
 
         if board.is_white_turn():
             current_player = 'white'
         else:
             current_player = 'black'
-        print('Game turn: {}, Player to Move: {}, Player Turn: {}'.format(board.turn_number, current_player,
-                                                                          (board.turn_number + 1) // 2))
+        print('Game turn: {}\n, Player to Move: {}\n, Player Turn: {}\n'.format(board.turn_number, current_player,
+                                                                                (board.turn_number + 1) // 2))
 
         pieces_to_play, locations_to_place, possible_moves = board.get_all_possible_actions()
 
@@ -67,6 +67,8 @@ def play_game():
 
         except KeyError:
             print('Error in processing input: ', traceback.format_exc())
+        except ValueError:
+            print('Invalid input: ', traceback.format_exc())
 
     print('Winner: {}'.format(board.determine_winner()))
 
@@ -92,4 +94,5 @@ def test_game():
 
 # TODO: [UI] Make this nicer later on
 if __name__ == '__main__':
-    test_game()
+    # test_game()
+    play_game()
