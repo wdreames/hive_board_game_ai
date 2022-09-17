@@ -122,7 +122,6 @@ class TestSampleGameWithNoMovement(unittest.TestCase):
 
     def test_i_end_game_correct_num_turns(self):
         # Continue making moves
-        # TODO: [Errors] Maybe make these raise errors and test for those here
         self.assertRaises(ValueError,
                           board.HiveGameBoard().place_piece, 'Ant', (-2, -2))  # Black; Meant to fail & be skipped
         self.assertRaises(ValueError,

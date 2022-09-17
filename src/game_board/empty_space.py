@@ -97,8 +97,6 @@ class EmptySpace(HexSpace):
         for space_location in self.connected_pieces.union(self.connected_empty_spaces):
             board.HiveGameBoard().get_all_spaces()[space_location].remove_connection_to_empty_space(self.location)
 
-        # TODO: [Movement] Logic for pieces that can move here
-
         del self
 
     def white_can_place(self):
