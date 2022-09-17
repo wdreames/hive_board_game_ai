@@ -47,7 +47,12 @@ class Piece(HexSpace):
         self.update_cannot_move_to()
         self.calc_possible_moves()
 
-    def remove(self):
+    # TODO: [Beetle] Include a create_new_emt_spc=True variable? Beetle could disable this when on top of a piece.
+    #       Interestingly, this would also mean the space.remove_connection_to_piece and add_connection_to_emt_spc
+    #       method calls wouldn't be necessary in that scenario.
+    #       Same with preventing sliding.
+    #       Maybe just include an is_beetle=False parameter.
+    def remove(self, is_beetle=False):
         # TODO: [Movement] Unlock any relevant pieces that used to be connected
         #       Also need to see if any cannot_move_to sets need to be updated
 
@@ -93,7 +98,7 @@ class Piece(HexSpace):
             raise ValueError('Cannot move {} at {} to {}'.format(self.name, self.location, new_location))
 
     # TODO: [Formatting] Reformat this function for added readability
-    def _set_location_to(self, new_location):
+    def _set_location_to(self, new_location, is_beetle=False):
         """
         Moves this piece to a new location. This also updates any previous/new connections to other pieces. No movement
         will happen if the move is invalid.
