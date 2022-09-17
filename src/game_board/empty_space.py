@@ -56,7 +56,7 @@ class EmptySpace(HexSpace):
                     self.num_white_connected += 1
                 else:
                     self.num_black_connected += 1
-            self.update_placement_options()
+            self.prepare_for_update()
 
     def update(self):
         super().update()
@@ -143,3 +143,15 @@ class EmptySpace(HexSpace):
 
     def remove_connection_to_empty_space(self, location):
         HexSpace.remove_connection_to_empty_space(self, location)
+
+    def __str__(self):
+        return_str = 'Information for EmptySpace at {}:\n'.format(self.location)
+        return_str += 'connected_pieces: {}\n'.format(self.connected_pieces)
+        return_str += 'connected_empty_spaces: {}\n'.format(self.connected_empty_spaces)
+        return_str += 'cannot_move_to: {}\n'.format(self.cannot_move_to)
+        return_str += 'sliding_prevented_to: {}\n'.format(self.sliding_prevented_to)
+        return_str += f'pieces_that_can_move_here: {self.pieces_that_can_move_here}\n'
+        return_str += f'num_white_connected: {self.num_white_connected}\n'
+        return_str += f'num_black_connected: {self.num_black_connected}\n'
+
+        return return_str
