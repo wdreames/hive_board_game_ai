@@ -40,7 +40,7 @@ class TestSlidingRulesNoMvt(unittest.TestCase):
 
     def test_both_1(self):
         # Use sample empty space at (2, 0)
-        expected_cannot_move_to = {(1, 0), (1, -1), (2, 1), (3, 0)}
+        expected_cannot_move_to = {(1, 0), (1, -1)}
         actual_cannot_move_to = board.HiveGameBoard().get_all_spaces()[(2, 0)].cannot_move_to
         self.assertEqual(expected_cannot_move_to, actual_cannot_move_to)
 
@@ -50,6 +50,9 @@ class TestSlidingRulesNoMvt(unittest.TestCase):
 
         # Place a new piece at (2,0). Movement limitations should remain unchanged
         board.HiveGameBoard().place_piece('Grasshopper', (2, 0))  # Black
+
+        # New empty space should be made at (2, 1); (2, 0) cannot move there. Add this to expected movement limitations
+        expected_cannot_move_to = {(1, 0), (1, -1), (2, 1)}
 
         actual_cannot_move_to = board.HiveGameBoard().get_all_spaces()[(2, 0)].cannot_move_to
         self.assertEqual(expected_cannot_move_to, actual_cannot_move_to)
@@ -86,7 +89,7 @@ class TestSlidingRulesNoMvt(unittest.TestCase):
 
     def test_floating_space_2(self):
         # Use sample piece at (0, 0)
-        expected_cannot_move_to = {(1, 1), (-1, 0), (0, -1)}
+        expected_cannot_move_to = {(1, 1)}
         actual_cannot_move_to = board.HiveGameBoard().get_all_spaces()[(0, 0)].cannot_move_to
         self.assertEqual(expected_cannot_move_to, actual_cannot_move_to)
 
@@ -114,13 +117,13 @@ class TestSlidingRulesNoMvt(unittest.TestCase):
         self.assertDictEqual(expected_cannot_slide_to, actual_cannot_slide_to)
 
     def test_floating_space_4(self):
-        # Use sample empty space at (-3, -1)
-        expected_cannot_move_to = {(-2, 0), (-4, -1), (-3, -2)}
+        # Use sample piece at (-3, -1)
+        expected_cannot_move_to = {(-4, -1)}
         actual_cannot_move_to = board.HiveGameBoard().get_all_spaces()[(-3, -1)].cannot_move_to
         self.assertEqual(expected_cannot_move_to, actual_cannot_move_to)
 
     def test_closed_gap_5(self):
-        # Use sample empty space at (-2, -0)
+        # Use sample piece at (-2, -0)
         expected_cannot_slide_to = {
             (-2, -1): {(-3, -1), (-1, 0)}
         }
@@ -128,8 +131,8 @@ class TestSlidingRulesNoMvt(unittest.TestCase):
         self.assertDictEqual(expected_cannot_slide_to, actual_cannot_slide_to)
 
     def test_floating_space_5(self):
-        # Use sample empty space at (-2, 0)
-        expected_cannot_move_to = {(-1, 0), (-2, 1), (-3, -1)}
+        # Use sample piece at (-2, 0)
+        expected_cannot_move_to = {(-2, 1)}
         actual_cannot_move_to = board.HiveGameBoard().get_all_spaces()[(-2, 0)].cannot_move_to
         self.assertEqual(expected_cannot_move_to, actual_cannot_move_to)
 
@@ -143,7 +146,7 @@ class TestSlidingRulesNoMvt(unittest.TestCase):
 
     def test_floating_space_6(self):
         # Use sample empty space at (-1, -3)
-        expected_cannot_move_to = {(-2, -3), (-1, -4), (0, -2)}
+        expected_cannot_move_to = set()
         actual_cannot_move_to = board.HiveGameBoard().get_all_spaces()[(-1, -3)].cannot_move_to
         self.assertEqual(expected_cannot_move_to, actual_cannot_move_to)
 
@@ -156,8 +159,8 @@ class TestSlidingRulesNoMvt(unittest.TestCase):
         self.assertDictEqual(expected_cannot_slide_to, actual_cannot_slide_to)
 
     def test_floating_space_7(self):
-        # Use sample empty space at (0, -2)
-        expected_cannot_move_to = {(0, -1), (1, -2), (-1, -3)}
+        # Use sample piece at (0, -2)
+        expected_cannot_move_to = {(-1, -3)}
         actual_cannot_move_to = board.HiveGameBoard().get_all_spaces()[(0, -2)].cannot_move_to
         self.assertEqual(expected_cannot_move_to, actual_cannot_move_to)
 
