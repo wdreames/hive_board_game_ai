@@ -3,6 +3,7 @@ from src.game_board.piece import Piece
 from src.game_board.pieces.ant import Ant
 from src.game_board.pieces.grasshopper import Grasshopper
 from src.game_board.pieces.queen_bee import QueenBee
+from src.game_board.pieces.beetle import Beetle
 
 
 class HiveGameBoard(object):
@@ -35,12 +36,14 @@ class HiveGameBoard(object):
             cls.white_pieces_to_place = {
                 Piece.ANT: 5,
                 Piece.QUEEN_BEE: 1,
-                Piece.GRASSHOPPER: 5
+                Piece.GRASSHOPPER: 5,
+                Piece.BEETLE: 2
             }
             cls.black_pieces_to_place = {
                 Piece.ANT: 5,
                 Piece.QUEEN_BEE: 1,
-                Piece.GRASSHOPPER: 5
+                Piece.GRASSHOPPER: 5,
+                Piece.BEETLE: 2
             }
 
             cls.turn_number = 1
@@ -56,12 +59,13 @@ class HiveGameBoard(object):
             cls.white_locations_to_place = {(0, 0)}
 
             cls.spaces_requiring_updates = set()
+            cls.empty_spaces_requiring_deletion = set()
 
         return cls.instance
 
-    def perform_action(self, action_type, piece_type, piece_location, new_piece_location):
+    def perform_action(self, action_type, piece_location, new_location=None, piece_type=None):
         if action_type == HiveGameBoard.MOVE_PIECE:
-            self.move_piece(piece_location, new_piece_location)
+            self.move_piece(piece_location, new_location)
         elif action_type == HiveGameBoard.PLACE_PIECE:
             self.place_piece(piece_type, piece_location)
         else:
@@ -123,6 +127,7 @@ class HiveGameBoard(object):
             - Piece.ANT
             - Piece.GRASSHOPPER
             - Piece.QUEEN_BEE
+            - Piece.BEETLE
         :param location: tuple
             Coordinate of the location this piece will be placed. This location must be in the list of possible
             locations for the current player to place a piece or it will not be placed.
@@ -143,6 +148,8 @@ class HiveGameBoard(object):
                     self.black_pieces_to_place[Piece.QUEEN_BEE] = 0
             elif piece_type == Piece.GRASSHOPPER:
                 Grasshopper(location[0], location[1], is_white=self.is_white_turn())
+            elif piece_type == Piece.BEETLE:
+                Beetle(location[0], location[1], is_white=self.is_white_turn())
             else:
                 raise ValueError(f'{piece_type} is not a valid type of piece.')
         else:
@@ -150,7 +157,7 @@ class HiveGameBoard(object):
 
         # End of action bookkeeping
         all_spaces = self.get_all_spaces()
-        for space in self.spaces_requiring_updates:
+        for space in self.spaces_requiring_updates.copy():
             if space in all_spaces:
                 all_spaces[space].update()
         self.spaces_requiring_updates.clear()
@@ -162,7 +169,7 @@ class HiveGameBoard(object):
 
         # End of action bookkeeping
         all_spaces = self.get_all_spaces()
-        for space in self.spaces_requiring_updates:
+        for space in self.spaces_requiring_updates.copy():
             if space in all_spaces:
                 all_spaces[space].update()
         self.spaces_requiring_updates.clear()
@@ -225,7 +232,7 @@ class HiveGameBoard(object):
         if not self.pieces:
             return
 
-        piece_coords = list(self.pieces.keys())
+        piece_coords = list(self.get_all_spaces().keys())
         piece_coords.sort(key=lambda x: x[0])
         min_x = piece_coords[0][0]
         max_x = piece_coords[-1][0]
@@ -244,6 +251,8 @@ class HiveGameBoard(object):
                         piece_char = '(' + piece_char + ')'
                     else:
                         piece_char = ' ' + piece_char + ' '
+                elif (x + min_x, y + min_y) in self.empty_spaces:
+                    piece_char = ' _ '
                 else:
                     piece_char = '   '
                 if (x + min_x, y + min_y) == (0, 0):

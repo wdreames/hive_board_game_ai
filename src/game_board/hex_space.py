@@ -24,6 +24,9 @@ class HexSpace:
         self.cannot_move_to = set()
         self.sliding_prevented_to = dict()
 
+    def prepare_for_update(self):
+        board.HiveGameBoard().spaces_requiring_updates.add(self.location)
+
     def update(self):
         self.update_cannot_move_to()
 
@@ -42,7 +45,7 @@ class HexSpace:
 
     def _add_to_cannot_move_to(self, loc, loc_check1, loc_check2):
         pieces = board.HiveGameBoard().pieces
-        if {loc_check1, loc_check2}.isdisjoint(pieces):
+        if {loc_check1, loc_check2}.isdisjoint(pieces) and loc in board.HiveGameBoard().empty_spaces:
             self.cannot_move_to.add(loc)
         elif loc in self.cannot_move_to:
             self.cannot_move_to.remove(loc)
@@ -54,21 +57,19 @@ class HexSpace:
     @abstractmethod
     def add_connection_to_piece(self, location):
         self.connected_pieces.add(location)
-        board.HiveGameBoard().spaces_requiring_updates.add(self.location)
+        self.prepare_for_update()
 
     @abstractmethod
     def remove_connection_to_piece(self, location):
         self.connected_pieces.remove(location)
-        board.HiveGameBoard().spaces_requiring_updates.add(self.location)
+        self.prepare_for_update()
 
     @abstractmethod
     def add_connection_to_empty_space(self, location):
         self.connected_empty_spaces.add(location)
-        board.HiveGameBoard().spaces_requiring_updates.add(self.location)
+        self.prepare_for_update()
 
     @abstractmethod
     def remove_connection_to_empty_space(self, location):
-        # If an error occurs here, the program can likely be made to be more efficient. Don't use the following if stmt
-        # if location in self.connected_empty_spaces:
         self.connected_empty_spaces.remove(location)
-        board.HiveGameBoard().spaces_requiring_updates.add(self.location)
+        self.prepare_for_update()

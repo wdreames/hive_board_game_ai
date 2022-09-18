@@ -59,6 +59,10 @@ class EmptySpace(HexSpace):
             self.prepare_for_update()
 
     def update(self):
+        if len(self.connected_pieces) == 0:
+            self.remove()
+            return
+
         super().update()
         self.update_placement_options()
 
@@ -127,15 +131,12 @@ class EmptySpace(HexSpace):
     def remove_connection_to_piece(self, location):
         HexSpace.remove_connection_to_piece(self, location)
 
-        # If this empty space does not have any pieces connected to it, remove it
-        if not self.connected_pieces:
-            self.remove()
-            return
-
         if board.HiveGameBoard().pieces[location].is_white:
             self.num_white_connected -= 1
         else:
             self.num_black_connected -= 1
+
+        self.prepare_for_update()
 
     def add_connection_to_empty_space(self, location):
         HexSpace.add_connection_to_empty_space(self, location)
