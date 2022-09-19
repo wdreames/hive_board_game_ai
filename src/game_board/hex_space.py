@@ -25,8 +25,6 @@ class HexSpace:
         self.cannot_move_to = set()
         self.sliding_prevented_to = dict()
 
-        self.grasshopper_links = set()
-
     def prepare_for_update(self):
         board.HiveGameBoard().spaces_requiring_updates.add(self.location)
 
@@ -82,44 +80,6 @@ class HexSpace:
             return new_location
         else:
             return None
-
-    def add_link_to_grasshopper(self, grasshopper_loc):
-        self.grasshopper_links.add(grasshopper_loc)
-
-    def remove_link_to_grasshopper(self, grasshopper_loc):
-        # if grasshopper_loc in self.grasshopper_links:
-        self.grasshopper_links.remove(grasshopper_loc)
-
-    def add_gh_links_in_direction(self, grasshopper_loc, direction, start_loc=None):
-        print('=' * 50)
-        print(f'Adding GH Links for {self.name} at {self.location}')
-        if start_loc is None:
-            next_loc = grasshopper_loc
-        else:
-            next_loc = start_loc
-
-        all_spaces = board.HiveGameBoard().get_all_spaces()
-        while next_loc is not None:
-            all_spaces[next_loc].add_link_to_grasshopper(grasshopper_loc)
-            print(f'Added link to {all_spaces[next_loc].name} at {all_spaces[next_loc].location}')
-            if next_loc in board.HiveGameBoard().empty_spaces:
-                return
-
-            next_loc = self.get_next_space_in_dir(next_loc, direction)
-            print(f'The next location to add is {next_loc}')
-
-    def remove_gh_links_in_direction(self, grasshopper_loc, direction, start_loc=None):
-        print('=' * 50)
-        print(f'Removing GH Links for {self.name} at {self.location}')
-        if start_loc is None or start_loc == grasshopper_loc:
-            next_loc = self.get_next_space_in_dir(grasshopper_loc, direction)
-        else:
-            next_loc = start_loc
-
-        all_spaces = board.HiveGameBoard().get_all_spaces()
-        while next_loc is not None and grasshopper_loc in all_spaces[next_loc].grasshopper_links:
-            all_spaces[next_loc].remove_link_to_grasshopper(grasshopper_loc)
-            next_loc = self.get_next_space_in_dir(next_loc, direction)
 
     def get_surrounding_locations(self):
         return {(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x - 1, self.y),
