@@ -36,8 +36,7 @@ class EmptySpace(HexSpace):
 
         if connected_pcs is None or connected_emt_spcs is None:
             # Check surrounding spaces and connect to them
-            for space_location in [(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x - 1, self.y),
-                                   (self.x + 1, self.y), (self.x, self.y + 1), (self.x + 1, self.y + 1)]:
+            for space_location in self.get_surrounding_locations():
                 all_spaces = board.HiveGameBoard().get_all_spaces()
                 if space_location in all_spaces:
                     all_spaces[space_location].add_connection_to_empty_space(self.location)
@@ -101,6 +100,10 @@ class EmptySpace(HexSpace):
         for space_location in self.connected_pieces.union(self.connected_empty_spaces):
             board.HiveGameBoard().get_all_spaces()[space_location].remove_connection_to_empty_space(self.location)
 
+        for grasshopper_loc in self.grasshopper_links.copy():
+            board.HiveGameBoard().pieces[grasshopper_loc].spaces_to_unlink.add(self.location)
+            board.HiveGameBoard().pieces[grasshopper_loc].prepare_for_update()
+
         del self
 
     def white_can_place(self):
@@ -121,15 +124,27 @@ class EmptySpace(HexSpace):
         """
         return not self.num_white_connected
 
+    def add_link_to_grasshopper(self, grasshopper_loc):
+        super().add_link_to_grasshopper(grasshopper_loc)
+        if grasshopper_loc not in self.get_surrounding_locations():
+            # print(f'Empty Space at {self.location} is adding a possible move to Grasshopper at {grasshopper_loc}')
+            board.HiveGameBoard().pieces[grasshopper_loc].possible_moves.add(self.location)
+
+    def remove_link_to_grasshopper(self, grasshopper_loc):
+        super().remove_link_to_grasshopper(grasshopper_loc)
+        # if self.location in board.HiveGameBoard().pieces[grasshopper_loc].possible_moves:
+        #     print(f'Empty Space at {self.location} is removing a possible move to Grasshopper at {grasshopper_loc}')
+        board.HiveGameBoard().pieces[grasshopper_loc].possible_moves.remove(self.location)
+
     def add_connection_to_piece(self, location):
-        HexSpace.add_connection_to_piece(self, location)
+        super().add_connection_to_piece(location)
         if board.HiveGameBoard().pieces[location].is_white:
             self.num_white_connected += 1
         else:
             self.num_black_connected += 1
 
     def remove_connection_to_piece(self, location):
-        HexSpace.remove_connection_to_piece(self, location)
+        super().remove_connection_to_piece(location)
 
         if board.HiveGameBoard().pieces[location].is_white:
             self.num_white_connected -= 1
@@ -139,11 +154,11 @@ class EmptySpace(HexSpace):
         self.prepare_for_update()
 
     def add_connection_to_empty_space(self, location):
-        HexSpace.add_connection_to_empty_space(self, location)
+        super().add_connection_to_empty_space(location)
         board.HiveGameBoard().empty_spaces[location].connected_empty_spaces.add(self.location)
 
     def remove_connection_to_empty_space(self, location):
-        HexSpace.remove_connection_to_empty_space(self, location)
+        super().remove_connection_to_empty_space(location)
 
     def __str__(self):
         return_str = 'Information for EmptySpace at {}:\n'.format(self.location)
@@ -154,5 +169,6 @@ class EmptySpace(HexSpace):
         return_str += f'pieces_that_can_move_here: {self.pieces_that_can_move_here}\n'
         return_str += f'num_white_connected: {self.num_white_connected}\n'
         return_str += f'num_black_connected: {self.num_black_connected}\n'
+        return_str += f'grasshopper_links: {self.grasshopper_links}\n'
 
         return return_str

@@ -48,11 +48,13 @@ class Piece(HexSpace):
         super().update()
         self.calc_possible_moves()
 
-    # TODO: [Beetle] Include a create_new_emt_spc=True variable? Beetle could disable this when on top of a piece.
-    #       Interestingly, this would also mean the space.remove_connection_to_piece and add_connection_to_emt_spc
-    #       method calls wouldn't be necessary in that scenario.
-    #       Same with preventing sliding.
-    #       Maybe just include an is_beetle=False parameter.
+    def move_to(self, new_location):
+        if new_location in self.possible_moves:
+            self.remove()
+            self._set_location_to(new_location)
+        else:
+            raise ValueError('Cannot move {} at {} to {}'.format(self.name, self.location, new_location))
+
     def remove(self):
         # TODO: [Movement] Unlock any relevant pieces that used to be connected
         #       Also need to see if any cannot_move_to sets need to be updated
@@ -79,8 +81,19 @@ class Piece(HexSpace):
                     connected_emt_spc.prepare_for_update()
         else:
             # Create an empty space here
-            emt.EmptySpace(self.x, self.y, self.connected_pieces, self.connected_empty_spaces, self.sliding_prevented_to,
-                           self.cannot_move_to)
+            emt.EmptySpace(self.x, self.y, self.connected_pieces, self.connected_empty_spaces,
+                           self.sliding_prevented_to, self.cannot_move_to)
+
+            # # Update relevant grasshopper moves
+            for grasshopper_loc in self.grasshopper_links.copy():
+                board.HiveGameBoard().pieces[grasshopper_loc].spaces_to_unlink.add(self.location)
+                # board.HiveGameBoard().pieces[grasshopper_loc].spaces_to_link.add(self.location)
+                board.HiveGameBoard().pieces[grasshopper_loc].prepare_for_update()
+                # direction = self.dir_from_a_to_b(grasshopper_loc, self.location)
+                # self.remove_gh_links_in_direction(grasshopper_loc, direction, self.location)
+                # new_empty_space.add_link_to_grasshopper(grasshopper_loc)
+
+            self.grasshopper_links.clear()
 
             all_board_spaces = board.HiveGameBoard().get_all_spaces()
             for space in self.connected_pieces.union(self.connected_empty_spaces):
@@ -117,13 +130,6 @@ class Piece(HexSpace):
             self.stacked_piece_obj = None
         else:
             board.HiveGameBoard().pieces.pop(self.location)
-
-    def move_to(self, new_location):
-        if new_location in self.possible_moves:
-            self.remove()
-            self._set_location_to(new_location)
-        else:
-            raise ValueError('Cannot move {} at {} to {}'.format(self.name, self.location, new_location))
 
     # TODO: [Formatting] Reformat this function for added readability
     def _set_location_to(self, new_location):
@@ -180,6 +186,11 @@ class Piece(HexSpace):
             self.connected_empty_spaces = related_empty_space.connected_empty_spaces
             self.sliding_prevented_to = related_empty_space.sliding_prevented_to
             self.cannot_move_to = related_empty_space.cannot_move_to
+            self.grasshopper_links = related_empty_space.grasshopper_links.copy()
+
+            for grasshopper_loc in self.grasshopper_links:
+                board.HiveGameBoard().pieces[grasshopper_loc].spaces_to_link.add(self.location)
+                board.HiveGameBoard().pieces[grasshopper_loc].prepare_for_update()
 
             # Update all the piece and empty space connections
             all_connected_spaces = self.connected_empty_spaces.union(self.connected_pieces)
@@ -195,6 +206,13 @@ class Piece(HexSpace):
             self._create_surrounding_emt_spcs()
 
             self._update_sliding()
+
+            # # Update relevant grasshopper moves
+            # for grasshopper_loc in self.grasshopper_links:
+            #     direction = self.dir_from_a_to_b(grasshopper_loc, self.location)
+            #     self.add_gh_links_in_direction(grasshopper_loc, direction, self.location)
+            #     # if self.location in board.HiveGameBoard().pieces[grasshopper_loc].possible_moves:
+            #     #     board.HiveGameBoard().pieces[grasshopper_loc].possible_moves.remove(self.location)
 
     def _create_surrounding_emt_spcs(self):
         # Helper function for move_to(location)
@@ -284,17 +302,17 @@ class Piece(HexSpace):
             board.HiveGameBoard().black_possible_moves[self.location] = self.possible_moves
 
     def add_connection_to_piece(self, location):
-        HexSpace.add_connection_to_piece(self, location)
+        super().add_connection_to_piece(location)
 
     def remove_connection_to_piece(self, location):
-        HexSpace.remove_connection_to_piece(self, location)
+        super().remove_connection_to_piece(location)
 
     def add_connection_to_empty_space(self, location):
-        HexSpace.add_connection_to_empty_space(self, location)
+        super().add_connection_to_empty_space(location)
         board.HiveGameBoard().empty_spaces[location].add_connection_to_piece(self.location)
 
     def remove_connection_to_empty_space(self, location):
-        HexSpace.remove_connection_to_empty_space(self, location)
+        super().remove_connection_to_empty_space(location)
 
     def __str__(self):
         return_str = 'Piece information for {} at {}:\n'.format(self.name, self.location)
@@ -305,5 +323,6 @@ class Piece(HexSpace):
         return_str += 'cannot_move_to: {}\n'.format(self.cannot_move_to)
         return_str += 'sliding_prevented_to: {}\n'.format(self.sliding_prevented_to)
         return_str += 'preventing_sliding_for: {}\n'.format(self.preventing_sliding_for)
+        # return_str += f'grasshopper_links: {self.grasshopper_links}\n'
 
         return return_str

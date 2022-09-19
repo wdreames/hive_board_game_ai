@@ -17,7 +17,7 @@ def play_game():
 
     while board.determine_winner() is None:
         print('-' * 50)
-        # print(board)
+        print(board)
         board.print_board()
 
         if board.is_white_turn():
@@ -65,8 +65,8 @@ def play_game():
                 else:
                     print('Invalid selection. Please select from the list of available pieces to move')
 
-        except KeyError:
-            print('Error in processing input: ', traceback.format_exc())
+        # except KeyError:
+        #     print('Error in processing input: ', traceback.format_exc())
         except ValueError:
             print('Invalid input: ', traceback.format_exc())
 
@@ -138,16 +138,42 @@ def test_game2():
     board.print_board()
     board.perform_action(PLACE, (0, 4), piece_type=Piece.ANT)
     board.print_board()
-    board.perform_action(MOVE, (-2, -1), new_location=(-1,-1))
+    board.perform_action(MOVE, (-2, -1), new_location=(-1, -1))
     board.print_board()
     # board.perform_action(MOVE, (-1, -2), new_location=(-1, -1))
 
     print(board)
+    print(board.pieces[(0, 3)])
+    print(board.pieces[(0, 4)])
+
+    play_game()
+
+
+def test_game3():
+    board = HiveGameBoard(new_board=True)
+    PLACE = HiveGameBoard.PLACE_PIECE
+    MOVE = HiveGameBoard.MOVE_PIECE
+
+    board.perform_action(PLACE, (0, 0), piece_type=Piece.GRASSHOPPER)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(PLACE, (1, 0), piece_type=Piece.GRASSHOPPER)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(PLACE, (-1, 0), piece_type=Piece.ANT)
+    board.print_board()
+    print('-' * 10)
+
+    print(board)
+    print(board.pieces[(0, 0)])
+    print(board.pieces[(1, 0)])
+    print(board.pieces[(-1, 0)])
 
     play_game()
 
 
 # TODO: [UI] Make this nicer later on
 if __name__ == '__main__':
-    test_game2()
+    # test_game2()
     # play_game()
+    test_game3()
