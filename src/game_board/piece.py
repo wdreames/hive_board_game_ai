@@ -35,9 +35,6 @@ class Piece(h.HexSpace):
         self.possible_moves = set()
         self.preventing_sliding_for = {}
 
-        # Only used when Piece is a Beetle; Needs to be of type Piece; NOT A COORDINATE
-        self.stacked_piece_obj = None
-
         # TODO: [Organization] This assumes that this color piece can be placed here without issue
         if self.location in board.HiveGameBoard().empty_spaces:
             self._set_location_to(self.location)
@@ -59,62 +56,41 @@ class Piece(h.HexSpace):
         # TODO: [Movement] Unlock any relevant pieces that used to be connected
         #       Also need to see if any cannot_move_to sets need to be updated
 
-        on_top_of_piece = self.name == Piece.BEETLE and self.stacked_piece_obj is not None
+        # Create an empty space here
+        new_empty_space = emt.EmptySpace(self.x, self.y, self.connected_pieces, self.connected_empty_spaces,
+                                         self.sliding_prevented_to, self.cannot_move_to)
 
-        if on_top_of_piece:
-            self.stacked_piece_obj.connected_pieces = self.connected_pieces
-            self.stacked_piece_obj.connected_empty_spaces = self.connected_empty_spaces
-            self.stacked_piece_obj.sliding_prevented_to = self.sliding_prevented_to
-            self.stacked_piece_obj.cannot_move_to = self.cannot_move_to
-            self.stacked_piece_obj.preventing_sliding_for = self.preventing_sliding_for
+        all_board_spaces = board.HiveGameBoard().get_all_spaces()
+        for space in self.connected_pieces.union(self.connected_empty_spaces):
+            all_board_spaces[space].remove_connection_to_piece(self.location)
+            all_board_spaces[space].add_connection_to_empty_space(self.location)
 
-            # Need to update num white/black connected in nearby empty spaces
-            if self.is_white != self.stacked_piece_obj.is_white:
-                for connected_emt_spc_loc in self.connected_empty_spaces:
-                    connected_emt_spc = board.HiveGameBoard().empty_spaces[connected_emt_spc_loc]
-                    if self.is_white:
-                        connected_emt_spc.num_white_connected -= 1
-                        connected_emt_spc.num_black_connected += 1
-                    else:
-                        connected_emt_spc.num_white_connected += 1
-                        connected_emt_spc.num_black_connected -= 1
-                    connected_emt_spc.prepare_for_update()
-        else:
-            # Create an empty space here
-            new_empty_space = emt.EmptySpace(self.x, self.y, self.connected_pieces, self.connected_empty_spaces,
-                           self.sliding_prevented_to, self.cannot_move_to)
+        # Update pieces that are no longer prevented from sliding
+        all_spaces = board.HiveGameBoard().get_all_spaces()
+        for limited_space_loc, locations in self.preventing_sliding_for.items():
+            limited_space = all_spaces[limited_space_loc]
 
-            all_board_spaces = board.HiveGameBoard().get_all_spaces()
-            for space in self.connected_pieces.union(self.connected_empty_spaces):
-                all_board_spaces[space].remove_connection_to_piece(self.location)
-                all_board_spaces[space].add_connection_to_empty_space(self.location)
+            for loc in locations:
+                # The limited space is no longer blocked by this piece
+                limited_space.sliding_prevented_to[loc].remove(self.location)
 
-            # Update pieces that are no longer prevented from sliding
-            all_spaces = board.HiveGameBoard().get_all_spaces()
-            for limited_space_loc, locations in self.preventing_sliding_for.items():
-                limited_space = all_spaces[limited_space_loc]
+                # There are always two pieces preventing sliding. The other piece no longer has a pair and can
+                # remove this block
+                other_limiting_piece_loc = limited_space.sliding_prevented_to[loc].pop()
+                all_spaces[other_limiting_piece_loc].preventing_sliding_for[limited_space_loc].remove(loc)
 
-                for loc in locations:
-                    # The limited space is no longer blocked by this piece
-                    limited_space.sliding_prevented_to[loc].remove(self.location)
+                # The limited space is able to slide into the specified location now
+                limited_space.sliding_prevented_to.pop(loc)
 
-                    # There are always two pieces preventing sliding. The other piece no longer has a pair and can
-                    # remove this block
-                    other_limiting_piece_loc = limited_space.sliding_prevented_to[loc].pop()
-                    all_spaces[other_limiting_piece_loc].preventing_sliding_for[limited_space_loc].remove(loc)
+        # Check if this piece was part of a path for a grasshopper
+        if self.linked_grasshoppers:
+            for grasshopper_location in self.linked_grasshoppers:
+                self.remove_from_grasshopper_path(grasshopper_location)
+                new_empty_space.linked_grasshoppers.add(grasshopper_location)
+                if grasshopper_location not in self.get_surrounding_locations():
+                    board.HiveGameBoard().pieces[grasshopper_location].add_move(self.location)
 
-                    # The limited space is able to slide into the specified location now
-                    limited_space.sliding_prevented_to.pop(loc)
-
-            # Check if this piece was part of a path for a grasshopper
-            if self.linked_grasshoppers:
-                for grasshopper_location in self.linked_grasshoppers:
-                    self.remove_from_grasshopper_path(grasshopper_location)
-                    new_empty_space.linked_grasshoppers.add(grasshopper_location)
-                    if grasshopper_location not in self.get_surrounding_locations():
-                        board.HiveGameBoard().pieces[grasshopper_location].add_move(self.location)
-
-            self.linked_grasshoppers.clear()
+        self.linked_grasshoppers.clear()
 
         self.preventing_sliding_for.clear()
 
@@ -124,12 +100,7 @@ class Piece(h.HexSpace):
         else:
             board.HiveGameBoard().black_possible_moves.pop(self.location)
 
-        if on_top_of_piece:
-            board.HiveGameBoard().pieces[self.location] = self.stacked_piece_obj
-            self.stacked_piece_obj.prepare_for_update()
-            self.stacked_piece_obj = None
-        else:
-            board.HiveGameBoard().pieces.pop(self.location)
+        board.HiveGameBoard().pieces.pop(self.location)
 
     # TODO: [Formatting] Reformat this function for added readability
     def _set_location_to(self, new_location):
@@ -140,74 +111,40 @@ class Piece(h.HexSpace):
         :param new_location: tuple
             (x, y) location where the piece will be placed
         """
-
-        moving_onto_piece = self.name == Piece.BEETLE and new_location in board.HiveGameBoard().pieces
-
         # Move this piece in the board dictionary
         self.location = new_location
         self.x = new_location[0]
         self.y = new_location[1]
-        if moving_onto_piece:
-            self.stacked_piece_obj = board.HiveGameBoard().pieces[new_location]
         board.HiveGameBoard().pieces[new_location] = self
 
-        if moving_onto_piece:
-            # Copy the connections from the piece at the new lo
-            self.connected_pieces = self.stacked_piece_obj.connected_pieces
-            self.connected_empty_spaces = self.stacked_piece_obj.connected_empty_spaces
-            self.sliding_prevented_to = self.stacked_piece_obj.sliding_prevented_to
-            self.cannot_move_to = self.stacked_piece_obj.cannot_move_to
-            self.preventing_sliding_for = self.stacked_piece_obj.preventing_sliding_for
+        # Copy the connections from the empty space at the new location
+        related_empty_space = board.HiveGameBoard().empty_spaces[new_location]
+        self.connected_pieces = related_empty_space.connected_pieces
+        self.connected_empty_spaces = related_empty_space.connected_empty_spaces
+        self.sliding_prevented_to = related_empty_space.sliding_prevented_to
+        self.cannot_move_to = related_empty_space.cannot_move_to
 
-            # Need to update num white/black connected in nearby empty spaces
-            if self.is_white != self.stacked_piece_obj.is_white:
-                for connected_emt_spc_loc in self.connected_empty_spaces:
-                    connected_emt_spc = board.HiveGameBoard().empty_spaces[connected_emt_spc_loc]
-                    if self.is_white:
-                        connected_emt_spc.num_white_connected += 1
-                        connected_emt_spc.num_black_connected -= 1
-                    else:
-                        connected_emt_spc.num_white_connected -= 1
-                        connected_emt_spc.num_black_connected += 1
-                    connected_emt_spc.prepare_for_update()
+        # If this space was a possible move for a grasshopper, remove it and add a new path
+        if related_empty_space.linked_grasshoppers:
+            for grasshopper_location in related_empty_space.linked_grasshoppers:
+                if grasshopper_location in board.HiveGameBoard().pieces:
+                    board.HiveGameBoard().pieces[grasshopper_location].remove_move(self.location)
+                    self.add_to_grasshopper_path(grasshopper_location)
 
-            # TODO: [Movement] This could also be done with a lock action
-            # Remove piece from board movement dictionaries
-            if self.stacked_piece_obj.is_white:
-                board.HiveGameBoard().white_possible_moves.pop(self.stacked_piece_obj.location)
-            else:
-                board.HiveGameBoard().black_possible_moves.pop(self.stacked_piece_obj.location)
+        # Update all the piece and empty space connections
+        all_connected_spaces = self.connected_empty_spaces.union(self.connected_pieces)
+        for space_location in all_connected_spaces:
+            board.HiveGameBoard().get_all_spaces()[space_location].add_connection_to_piece(self.location)
 
-            self.prepare_for_update()
-        else:
-            # Copy the connections from the empty space at the new location
-            related_empty_space = board.HiveGameBoard().empty_spaces[new_location]
-            self.connected_pieces = related_empty_space.connected_pieces
-            self.connected_empty_spaces = related_empty_space.connected_empty_spaces
-            self.sliding_prevented_to = related_empty_space.sliding_prevented_to
-            self.cannot_move_to = related_empty_space.cannot_move_to
+        if len(self.connected_pieces) == 1:
+            board.HiveGameBoard().pieces[list(self.connected_pieces)[0]].lock()
 
-            # If this space was a possible move for a grasshopper, remove it and add a new path
-            if related_empty_space.linked_grasshoppers:
-                for grasshopper_location in related_empty_space.linked_grasshoppers:
-                    if grasshopper_location in board.HiveGameBoard().pieces:
-                        board.HiveGameBoard().pieces[grasshopper_location].remove_move(self.location)
-                        self.add_to_grasshopper_path(grasshopper_location)
+        # Delete the empty space at this location
+        related_empty_space.remove()
 
-            # Update all the piece and empty space connections
-            all_connected_spaces = self.connected_empty_spaces.union(self.connected_pieces)
-            for space_location in all_connected_spaces:
-                board.HiveGameBoard().get_all_spaces()[space_location].add_connection_to_piece(self.location)
+        self._create_surrounding_emt_spcs()
 
-            if len(self.connected_pieces) == 1:
-                board.HiveGameBoard().pieces[list(self.connected_pieces)[0]].lock()
-
-            # Delete the empty space at this location
-            related_empty_space.remove()
-
-            self._create_surrounding_emt_spcs()
-
-            self._update_sliding()
+        self._update_sliding()
 
     def _create_surrounding_emt_spcs(self):
         # Helper function for move_to(location)
