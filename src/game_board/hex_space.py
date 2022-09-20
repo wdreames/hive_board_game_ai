@@ -55,17 +55,12 @@ class HexSpace:
 
     @staticmethod
     def direction_from_a_to_b(piece_a, piece_b):
-        print('Calling Direction')
-        print(f'Piece a: {piece_a}')
-        print(f'Piece b: {piece_b}')
         x_diff = piece_b[0] - piece_a[0]
         y_diff = piece_b[1] - piece_a[1]
         divisor = max(abs(x_diff), abs(y_diff))
         if divisor == 0:
-            print('Direction = 0')
             return 0, 0
         else:
-            print(f'Direction = {x_diff // divisor, y_diff // divisor}')
             return x_diff // divisor, y_diff // divisor
 
     @staticmethod
@@ -74,10 +69,7 @@ class HexSpace:
         if direction == (0, 0):
             raise ValueError('Direction cannot be (0, 0).')
 
-        # print(f'Start location: {start_location}')
-        # print(f'Direction: {direction}')
         new_location = (start_location[0] + direction[0], start_location[1] + direction[1])
-        # print(f'New Location: {new_location}')
         if new_location in board.HiveGameBoard().get_all_spaces():
             return new_location
         else:

@@ -110,8 +110,10 @@ class Piece(h.HexSpace):
             if self.linked_grasshoppers:
                 for grasshopper_location in self.linked_grasshoppers:
                     self.remove_from_grasshopper_path(grasshopper_location)
-                    board.HiveGameBoard().pieces[grasshopper_location].possible_moves.add(self.location)
                     new_empty_space.linked_grasshoppers.add(grasshopper_location)
+                    if grasshopper_location not in self.get_surrounding_locations():
+                        board.HiveGameBoard().pieces[grasshopper_location].add_move(self.location)
+
             self.linked_grasshoppers.clear()
 
         self.preventing_sliding_for.clear()
@@ -189,7 +191,7 @@ class Piece(h.HexSpace):
             if related_empty_space.linked_grasshoppers:
                 for grasshopper_location in related_empty_space.linked_grasshoppers:
                     if grasshopper_location in board.HiveGameBoard().pieces:
-                        board.HiveGameBoard().pieces[grasshopper_location].possible_moves.remove(self.location)
+                        board.HiveGameBoard().pieces[grasshopper_location].remove_move(self.location)
                         self.add_to_grasshopper_path(grasshopper_location)
 
             # Update all the piece and empty space connections

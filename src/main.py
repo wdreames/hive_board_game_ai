@@ -99,7 +99,7 @@ def test_game1():
     print(board)
     board.print_board()
 
-    board.perform_action(HiveGameBoard.MOVE_PIECE, (0, 0), new_piece_location=(-1, -1))
+    board.perform_action(HiveGameBoard.MOVE_PIECE, (0, 0), new_location=(-1, -1))
 
     print(board)
     board.print_board()
@@ -172,7 +172,7 @@ def test_game3():
     # print(board.pieces[(1, 0)])
     # print(board.pieces[(-1, 0)])
 
-    play_game()
+    # play_game()
 
 
 # TODO: [UI] Make this nicer later on
