@@ -75,14 +75,29 @@ class HexSpace:
         else:
             return None
 
+    def add_link_to_grasshopper(self, grasshopper_location):
+        self.linked_grasshoppers.add(grasshopper_location)
+        board.HiveGameBoard().pieces[grasshopper_location].added_paths.add(self.location)
+
+    def remove_link_to_grasshopper(self, grasshopper_location):
+        if grasshopper_location in self.linked_grasshoppers:
+            self.linked_grasshoppers.remove(grasshopper_location)
+            board.HiveGameBoard().pieces[grasshopper_location].removed_paths.add(self.location)
+
     def add_to_grasshopper_path(self, grasshopper_location):
         grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
         grasshopper.pieces_to_add_to_path.add(self.location)
+
+        # grasshopper.add_path(self.location)
+
         grasshopper.prepare_for_update()
 
     def remove_from_grasshopper_path(self, grasshopper_location):
         grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
-        grasshopper.pieces_to_remove_from_path.add(self.location)
+        # grasshopper.pieces_to_remove_from_path.add(self.location)
+
+        grasshopper.remove_path(self.location)
+
         grasshopper.prepare_for_update()
 
     def get_surrounding_locations(self):

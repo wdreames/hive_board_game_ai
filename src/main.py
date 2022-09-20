@@ -140,11 +140,12 @@ def test_game2():
     board.print_board()
     board.perform_action(MOVE, (-2, -1), new_location=(-1, -1))
     board.print_board()
-    # board.perform_action(MOVE, (-1, -2), new_location=(-1, -1))
+    board.perform_action(MOVE, (0, 2), new_location=(0, -1))
+    board.print_board()
 
     print(board)
+    print(board.pieces[(0, -1)])
     print(board.pieces[(0, 3)])
-    print(board.pieces[(0, 4)])
 
     play_game()
 

@@ -84,9 +84,15 @@ class Piece(h.HexSpace):
 
         # Check if this piece was part of a path for a grasshopper
         if self.linked_grasshoppers:
-            for grasshopper_location in self.linked_grasshoppers:
+            for grasshopper_location in self.linked_grasshoppers.copy():
+
                 self.remove_from_grasshopper_path(grasshopper_location)
-                new_empty_space.linked_grasshoppers.add(grasshopper_location)
+
+                # This path needs to be removed immediately
+                # grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
+                # grasshopper.remove_path(self.location)
+
+                new_empty_space.add_link_to_grasshopper(grasshopper_location)
                 if grasshopper_location not in self.get_surrounding_locations():
                     board.HiveGameBoard().pieces[grasshopper_location].add_move(self.location)
 
