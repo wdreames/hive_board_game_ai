@@ -164,8 +164,8 @@ class HiveGameBoard(object):
 
         self.turn_number += 1
 
-    def move_piece(self, piece, new_location):
-        self.pieces[piece].move_to(new_location)
+    def move_piece(self, piece_location, new_location):
+        self.pieces[piece_location].move_to(new_location)
 
         # End of action bookkeeping
         all_spaces = self.get_all_spaces()

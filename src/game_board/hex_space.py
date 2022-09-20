@@ -25,6 +25,8 @@ class HexSpace:
         self.cannot_move_to = set()
         self.sliding_prevented_to = dict()
 
+        self.linked_grasshoppers = set()
+
     def prepare_for_update(self):
         board.HiveGameBoard().spaces_requiring_updates.add(self.location)
 
@@ -52,7 +54,7 @@ class HexSpace:
             self.cannot_move_to.remove(loc)
 
     @staticmethod
-    def dir_from_a_to_b(piece_a, piece_b):
+    def direction_from_a_to_b(piece_a, piece_b):
         print('Calling Direction')
         print(f'Piece a: {piece_a}')
         print(f'Piece b: {piece_b}')
@@ -67,10 +69,10 @@ class HexSpace:
             return x_diff // divisor, y_diff // divisor
 
     @staticmethod
-    def get_next_space_in_dir(start_location, direction):
+    def get_next_space_in_direction(start_location, direction):
         # If the direction is 0, this would return the same location, possibly leading to an infinite loop
-        # if direction == (0, 0):
-        #     raise ValueError('Direction cannot be (0, 0)')
+        if direction == (0, 0):
+            raise ValueError('Direction cannot be (0, 0).')
 
         # print(f'Start location: {start_location}')
         # print(f'Direction: {direction}')
@@ -80,6 +82,16 @@ class HexSpace:
             return new_location
         else:
             return None
+
+    def add_to_grasshopper_path(self, grasshopper_location):
+        grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
+        grasshopper.pieces_to_add_to_path.add(self.location)
+        grasshopper.prepare_for_update()
+
+    def remove_from_grasshopper_path(self, grasshopper_location):
+        grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
+        grasshopper.pieces_to_remove_from_path.add(self.location)
+        grasshopper.prepare_for_update()
 
     def get_surrounding_locations(self):
         return {(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x - 1, self.y),

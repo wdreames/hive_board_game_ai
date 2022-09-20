@@ -2,10 +2,10 @@ import src.game_board.board as board
 import src.game_board.empty_space as emt
 
 from abc import abstractmethod
-from src.game_board.hex_space import HexSpace
+import src.game_board.hex_space as h
 
 
-class Piece(HexSpace):
+class Piece(h.HexSpace):
     """
     Used to represent a piece on the game board. This is an abstract class.
     Superclass for Ant, Grasshopper, and QueenBee.
@@ -81,7 +81,7 @@ class Piece(HexSpace):
                     connected_emt_spc.prepare_for_update()
         else:
             # Create an empty space here
-            emt.EmptySpace(self.x, self.y, self.connected_pieces, self.connected_empty_spaces,
+            new_empty_space = emt.EmptySpace(self.x, self.y, self.connected_pieces, self.connected_empty_spaces,
                            self.sliding_prevented_to, self.cannot_move_to)
 
             all_board_spaces = board.HiveGameBoard().get_all_spaces()
@@ -105,6 +105,15 @@ class Piece(HexSpace):
 
                     # The limited space is able to slide into the specified location now
                     limited_space.sliding_prevented_to.pop(loc)
+
+            # Check if this piece was part of a path for a grasshopper
+            if self.linked_grasshoppers:
+                for grasshopper_location in self.linked_grasshoppers:
+                    self.remove_from_grasshopper_path(grasshopper_location)
+                    board.HiveGameBoard().pieces[grasshopper_location].possible_moves.add(self.location)
+                    new_empty_space.linked_grasshoppers.add(grasshopper_location)
+            self.linked_grasshoppers.clear()
+
         self.preventing_sliding_for.clear()
 
         # Remove this piece from the board dictionaries
@@ -175,6 +184,13 @@ class Piece(HexSpace):
             self.connected_empty_spaces = related_empty_space.connected_empty_spaces
             self.sliding_prevented_to = related_empty_space.sliding_prevented_to
             self.cannot_move_to = related_empty_space.cannot_move_to
+
+            # If this space was a possible move for a grasshopper, remove it and add a new path
+            if related_empty_space.linked_grasshoppers:
+                for grasshopper_location in related_empty_space.linked_grasshoppers:
+                    if grasshopper_location in board.HiveGameBoard().pieces:
+                        board.HiveGameBoard().pieces[grasshopper_location].possible_moves.remove(self.location)
+                        self.add_to_grasshopper_path(grasshopper_location)
 
             # Update all the piece and empty space connections
             all_connected_spaces = self.connected_empty_spaces.union(self.connected_pieces)

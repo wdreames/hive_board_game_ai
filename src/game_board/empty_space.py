@@ -1,9 +1,9 @@
 import src.game_board.board as board
 
-from src.game_board.hex_space import HexSpace
+import src.game_board.hex_space as h
 
 
-class EmptySpace(HexSpace):
+class EmptySpace(h.HexSpace):
     """
     Used to represent an empty space containing no pieces on the board. These are used when calculating
     where pieces can be placed or moved.

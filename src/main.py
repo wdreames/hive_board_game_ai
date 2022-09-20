@@ -163,11 +163,14 @@ def test_game3():
     board.perform_action(PLACE, (-1, 0), piece_type=Piece.ANT)
     board.print_board()
     print('-' * 10)
+    board.perform_action(MOVE, (1, 0), new_location=(-2, 0))
+    board.print_board()
+    print('-' * 10)
 
     print(board)
-    print(board.pieces[(0, 0)])
-    print(board.pieces[(1, 0)])
-    print(board.pieces[(-1, 0)])
+    # print(board.pieces[(0, 0)])
+    # print(board.pieces[(1, 0)])
+    # print(board.pieces[(-1, 0)])
 
     play_game()
 
