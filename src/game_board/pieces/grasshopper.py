@@ -13,6 +13,9 @@ class Grasshopper(p.Piece):
         self.name = p.Piece.GRASSHOPPER
 
     def update(self):
+        self.added_paths.clear()
+        self.removed_paths.clear()
+
         for piece_location in self.pieces_to_remove_from_path:
             direction = self.direction_from_a_to_b(self.location, piece_location)
             self.remove_path(piece_location, direction)
@@ -20,8 +23,8 @@ class Grasshopper(p.Piece):
             direction = self.direction_from_a_to_b(self.location, piece_location)
             self.add_path(piece_location, direction)
 
-        self.added_paths.clear()
-        self.removed_paths.clear()
+        self.pieces_to_remove_from_path.clear()
+        self.pieces_to_add_to_path.clear()
 
         super().update()
 
@@ -47,18 +50,22 @@ class Grasshopper(p.Piece):
         self.possible_moves.add(location)
 
     def remove_move(self, location):
-        self.possible_moves.remove(location)
+        if location in self.possible_moves:
+            self.possible_moves.remove(location)
 
     def add_path(self, start_location, direction):
-        current_location = start_location
+        if start_location in board.HiveGameBoard().empty_spaces:
+            board.HiveGameBoard().empty_spaces[start_location].linked_grasshoppers.add(self.location)
+            return
 
+        current_location = start_location
         while current_location not in board.HiveGameBoard().empty_spaces:
-            # if current_location in self.added_paths:
-            #     return
-            # else:
-            board.HiveGameBoard().pieces[current_location].linked_grasshoppers.add(self.location)
-            current_location = self.get_next_space_in_direction(current_location, direction)
-            self.added_paths.add(current_location)
+            if current_location in self.added_paths:
+                return
+            else:
+                board.HiveGameBoard().pieces[current_location].linked_grasshoppers.add(self.location)
+                self.added_paths.add(current_location)
+                current_location = self.get_next_space_in_direction(current_location, direction)
 
         # current_location must be an EmptySpace
         board.HiveGameBoard().empty_spaces[current_location].linked_grasshoppers.add(self.location)
@@ -67,15 +74,17 @@ class Grasshopper(p.Piece):
     def remove_path(self, start_location, direction):
         current_location = start_location
         board.HiveGameBoard().get_all_spaces()[current_location].linked_grasshoppers.remove(self.location)
+        if current_location in board.HiveGameBoard().empty_spaces:
+            self.remove_move(current_location)
         current_location = self.get_next_space_in_direction(current_location, direction)
 
         while current_location not in board.HiveGameBoard().empty_spaces:
-            # if current_location in self.removed_paths:
-            #     return
-            # else:
-            board.HiveGameBoard().pieces[current_location].linked_grasshoppers.remove(self.location)
-            current_location = self.get_next_space_in_direction(current_location, direction)
-            self.removed_paths.add(current_location)
+            if current_location in self.removed_paths:
+                return
+            else:
+                board.HiveGameBoard().pieces[current_location].linked_grasshoppers.remove(self.location)
+                self.removed_paths.add(current_location)
+                current_location = self.get_next_space_in_direction(current_location, direction)
 
         # current_location must be an EmptySpace
         board.HiveGameBoard().empty_spaces[current_location].linked_grasshoppers.remove(self.location)
