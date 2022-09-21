@@ -1,6 +1,6 @@
 import unittest
-import src.game_board.board as game_board
-import src.game_board.spaces as spcs
+import src.game.board as game_board
+import src.game.spaces as spcs
 
 
 class TestGrasshopper(unittest.TestCase):

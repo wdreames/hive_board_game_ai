@@ -1,4 +1,4 @@
-import src.game_board.board as board
+import src.game.board as board
 from abc import abstractmethod
 
 

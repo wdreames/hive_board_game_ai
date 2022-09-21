@@ -1,5 +1,5 @@
-from src.game_board.spaces import Piece
-import src.game_board.board as board
+from src.game.spaces import Piece
+import src.game.board as board
 
 
 class Ant(Piece):

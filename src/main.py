@@ -6,8 +6,8 @@ AI for the Hive Board Game
 """
 # TODO: [Formatting] Add comments for all classes and methods
 import traceback
-from src.game_board.board import HiveGameBoard
-from src.game_board.spaces import Piece
+from src.game.board import HiveGameBoard
+from src.game.spaces import Piece
 
 
 def play_game():

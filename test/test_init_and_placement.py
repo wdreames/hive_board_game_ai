@@ -1,7 +1,7 @@
 import unittest
 
-import src.game_board.board as board
-import src.game_board.pieces as pcs
+import src.game.board as board
+import src.game.pieces as pcs
 
 
 class TestInitializationAndPlacements(unittest.TestCase):

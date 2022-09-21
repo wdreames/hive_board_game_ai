@@ -315,4 +315,4 @@ cython_debug/
 .coverage
 
 # Ignore old file structure
-src/game_board/old_formatting
+src/game/old_formatting
