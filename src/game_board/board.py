@@ -1,9 +1,9 @@
-from src.game_board.empty_space import EmptySpace
-from src.game_board.piece import Piece
-from src.game_board.pieces.ant import Ant
-from src.game_board.pieces.grasshopper import Grasshopper
-from src.game_board.pieces.queen_bee import QueenBee
-from src.game_board.pieces.beetle import Beetle
+from src.game_board.spaces import EmptySpace
+from src.game_board.spaces import Piece
+from src.game_board.pieces import Ant
+from src.game_board.pieces import Grasshopper
+from src.game_board.pieces import QueenBee
+from src.game_board.pieces import Beetle
 
 
 class HiveGameBoard(object):

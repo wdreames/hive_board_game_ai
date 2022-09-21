@@ -1,10 +1,7 @@
 import unittest
 
 import src.game_board.board as board
-import src.game_board.pieces.ant as ant
-import src.game_board.pieces.queen_bee as qb
-import src.game_board.pieces.grasshopper as gh
-import src.game_board.empty_space as emt_spc
+import src.game_board.pieces as pcs
 
 
 class TestInitializationAndPlacements(unittest.TestCase):
@@ -36,7 +33,7 @@ class TestInitializationAndPlacements(unittest.TestCase):
         # Resets the board
         board.HiveGameBoard(new_board=True)
 
-        ant.Ant(0, 0)
+        pcs.Ant(0, 0)
 
         self._test_new_piece_at_0_0()
 
@@ -49,7 +46,7 @@ class TestInitializationAndPlacements(unittest.TestCase):
         # Resets the board
         board.HiveGameBoard(new_board=True)
 
-        gh.Grasshopper(0, 0)
+        pcs.Grasshopper(0, 0)
 
         self._test_new_piece_at_0_0()
 

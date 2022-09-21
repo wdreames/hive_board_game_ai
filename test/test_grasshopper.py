@@ -1,6 +1,6 @@
 import unittest
 import src.game_board.board as game_board
-import src.game_board.piece as p
+import src.game_board.spaces as spcs
 
 
 class TestGrasshopper(unittest.TestCase):
@@ -9,9 +9,9 @@ class TestGrasshopper(unittest.TestCase):
     def setUpClass(cls):
         cls.board = game_board.HiveGameBoard(new_board=True)
 
-        cls.board.perform_action(cls.board.PLACE_PIECE, (0, 0), piece_type=p.Piece.GRASSHOPPER)
-        cls.board.perform_action(cls.board.PLACE_PIECE, (1, 0), piece_type=p.Piece.GRASSHOPPER)
-        cls.board.perform_action(cls.board.PLACE_PIECE, (-1, 0), piece_type=p.Piece.ANT)
+        cls.board.perform_action(cls.board.PLACE_PIECE, (0, 0), piece_type=spcs.Piece.GRASSHOPPER)
+        cls.board.perform_action(cls.board.PLACE_PIECE, (1, 0), piece_type=spcs.Piece.GRASSHOPPER)
+        cls.board.perform_action(cls.board.PLACE_PIECE, (-1, 0), piece_type=spcs.Piece.ANT)
 
     def test_1_moveset_1(self):
         # Testing grasshopper as (0, 0)

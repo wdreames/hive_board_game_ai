@@ -8,7 +8,7 @@ AI for the Hive Board Game
 # TODO: [Formatting] Add comments for all classes and methods
 import traceback
 from src.game_board.board import HiveGameBoard
-from src.game_board.piece import Piece
+from src.game_board.spaces import Piece
 
 
 def play_game():
@@ -178,6 +178,6 @@ def test_game3():
 
 # TODO: [UI] Make this nicer later on
 if __name__ == '__main__':
-    test_game2()
+    # test_game2()
     # play_game()
-    # test_game3()
+    test_game3()
