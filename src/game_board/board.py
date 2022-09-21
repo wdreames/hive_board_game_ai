@@ -1,9 +1,10 @@
 from src.game_board.spaces import EmptySpace
 from src.game_board.spaces import Piece
 from src.game_board.pieces import Ant
+from src.game_board.pieces import Beetle
 from src.game_board.pieces import Grasshopper
 from src.game_board.pieces import QueenBee
-from src.game_board.pieces import Beetle
+from src.game_board.pieces import Spider
 
 
 class HiveGameBoard(object):
@@ -34,16 +35,18 @@ class HiveGameBoard(object):
             cls.pieces = dict()
             cls.empty_spaces = dict()
             cls.white_pieces_to_place = {
-                Piece.ANT: 5,
+                Piece.ANT: 3,
+                Piece.BEETLE: 2,
+                Piece.GRASSHOPPER: 3,
                 Piece.QUEEN_BEE: 1,
-                Piece.GRASSHOPPER: 5,
-                Piece.BEETLE: 2
+                Piece.SPIDER: 2
             }
             cls.black_pieces_to_place = {
-                Piece.ANT: 5,
+                Piece.ANT: 3,
+                Piece.BEETLE: 2,
+                Piece.GRASSHOPPER: 3,
                 Piece.QUEEN_BEE: 1,
-                Piece.GRASSHOPPER: 5,
-                Piece.BEETLE: 2
+                Piece.SPIDER: 2
             }
 
             cls.turn_number = 1
@@ -140,16 +143,18 @@ class HiveGameBoard(object):
             pieces_to_place[piece_type] -= 1
             if piece_type == Piece.ANT:
                 Ant(location[0], location[1], is_white=self.is_white_turn())
+            elif piece_type == Piece.BEETLE:
+                Beetle(location[0], location[1], is_white=self.is_white_turn())
+            elif piece_type == Piece.GRASSHOPPER:
+                Grasshopper(location[0], location[1], is_white=self.is_white_turn())
             elif piece_type == Piece.QUEEN_BEE:
                 QueenBee(location[0], location[1], is_white=self.is_white_turn())
                 if self.is_white_turn():
                     self.white_pieces_to_place[Piece.QUEEN_BEE] = 0
                 else:
                     self.black_pieces_to_place[Piece.QUEEN_BEE] = 0
-            elif piece_type == Piece.GRASSHOPPER:
-                Grasshopper(location[0], location[1], is_white=self.is_white_turn())
-            elif piece_type == Piece.BEETLE:
-                Beetle(location[0], location[1], is_white=self.is_white_turn())
+            elif piece_type == Piece.SPIDER:
+                Spider(location[0], location[1], is_white=self.is_white_turn())
             else:
                 raise ValueError(f'{piece_type} is not a valid type of piece.')
         else:

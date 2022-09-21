@@ -4,7 +4,6 @@ CNU Computer Science Capstone
 AI for the Hive Board Game
 2022
 """
-# TODO: [Formatting] Refactor imports across all files. Import system feels inconsistent across files
 # TODO: [Formatting] Add comments for all classes and methods
 import traceback
 from src.game_board.board import HiveGameBoard
@@ -179,5 +178,5 @@ def test_game3():
 # TODO: [UI] Make this nicer later on
 if __name__ == '__main__':
     # test_game2()
-    # play_game()
-    test_game3()
+    play_game()
+    # test_game3()
