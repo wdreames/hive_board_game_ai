@@ -16,7 +16,6 @@ class HexSpace:
         :param y: int
             y location
         """
-        self.name = ''
         self.x = x
         self.y = y
         self.location = (self.x, self.y)
@@ -87,18 +86,11 @@ class HexSpace:
     def add_to_grasshopper_path(self, grasshopper_location):
         grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
         grasshopper.pieces_to_add_to_path.add(self.location)
-
-        # grasshopper.add_path(self.location)
-
         grasshopper.prepare_for_update()
 
     def remove_from_grasshopper_path(self, grasshopper_location):
         grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
-        # grasshopper.pieces_to_remove_from_path.add(self.location)
-
-        grasshopper.remove_path(self.location)
-
-        grasshopper.prepare_for_update()
+        grasshopper.remove_grasshopper_path(self.location)
 
     def get_surrounding_locations(self):
         return {(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x - 1, self.y),
@@ -155,6 +147,8 @@ class EmptySpace(HexSpace):
         self.pieces_that_can_move_here = set()
         self.num_white_connected = 0
         self.num_black_connected = 0
+
+        self.linked_spiders = set()
 
         board.HiveGameBoard().empty_spaces[self.location] = self
 
@@ -217,7 +211,6 @@ class EmptySpace(HexSpace):
         Removes this empty space from the game board. This also removes this spot from each player's list of locations
         to place pieces, and disconnects any previously connected spaces.
         """
-        board.HiveGameBoard().empty_spaces.pop(self.location)
         if self.location in board.HiveGameBoard().white_locations_to_place:
             board.HiveGameBoard().white_locations_to_place.remove(self.location)
         if self.location in board.HiveGameBoard().black_locations_to_place:
@@ -225,6 +218,13 @@ class EmptySpace(HexSpace):
 
         for space_location in self.connected_pieces.union(self.connected_empty_spaces):
             board.HiveGameBoard().get_all_spaces()[space_location].remove_connection_to_empty_space(self.location)
+
+        # If this Empty Space is part of a path for a spider, remove the path.
+        for spider_location in self.linked_spiders.copy():
+            spider = board.HiveGameBoard().pieces[spider_location]
+            spider.remove_spider_path(self.location, initial_call=True)
+
+        board.HiveGameBoard().empty_spaces.pop(self.location)
 
         del self
 
@@ -279,6 +279,7 @@ class EmptySpace(HexSpace):
         return_str += f'pieces_that_can_move_here: {self.pieces_that_can_move_here}\n'
         return_str += f'num_white_connected: {self.num_white_connected}\n'
         return_str += f'num_black_connected: {self.num_black_connected}\n'
+        return_str += f'linked_spiders: {self.linked_spiders}\n'
 
         return return_str
 
@@ -289,7 +290,7 @@ class Piece(HexSpace):
     Superclass for Ant, Grasshopper, and QueenBee.
     """
 
-    GENERIC = 'Generic'
+    GENERIC = 'Generic Piece'
     ANT = 'Ant'
     BEETLE = 'Beetle'
     GRASSHOPPER = 'Grasshopper'
@@ -308,7 +309,7 @@ class Piece(HexSpace):
             True if this piece belongs to White; False if this piece belongs to Black
         """
         super().__init__(x, y)
-        self.name = 'Generic Piece'
+        self.name = Piece.GENERIC
         self.is_white = is_white
         self.possible_moves = set()
         self.preventing_sliding_for = {}
@@ -365,10 +366,6 @@ class Piece(HexSpace):
             for grasshopper_location in self.linked_grasshoppers.copy():
 
                 self.remove_from_grasshopper_path(grasshopper_location)
-
-                # This path needs to be removed immediately
-                # grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
-                # grasshopper.remove_path(self.location)
 
                 new_empty_space.add_link_to_grasshopper(grasshopper_location)
                 if grasshopper_location not in self.get_surrounding_locations():
@@ -510,6 +507,15 @@ class Piece(HexSpace):
         all possible moves for a given piece based on the current board state.
         """
         pass
+
+    def add_move(self, location):
+        # print(f'Adding {location} as a possible move for {self.name} at {self.location}')
+        self.possible_moves.add(location)
+
+    def remove_move(self, location):
+        # print(f'Removing {location} as a possible move for {self.name} at {self.location}')
+        if location in self.possible_moves:
+            self.possible_moves.remove(location)
 
     def update_board_moves(self):
         if self.is_white:

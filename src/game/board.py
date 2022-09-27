@@ -67,6 +67,8 @@ class HiveGameBoard(object):
         return cls.instance
 
     def perform_action(self, action_type, piece_location, new_location=None, piece_type=None):
+
+        # TODO: [Movement] Will need to ensure Queen Bee is placed <= turn 4. Cannot move if QB not placed
         if action_type == HiveGameBoard.MOVE_PIECE:
             self.move_piece(piece_location, new_location)
         elif action_type == HiveGameBoard.PLACE_PIECE:
@@ -161,22 +163,41 @@ class HiveGameBoard(object):
             raise ValueError('You either do not have any more of this type of piece or cannot place a piece there.')
 
         # End of action bookkeeping
-        all_spaces = self.get_all_spaces()
-        for space in self.spaces_requiring_updates.copy():
-            if space in all_spaces:
-                all_spaces[space].update()
+        # all_spaces = self.get_all_spaces()
+        # for space in self.spaces_requiring_updates.copy():
+        #     if space in all_spaces:
+        #         all_spaces[space].update()
+        # self.spaces_requiring_updates.clear()
+
+        pieces_requiring_updates = self.spaces_requiring_updates.intersection(self.pieces.keys())
+        empty_spaces_requiring_updates = self.spaces_requiring_updates.intersection(self.empty_spaces.keys())
+        for empty_space_location in empty_spaces_requiring_updates:
+            self.empty_spaces[empty_space_location].update()
+        for piece_location in pieces_requiring_updates:
+            self.pieces[piece_location].update()
         self.spaces_requiring_updates.clear()
 
         self.turn_number += 1
 
     def move_piece(self, piece_location, new_location):
+        if piece_location == new_location:
+            return
+
         self.pieces[piece_location].move_to(new_location)
 
         # End of action bookkeeping
-        all_spaces = self.get_all_spaces()
-        for space in self.spaces_requiring_updates.copy():
-            if space in all_spaces:
-                all_spaces[space].update()
+        # all_spaces = self.get_all_spaces()
+        # for space in self.spaces_requiring_updates.copy():
+        #     if space in all_spaces:
+        #         all_spaces[space].update()
+        # self.spaces_requiring_updates.clear()
+
+        pieces_requiring_updates = self.spaces_requiring_updates.intersection(self.pieces.keys())
+        empty_spaces_requiring_updates = self.spaces_requiring_updates.intersection(self.empty_spaces.keys())
+        for empty_space_location in empty_spaces_requiring_updates:
+            self.empty_spaces[empty_space_location].update()
+        for piece_location in pieces_requiring_updates:
+            self.pieces[piece_location].update()
         self.spaces_requiring_updates.clear()
 
         self.turn_number += 1
