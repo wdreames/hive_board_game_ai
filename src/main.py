@@ -6,13 +6,13 @@ AI for the Hive Board Game
 """
 # TODO: [Formatting] Add comments for all classes and methods
 import traceback
-from src.game.board import HiveGameBoard
-from src.game.spaces import Piece
+import src.game.board as brd
+import src.game.spaces as spcs
 
 
 def play_game():
     # Initialize the game board
-    board = HiveGameBoard()
+    board = brd.HiveGameBoard()
 
     while board.determine_winner() is None:
         print('-' * 50)
@@ -73,12 +73,12 @@ def play_game():
 
 
 def test_game1():
-    board = HiveGameBoard(new_board=True)
-    # board.place_piece(Piece.ANT, (0, 0))
+    board = brd.HiveGameBoard(new_board=True)
+    # board.place_piece(spcs.Piece.ANT, (0, 0))
     # board.print_board()
-    # board.place_piece(Piece.QUEEN_BEE, (-1, 0))
+    # board.place_piece(spcs.Piece.QUEEN_BEE, (-1, 0))
     # board.print_board()
-    # board.place_piece(Piece.ANT, (1, 1))
+    # board.place_piece(spcs.Piece.ANT, (1, 1))
     # board.print_board()
     # print(board)
     # print(board.pieces[(-1, 0)])
@@ -90,32 +90,35 @@ def test_game1():
     # print('-' * 50)
     # print(board.pieces[(0, 1)])
 
-    board.perform_action(HiveGameBoard.PLACE_PIECE, (0, 0), piece_type=Piece.BEETLE)
+    PLACE = brd.HiveGameBoard.PLACE_PIECE
+    MOVE = brd.HiveGameBoard.MOVE_PIECE
+
+    board.perform_action(PLACE, (0, 0), piece_type=spcs.spcs.Piece.BEETLE)
     print(board)
     board.print_board()
 
-    board.perform_action(HiveGameBoard.PLACE_PIECE, (-1, -1), piece_type=Piece.ANT)
+    board.perform_action(PLACE, (-1, -1), piece_type=spcs.spcs.Piece.ANT)
     print(board)
     board.print_board()
 
-    board.perform_action(HiveGameBoard.MOVE_PIECE, (0, 0), new_location=(-1, -1))
+    board.perform_action(MOVE, (0, 0), new_location=(-1, -1))
 
     print(board)
     board.print_board()
-    print(HiveGameBoard().empty_spaces[(0, 0)])
-    print(HiveGameBoard().empty_spaces[(-1, 0)])
+    print(brd.HiveGameBoard().empty_spaces[(0, 0)])
+    print(brd.HiveGameBoard().empty_spaces[(-1, 0)])
 
 
 def test_game2():
-    board = HiveGameBoard(new_board=True)
-    PLACE = HiveGameBoard.PLACE_PIECE
-    MOVE = HiveGameBoard.MOVE_PIECE
+    board = brd.HiveGameBoard(new_board=True)
+    PLACE = brd.HiveGameBoard.PLACE_PIECE
+    MOVE = brd.HiveGameBoard.MOVE_PIECE
 
-    board.perform_action(PLACE, (0, 0), piece_type=Piece.ANT)
+    board.perform_action(PLACE, (0, 0), piece_type=spcs.Piece.ANT)
     board.print_board()
-    board.perform_action(PLACE, (0, 1), piece_type=Piece.BEETLE)
+    board.perform_action(PLACE, (0, 1), piece_type=spcs.Piece.BEETLE)
     board.print_board()
-    board.perform_action(PLACE, (0, -1), piece_type=Piece.QUEEN_BEE)
+    board.perform_action(PLACE, (0, -1), piece_type=spcs.Piece.QUEEN_BEE)
     board.print_board()
     board.perform_action(MOVE, (0, 1), new_location=(0, 0))
     board.print_board()
@@ -123,19 +126,19 @@ def test_game2():
     board.print_board()
     board.perform_action(MOVE, (0, 0), new_location=(-1, -1))
     board.print_board()
-    board.perform_action(PLACE, (0, 1), piece_type=Piece.ANT)
+    board.perform_action(PLACE, (0, 1), piece_type=spcs.Piece.ANT)
     board.print_board()
-    board.perform_action(PLACE, (-2, -2), piece_type=Piece.QUEEN_BEE)
+    board.perform_action(PLACE, (-2, -2), piece_type=spcs.Piece.QUEEN_BEE)
     board.print_board()
-    board.perform_action(PLACE, (0, 2), piece_type=Piece.GRASSHOPPER)
+    board.perform_action(PLACE, (0, 2), piece_type=spcs.Piece.GRASSHOPPER)
     board.print_board()
-    board.perform_action(PLACE, (-1, -2), piece_type=Piece.ANT)
+    board.perform_action(PLACE, (-1, -2), piece_type=spcs.Piece.ANT)
     board.print_board()
-    board.perform_action(PLACE, (0, 3), piece_type=Piece.GRASSHOPPER)
+    board.perform_action(PLACE, (0, 3), piece_type=spcs.Piece.GRASSHOPPER)
     board.print_board()
-    board.perform_action(PLACE, (-2, -1), piece_type=Piece.BEETLE)
+    board.perform_action(PLACE, (-2, -1), piece_type=spcs.Piece.BEETLE)
     board.print_board()
-    board.perform_action(PLACE, (0, 4), piece_type=Piece.ANT)
+    board.perform_action(PLACE, (0, 4), piece_type=spcs.Piece.ANT)
     board.print_board()
     board.perform_action(MOVE, (-2, -1), new_location=(-1, -1))
     board.print_board()
@@ -150,17 +153,17 @@ def test_game2():
 
 
 def test_game3():
-    board = HiveGameBoard(new_board=True)
-    PLACE = HiveGameBoard.PLACE_PIECE
-    MOVE = HiveGameBoard.MOVE_PIECE
+    board = brd.HiveGameBoard(new_board=True)
+    PLACE = brd.HiveGameBoard.PLACE_PIECE
+    MOVE = brd.HiveGameBoard.MOVE_PIECE
 
-    board.perform_action(PLACE, (0, 0), piece_type=Piece.GRASSHOPPER)
+    board.perform_action(PLACE, (0, 0), piece_type=spcs.Piece.GRASSHOPPER)
     board.print_board()
     print('-' * 10)
-    board.perform_action(PLACE, (1, 0), piece_type=Piece.GRASSHOPPER)
+    board.perform_action(PLACE, (1, 0), piece_type=spcs.Piece.GRASSHOPPER)
     board.print_board()
     print('-' * 10)
-    board.perform_action(PLACE, (-1, 0), piece_type=Piece.ANT)
+    board.perform_action(PLACE, (-1, 0), piece_type=spcs.Piece.ANT)
     board.print_board()
     print('-' * 10)
     board.perform_action(MOVE, (1, 0), new_location=(-2, 0))
@@ -175,8 +178,56 @@ def test_game3():
     # play_game()
 
 
+def test_game4():
+    board = brd.HiveGameBoard(new_board=True)
+    PLACE = brd.HiveGameBoard.PLACE_PIECE
+    MOVE = brd.HiveGameBoard.MOVE_PIECE
+
+    board.perform_action(PLACE, (0, 0), piece_type=spcs.Piece.BEETLE)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(PLACE, (1, 0), piece_type=spcs.Piece.GRASSHOPPER)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(PLACE, (-1, -1), piece_type=spcs.Piece.SPIDER)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(PLACE, (2, 0), piece_type=spcs.Piece.SPIDER)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(MOVE, (-1, -1), new_location=(2, -1))
+    print(board)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(PLACE, (3, 1), piece_type=spcs.Piece.GRASSHOPPER)
+    print(board)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(PLACE, (-1, 0), piece_type=spcs.Piece.QUEEN_BEE)
+    print(board)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(MOVE, (3, 1), new_location=(1, -1))
+    print(board)
+    board.print_board()
+    print('-' * 10)
+
+
+    # print(board)
+    #
+    # print(board.pieces[(2, 0)])
+    # print(board.pieces[(2, -1)])
+    # print(board.pieces[(-1, -1)])
+    # print(board.empty_spaces[(2, -1)])
+
+    # play_game()
+
+
 # TODO: [UI] Make this nicer later on
 if __name__ == '__main__':
+    # play_game()
+    # test_game1()
     # test_game2()
-    play_game()
     # test_game3()
+    test_game4()
+    # play_game()
