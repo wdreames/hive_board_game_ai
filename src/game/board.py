@@ -16,6 +16,10 @@ class HiveGameBoard(object):
     MOVE_PIECE = 'Move piece'
     PLACE_PIECE = 'Place piece'
 
+    # def __init__(self):
+    #     # TODO: [Formatting] Clean this up
+    #     self.loop_was_formed = False
+
     def __new__(cls, new_board=False):
         """
         Method used to get an instance of the game board. A singleton design pattern is used here so the class is
@@ -57,12 +61,22 @@ class HiveGameBoard(object):
             cls.white_queen_location = None
             cls.black_queen_location = None
 
+            cls.spaces_requiring_updates = set()
+            cls.empty_spaces_requiring_deletion = set()
+
+            # Variables for keeping track of Ant movement
+            cls.ant_mvt_prevention_sets = []
+            cls.ant_mvt_preventions_to_add = set()
+            cls.ant_locations = set()
+
+            # Variables for determining which pieces can move if a loop was formed
+            # cls.loop_was_formed = False
+            cls.tarjan_discovery_time = 0
+            cls.prepare_to_find_articulation_pts = False
+
             # Create board with one empty square
             EmptySpace(0, 0)
             cls.white_locations_to_place = {(0, 0)}
-
-            cls.spaces_requiring_updates = set()
-            cls.empty_spaces_requiring_deletion = set()
 
         return cls.instance
 
@@ -78,10 +92,7 @@ class HiveGameBoard(object):
 
         # TODO: [Organization] Test cases will need to be restructured in order to call the following here
         # End of action bookkeeping
-        # for space in self.spaces_requiring_updates:
-        #     space.update()
-        # self.spaces_requiring_updates.clear()
-        #
+        # self.update_pieces()
         # self.turn_number += 1
 
     def get_all_possible_actions(self):
@@ -162,21 +173,7 @@ class HiveGameBoard(object):
         else:
             raise ValueError('You either do not have any more of this type of piece or cannot place a piece there.')
 
-        # End of action bookkeeping
-        # all_spaces = self.get_all_spaces()
-        # for space in self.spaces_requiring_updates.copy():
-        #     if space in all_spaces:
-        #         all_spaces[space].update()
-        # self.spaces_requiring_updates.clear()
-
-        pieces_requiring_updates = self.spaces_requiring_updates.intersection(self.pieces.keys())
-        empty_spaces_requiring_updates = self.spaces_requiring_updates.intersection(self.empty_spaces.keys())
-        for empty_space_location in empty_spaces_requiring_updates:
-            self.empty_spaces[empty_space_location].update()
-        for piece_location in pieces_requiring_updates:
-            self.pieces[piece_location].update()
-        self.spaces_requiring_updates.clear()
-
+        self.update_pieces()
         self.turn_number += 1
 
     def move_piece(self, piece_location, new_location):
@@ -185,22 +182,137 @@ class HiveGameBoard(object):
 
         self.pieces[piece_location].move_to(new_location)
 
-        # End of action bookkeeping
-        # all_spaces = self.get_all_spaces()
-        # for space in self.spaces_requiring_updates.copy():
-        #     if space in all_spaces:
-        #         all_spaces[space].update()
-        # self.spaces_requiring_updates.clear()
+        self.update_pieces()
+        self.turn_number += 1
 
-        pieces_requiring_updates = self.spaces_requiring_updates.intersection(self.pieces.keys())
+    def update_pieces(self):
+        # TODO: [Efficiency] Add to these sets directly instead of having to use an intersection
         empty_spaces_requiring_updates = self.spaces_requiring_updates.intersection(self.empty_spaces.keys())
         for empty_space_location in empty_spaces_requiring_updates:
             self.empty_spaces[empty_space_location].update()
+
+        self.update_piece_movement()
+
+        pieces_requiring_updates = self.spaces_requiring_updates.intersection(self.pieces.keys())
         for piece_location in pieces_requiring_updates:
             self.pieces[piece_location].update()
         self.spaces_requiring_updates.clear()
 
-        self.turn_number += 1
+    def update_piece_movement(self):
+        # Ant movement specific
+        for location in self.ant_mvt_preventions_to_add:
+            self.add_to_ant_movement_prevention_set(location)
+        self.ant_mvt_preventions_to_add.clear()
+
+        # Determine which pieces can move under the OneHive rule
+        if self.prepare_to_find_articulation_pts:
+            # TODO: [Efficiency] See if there is a faster way to find a starting coordinate
+            start_coordinate = set(self.pieces.keys()).pop()
+            visited_pieces = set()
+            articulation_points = set()
+            parent_nodes = dict()
+            low_values = dict()
+            discovery_times = dict()
+            self.find_articulation_pts(start_coordinate, visited_pieces, articulation_points,
+                                       parent_nodes, low_values, discovery_times)
+
+            # TODO: [Efficiency] I feel like there may be an easier/faster way to do this
+            non_articulation_points = set(self.pieces.keys()).difference(articulation_points)
+            self.white_possible_moves.clear()
+            self.black_possible_moves.clear()
+            for piece_location in non_articulation_points:
+                self.pieces[piece_location].can_move = True
+                self.pieces[piece_location].calc_possible_moves()
+
+        self.prepare_to_find_articulation_pts = False
+
+    def find_articulation_pts(self, current_coordinate, visited, ap, parent, low, disc_time):
+        # Parameters:   current_coordinate: (x,y),
+        #               visited: set(coordinates),
+        #               articulation_points: set(coordinates),
+        #               parent: dict(coordinate: coordinate),
+        #               low: int,
+        #               disc_time: int
+        children = 0
+        visited.add(current_coordinate)
+        disc_time[current_coordinate] = self.tarjan_discovery_time
+        low[current_coordinate] = self.tarjan_discovery_time
+        self.tarjan_discovery_time += 1
+
+        for connected_location in self.pieces[current_coordinate].connected_pieces:
+            if connected_location not in visited:
+                parent[connected_location] = current_coordinate
+                children += 1
+
+                self.find_articulation_pts(connected_location, visited, ap, parent, low, disc_time)
+
+                low[current_coordinate] = min(low[connected_location], low[current_coordinate])
+
+                if current_coordinate not in parent and children > 1:
+                    ap.add(current_coordinate)
+                elif current_coordinate in parent and low[connected_location] >= disc_time[current_coordinate]:
+                    ap.add(current_coordinate)
+            elif parent.get(current_coordinate) and connected_location != parent.get(current_coordinate):
+                low[current_coordinate] = min(low[current_coordinate], disc_time[connected_location])
+
+    def add_to_ant_movement_prevention_set(self, current_space, set_index=None, visited_spaces=None):
+        if current_space not in self.empty_spaces:
+            return
+        if visited_spaces is None:
+            visited_spaces = set()
+        if set_index is None:
+            self.ant_mvt_prevention_sets.append(set())
+            set_index = -1
+
+        # If the edge of the board is ever reached, this should no longer be a set
+        if self.empty_spaces[current_space].get_total_num_connections() < 6:
+            self.ant_mvt_prevention_sets[set_index].clear()
+            return
+
+        self.ant_mvt_prevention_sets[set_index].add(current_space)
+        visited_spaces.add(current_space)
+
+        for connected_space in self.empty_spaces[current_space].get_queen_bee_moves().difference(visited_spaces):
+            self.add_to_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
+
+    def remove_from_ant_movement_prevention_set(self, current_space, set_index, visited_spaces=None):
+        if current_space not in self.empty_spaces or current_space not in self.ant_mvt_prevention_sets[set_index]:
+            return
+        if visited_spaces is None:
+            visited_spaces = set()
+        self.ant_mvt_prevention_sets[set_index].remove(current_space)
+        visited_spaces.add(current_space)
+
+        for connected_space in current_space.get_queen_bee_moves().difference(visited_spaces):
+            self.remove_from_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
+
+    def union_ant_movement_prevention_sets(self, set_index1, set_index2):
+        if set_index1 == set_index2:
+            return set_index1
+
+        # We want to make sure we are removing the larger index so that the index left in the list is not changed.
+        if set_index1 < set_index2:
+            i1 = set_index1
+            i2 = set_index2
+        else:
+            i1 = set_index2
+            i2 = set_index1
+
+        self.ant_mvt_prevention_sets[i1] = self.ant_mvt_prevention_sets[i1].union(
+            self.ant_mvt_prevention_sets[i2]
+        )
+        self.clear_ant_movement_prevention_set(i2)
+        return i1
+
+    def clear_ant_movement_prevention_set(self, set_index):
+        self.ant_mvt_prevention_sets.pop(set_index)
+
+    # Returns index if it exists
+    def empty_space_in_ant_movement_prevention_set(self, space_location):
+        for set_index, prevention_set in enumerate(self.ant_mvt_prevention_sets):
+            if space_location in prevention_set:
+                return set_index
+        return -1
 
     def get_all_spaces(self):
         # Merges the dictionaries

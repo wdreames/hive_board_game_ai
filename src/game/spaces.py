@@ -92,9 +92,21 @@ class HexSpace:
         grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
         grasshopper.remove_grasshopper_path(self.location)
 
-    def get_surrounding_locations(self):
-        return {(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x - 1, self.y),
-                (self.x + 1, self.y), (self.x, self.y + 1), (self.x + 1, self.y + 1)}
+    def get_all_surrounding_locations(self):
+        return {(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x + 1, self.y),
+                (self.x + 1, self.y + 1), (self.x, self.y + 1), (self.x - 1, self.y)}
+
+    def get_all_surrounding_locations_ordered(self):
+        return [(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x + 1, self.y),
+                (self.x + 1, self.y + 1), (self.x, self.y + 1), (self.x - 1, self.y)]
+
+    def get_queen_bee_moves(self):
+        unavailable_moves = self.cannot_move_to.union(self.sliding_prevented_to.keys())
+        queen_bee_moves = self.connected_empty_spaces.difference(unavailable_moves)
+        return queen_bee_moves
+
+    def get_total_num_connections(self):
+        return len(self.connected_pieces) + len(self.connected_empty_spaces)
 
     @abstractmethod
     def remove(self):
@@ -152,11 +164,16 @@ class EmptySpace(HexSpace):
 
         board.HiveGameBoard().empty_spaces[self.location] = self
 
+        # TODO: [Efficiency] This may not need to be called *every* time an Empty Space is placed
+        # TODO: [Ant] Need to update all Ant pieces since this empty space will count as a new potential move
+        for ant_location in board.HiveGameBoard().ant_locations:
+            board.HiveGameBoard().pieces[ant_location].prepare_for_update()
+
         # TODO: [Formatting] Clean this up
 
         if connected_pcs is None or connected_emt_spcs is None:
             # Check surrounding spaces and connect to them
-            for space_location in self.get_surrounding_locations():
+            for space_location in self.get_all_surrounding_locations():
                 all_spaces = board.HiveGameBoard().get_all_spaces()
                 if space_location in all_spaces:
                     all_spaces[space_location].add_connection_to_empty_space(self.location)
@@ -175,6 +192,41 @@ class EmptySpace(HexSpace):
                     self.num_white_connected += 1
                 else:
                     self.num_black_connected += 1
+
+            # TODO: [Ant]   Check QB moves
+            #               Check for spaces in a prevention set
+            #               If 1+ connected free spaces, clear connected prevention sets
+            #               Elif 1 connected prevention set, join it
+            #               Elif 2+ connected prevention sets, union them and join
+            surrounding_moves = self.get_queen_bee_moves()
+            found_free_space = False
+            prevention_set_index = -1
+            for space_location in surrounding_moves:
+                # TODO: [Efficiency] The methods I'm using don't feel super efficient. Looks like O(n^2) here
+                current_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(space_location)
+
+                # Found a connected prevention set
+                if current_index > -1:
+                    # If a prevention set has already been found, union them
+                    if prevention_set_index > -1:
+                        prevention_set_index = board.HiveGameBoard().union_ant_movement_prevention_sets(current_index,
+                                                                                                        prevention_set_index)
+                    # Otherwise, store the current index
+                    else:
+                        prevention_set_index = current_index
+                # Found a free space
+                else:
+                    found_free_space = True
+            if found_free_space and prevention_set_index > -1:
+                board.HiveGameBoard().clear_ant_movement_prevention_set(prevention_set_index)
+            elif prevention_set_index > -1:
+                board.HiveGameBoard().ant_mvt_prevention_sets[prevention_set_index].add(self.location)
+            elif not found_free_space:
+                # Are surrounding moves that exist (free spaces or spaces in prevention sets)
+                # Did not find any free spaces (therefore there must be prevention sets)
+                # Did not find a prevention index (therefore there must be free spaces)
+                raise RuntimeError('Error! This line should never be called!')
+
             self.prepare_for_update()
 
     def update(self):
@@ -223,6 +275,11 @@ class EmptySpace(HexSpace):
         for spider_location in self.linked_spiders.copy():
             spider = board.HiveGameBoard().pieces[spider_location]
             spider.remove_spider_path(self.location, initial_call=True)
+
+        # TODO: [Efficiency] This may not need to be called *every* time an Empty Space is placed
+        # TODO: [Ant] Need to update all Ant pieces since this empty space will no longer count as a new potential move
+        for ant_location in board.HiveGameBoard().ant_locations:
+            board.HiveGameBoard().pieces[ant_location].prepare_for_update()
 
         board.HiveGameBoard().empty_spaces.pop(self.location)
 
@@ -312,6 +369,7 @@ class Piece(HexSpace):
         self.name = Piece.GENERIC
         self.is_white = is_white
         self.possible_moves = set()
+        self.can_move = True
         self.preventing_sliding_for = {}
 
         # TODO: [Organization] This assumes that this color piece can be placed here without issue
@@ -335,15 +393,6 @@ class Piece(HexSpace):
         # TODO: [Movement] Unlock any relevant pieces that used to be connected
         #       Also need to see if any cannot_move_to sets need to be updated
 
-        # Create an empty space here
-        new_empty_space = EmptySpace(self.x, self.y, self.connected_pieces, self.connected_empty_spaces,
-                                     self.sliding_prevented_to, self.cannot_move_to)
-
-        all_board_spaces = board.HiveGameBoard().get_all_spaces()
-        for space in self.connected_pieces.union(self.connected_empty_spaces):
-            all_board_spaces[space].remove_connection_to_piece(self.location)
-            all_board_spaces[space].add_connection_to_empty_space(self.location)
-
         # Update pieces that are no longer prevented from sliding
         all_spaces = board.HiveGameBoard().get_all_spaces()
         for limited_space_loc, locations in self.preventing_sliding_for.items():
@@ -354,12 +403,46 @@ class Piece(HexSpace):
                 limited_space.sliding_prevented_to[loc].remove(self.location)
 
                 # There are always two pieces preventing sliding. The other piece no longer has a pair and can
-                # remove this block
+                # be cleared as well
                 other_limiting_piece_loc = limited_space.sliding_prevented_to[loc].pop()
                 all_spaces[other_limiting_piece_loc].preventing_sliding_for[limited_space_loc].remove(loc)
 
                 # The limited space is able to slide into the specified location now
                 limited_space.sliding_prevented_to.pop(loc)
+
+                # TODO: [Ant]
+                #       limited_space and loc should be a pair
+                #       if both are empty spaces:
+                #           if one is in a prevented set but the other is not:
+                #               clear the prevented set
+                #           elif both in separate prevented sets:
+                #               union the two sets
+
+                if limited_space_loc in board.HiveGameBoard().empty_spaces and \
+                        loc in board.HiveGameBoard().empty_spaces:
+                    space1_prevention_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(
+                        limited_space_loc)
+                    space2_prevention_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(loc)
+
+                    if space1_prevention_index > -1 and space2_prevention_index > -1:
+                        if space1_prevention_index != space2_prevention_index:
+                            board.HiveGameBoard().union_ant_movement_prevention_sets(space1_prevention_index,
+                                                                                     space2_prevention_index)
+                    elif space1_prevention_index > -1:
+                        board.HiveGameBoard().clear_ant_movement_prevention_set(space1_prevention_index)
+                    elif space2_prevention_index > -1:
+                        board.HiveGameBoard().clear_ant_movement_prevention_set(space2_prevention_index)
+
+        # Create a new empty space here
+        new_empty_space = EmptySpace(self.x, self.y, self.connected_pieces, self.connected_empty_spaces,
+                                     self.sliding_prevented_to, self.cannot_move_to)
+
+        self.update_one_hive_rule(self_is_placing=False)
+
+        all_board_spaces = board.HiveGameBoard().get_all_spaces()
+        for space in self.connected_pieces.union(self.connected_empty_spaces):
+            all_board_spaces[space].remove_connection_to_piece(self.location)
+            all_board_spaces[space].add_connection_to_empty_space(self.location)
 
         # Check if this piece was part of a path for a grasshopper
         if self.linked_grasshoppers:
@@ -368,7 +451,7 @@ class Piece(HexSpace):
                 self.remove_from_grasshopper_path(grasshopper_location)
 
                 new_empty_space.add_link_to_grasshopper(grasshopper_location)
-                if grasshopper_location not in self.get_surrounding_locations():
+                if grasshopper_location not in self.get_all_surrounding_locations():
                     board.HiveGameBoard().pieces[grasshopper_location].add_move(self.location)
 
         self.linked_grasshoppers.clear()
@@ -417,15 +500,14 @@ class Piece(HexSpace):
         for space_location in all_connected_spaces:
             board.HiveGameBoard().get_all_spaces()[space_location].add_connection_to_piece(self.location)
 
-        if len(self.connected_pieces) == 1:
-            board.HiveGameBoard().pieces[list(self.connected_pieces)[0]].lock()
-
         # Delete the empty space at this location
         related_empty_space.remove()
 
         self._create_surrounding_emt_spcs()
 
         self._update_sliding()
+
+        self.update_one_hive_rule(self_is_placing=True)
 
     def _create_surrounding_emt_spcs(self):
         # Helper function for move_to(location)
@@ -472,6 +554,52 @@ class Piece(HexSpace):
             self._helper_add_to_dict_set(space2.sliding_prevented_to, space1_loc, self.location)
             self._helper_add_to_dict_set(space2.sliding_prevented_to, space1_loc, other_piece_loc)
 
+            # TODO: [Ant]
+            #       If space1 and space2 are empty spaces:
+            #           If space1 and space2 free spaces:
+            #               Determine if either space is on the outside edge of the board
+            #               If none on outside:
+            #                   traverse separately and add to different new prevention sets
+            #               If one on outside:
+            #                   traverse side on inside and add to new prevention set
+            #           Elif space1 and space2 are prevented spaces and within different prevention sets:
+            #               Choose one space from the pair
+            #               traverse it, remove it from its prevention set, and add it to the other's prevention set
+            #           Else:
+            #               This should never happen in theory. If this is true, logic could be altered to improve
+            #               efficiency.
+
+            # Update Ant movement prevention sets
+            if space1_loc in board.HiveGameBoard().empty_spaces and space2_loc in board.HiveGameBoard().empty_spaces:
+                space1_prevention_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(space1_loc)
+                space2_prevention_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(space2_loc)
+
+                # Both empty spaces are free spaces
+                if space1_prevention_index == -1 and space2_prevention_index == -1:
+                    # Determine which space (if any) if on the outside of the board
+                    space1_on_outside = space1.get_total_num_connections() < 6
+                    space2_on_outside = space2.get_total_num_connections() < 6
+
+                    if not space1_on_outside and not space2_on_outside:
+                        board.HiveGameBoard().ant_mvt_preventions_to_add.add(space1_loc)
+                        board.HiveGameBoard().ant_mvt_preventions_to_add.add(space2_loc)
+                    elif space1_on_outside:
+                        board.HiveGameBoard().ant_mvt_preventions_to_add.add(space2_loc)
+                    elif space2_on_outside:
+                        board.HiveGameBoard().ant_mvt_preventions_to_add.add(space1_loc)
+                    else:
+                        raise RuntimeError('Error! This line should never be executed!')
+                # Both are within different prevention sets
+                elif space1_prevention_index != space2_prevention_index and \
+                        space1_prevention_index > -1 and space2_prevention_index > -1:
+                    # TODO: [Efficiency] Could combine these statements into a single method recursion
+                    board.HiveGameBoard().remove_from_ant_movement_prevention_set(space1_loc,
+                                                                                  space1_prevention_index)
+                    board.HiveGameBoard().add_to_ant_movement_prevention_set(space1_loc, space2_prevention_index)
+                    board.HiveGameBoard().clear_ant_movement_prevention_set(space1_prevention_index)
+                else:
+                    raise RuntimeError('Error! This line should never be executed!')
+
     # TODO: [Formatting] Put this function into a utils class
     @staticmethod
     def _helper_add_to_dict_set(dictionary, key, value):
@@ -480,25 +608,60 @@ class Piece(HexSpace):
         else:
             dictionary[key] = {value}
 
-    # def formed_loop(self):
-    #     # Check if two pieces are on opposite sides after being placed w/ 1+ empty spaces in between
-    #     return False
+    def update_one_hive_rule(self, self_is_placing=True):
+        n = len(self.connected_pieces)
 
-    # TODO: [Movement] Implement lock method; currently have a placeholder for testing
+        if n == 1:
+            if self_is_placing:
+                board.HiveGameBoard().pieces[list(self.connected_pieces)[0]].lock()
+            else:
+                board.HiveGameBoard().pieces[list(self.connected_pieces)[0]].unlock()
+            return
+        elif n == 6:
+            return
+        else:
+            board.HiveGameBoard().prepare_to_find_articulation_pts = True
+            return
+
+        # TODO: [Efficiency] Determine if the below code would still be useful
+        # Determine if all the connected pieces are in a single, connected line
+        # ordered_list = self.get_all_surrounding_locations_ordered()
+        # for index, _ in enumerate(ordered_list):
+        #     if index + n > len(ordered_list):
+        #         current_group = ordered_list[index:] + ordered_list[:(index + n) % len(ordered_list)]
+        #     else:
+        #         current_group = ordered_list[index:(index + n)]
+        #
+        #     if self.connected_pieces == set(current_group):
+        #         # Found the line of pieces. Now lock/unlock relevant locations
+        #         inner_group = current_group[1:-1]
+        #         for piece_location in inner_group:
+        #             related_piece = board.HiveGameBoard().pieces[piece_location]
+        #             direction = self.direction_from_a_to_b(self.location, related_piece.location)
+        #             next_location = self.get_next_space_in_direction(related_piece.location, direction)
+        #             if next_location in board.HiveGameBoard().empty_spaces:
+        #                 if self_is_placing:
+        #                     related_piece.unlock()
+        #                 else:
+        #                     related_piece.lock()
+        #         return
+        #
+        # # If we reach this point, a single line of pieces was not found. This means a loop was formed/broken
+        # # At this point, it is unknown which pieces need to be updated, and a DFS algorithm needs to be used to update
+        # # all pieces on the board. O(NumPieces + NumPieceConnections)
+        # print('A loop has been formed/broken!!!')
+        # if self_is_placing:
+        #     board.HiveGameBoard().loop_was_formed = True
+
     def lock(self):
-        """
-        Called when the piece is put into a position where it can no longer move. This function clears the set of
-        all possible moves
-        """
         print('{} located at {} has been locked'.format(self.name, self.location))
+        self.can_move = False
+        self.update_board_moves()  # TODO: [Lock/Unlock] Determine if this should prepare for update instead
 
-    # TODO: [Movement] Implement unlock method; currently have a placeholder for testing
     def unlock(self):
-        """
-        Called when the piece goes from a position where it cannot move, to a position where it can.
-        This function calculates a new list of possible moves for this piece.
-        """
         print('{} located at {} has been unlocked'.format(self.name, self.location))
+        self.can_move = True
+        self.update_board_moves()  # TODO: [Lock/Unlock] Determine if this should prepare for update instead
 
     @abstractmethod
     def calc_possible_moves(self):
@@ -518,10 +681,16 @@ class Piece(HexSpace):
             self.possible_moves.remove(location)
 
     def update_board_moves(self):
-        if self.is_white:
-            board.HiveGameBoard().white_possible_moves[self.location] = self.possible_moves
+        if self.can_move:
+            if self.is_white:
+                board.HiveGameBoard().white_possible_moves[self.location] = self.possible_moves
+            else:
+                board.HiveGameBoard().black_possible_moves[self.location] = self.possible_moves
         else:
-            board.HiveGameBoard().black_possible_moves[self.location] = self.possible_moves
+            if self.location in board.HiveGameBoard().white_possible_moves:
+                board.HiveGameBoard().white_possible_moves.pop(self.location)
+            elif self.location in board.HiveGameBoard().black_possible_moves:
+                board.HiveGameBoard().black_possible_moves.pop(self.location)
 
     def add_connection_to_piece(self, location):
         super().add_connection_to_piece(location)

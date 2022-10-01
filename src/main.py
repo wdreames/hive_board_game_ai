@@ -30,7 +30,7 @@ def play_game():
 
         print('{} has the following pieces to play: {}'.format(current_player, pieces_to_play))
         print('{} has the following locations to place a piece: {}'.format(current_player, locations_to_place))
-        print('{} has the following pieces on the board: {}'.format(current_player, set(possible_moves.keys())))
+        print('{} has the following pieces to move: {}'.format(current_player, set(possible_moves.keys())))
 
         try:
             # TODO: [UI] Assuming properly formatted input for now
@@ -93,11 +93,11 @@ def test_game1():
     PLACE = brd.HiveGameBoard.PLACE_PIECE
     MOVE = brd.HiveGameBoard.MOVE_PIECE
 
-    board.perform_action(PLACE, (0, 0), piece_type=spcs.spcs.Piece.BEETLE)
+    board.perform_action(PLACE, (0, 0), piece_type=spcs.Piece.BEETLE)
     print(board)
     board.print_board()
 
-    board.perform_action(PLACE, (-1, -1), piece_type=spcs.spcs.Piece.ANT)
+    board.perform_action(PLACE, (-1, -1), piece_type=spcs.Piece.ANT)
     print(board)
     board.print_board()
 
@@ -149,8 +149,6 @@ def test_game2():
     print(board.pieces[(0, -1)])
     print(board.pieces[(0, 3)])
 
-    play_game()
-
 
 def test_game3():
     board = brd.HiveGameBoard(new_board=True)
@@ -175,7 +173,129 @@ def test_game3():
     # print(board.pieces[(1, 0)])
     # print(board.pieces[(-1, 0)])
 
-    # play_game()
+
+def test_game4():
+    board = brd.HiveGameBoard(new_board=True)
+    PLACE = brd.HiveGameBoard.PLACE_PIECE
+    MOVE = brd.HiveGameBoard.MOVE_PIECE
+
+    board.perform_action(PLACE, (0, 0), piece_type=spcs.Piece.BEETLE)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(PLACE, (1, 0), piece_type=spcs.Piece.GRASSHOPPER)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(PLACE, (-1, -1), piece_type=spcs.Piece.SPIDER)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(PLACE, (2, 0), piece_type=spcs.Piece.SPIDER)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(MOVE, (-1, -1), new_location=(2, -1))
+    print(board)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(PLACE, (3, 1), piece_type=spcs.Piece.GRASSHOPPER)
+    print(board)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(PLACE, (-1, 0), piece_type=spcs.Piece.QUEEN_BEE)
+    print(board)
+    board.print_board()
+    print('-' * 10)
+    board.perform_action(MOVE, (3, 1), new_location=(1, -1))
+    print(board)
+    board.print_board()
+    print('-' * 10)
+
+
+def test_sliding_rules():
+    # This is copied from test/test_sliding_rules_no_mvt.py
+
+    game_board = brd.HiveGameBoard(new_board=True)
+
+    # Making sure there are enough pieces to be placed for my test cases
+    game_board.white_pieces_to_place = {
+        'Ant': 5,
+        'Queen Bee': 1,
+        'Grasshopper': 5
+    }
+    game_board.black_pieces_to_place = {
+        'Ant': 5,
+        'Queen Bee': 1,
+        'Grasshopper': 5
+    }
+
+    # Make moves for a sample game
+    game_board.place_piece('Ant', (0, 0))  # White
+    game_board.place_piece('Ant', (0, -1))  # Black
+    game_board.place_piece('Ant', (-1, 0))  # White
+    game_board.place_piece('Queen Bee', (0, -2))  # Black
+    game_board.place_piece('Ant', (-2, 0))  # White
+    game_board.place_piece('Ant', (1, -2))  # Black
+
+    game_board.place_piece('Queen Bee', (-3, -1))  # White
+    game_board.place_piece('Ant', (2, -2))  # Black
+    game_board.place_piece('Grasshopper', (-3, -2))  # White
+    game_board.place_piece('Grasshopper', (3, -1))  # Black
+    game_board.place_piece('Grasshopper', (-3, -3))  # White
+    game_board.place_piece('Grasshopper', (3, 0))  # Black
+    game_board.place_piece('Grasshopper', (-2, -3))  # White
+
+    game_board.print_board()
+    print(game_board)
+
+    print(f'Number of Empty Spaces on the board: {len(game_board.empty_spaces)}')
+
+    for piece in game_board.pieces.values():
+        if piece.name == spcs.Piece.ANT:
+            print(f'Number of Empty Spaces Ant at {piece.location} can reach: {len(piece.possible_moves)}')
+
+    print(f'Number of prevention sets: {len(game_board.ant_mvt_prevention_sets)}')
+
+    game_board.perform_action(brd.HiveGameBoard.PLACE_PIECE, (2, 0), piece_type=spcs.Piece.ANT)
+
+    print('-' * 50)
+    game_board.print_board()
+    print('-' * 50)
+
+    print(f'Number of Empty Spaces on the board: {len(game_board.empty_spaces)}')
+
+    for piece in game_board.pieces.values():
+        if piece.name == spcs.Piece.ANT:
+            print(f'Number of Empty Spaces Ant at {piece.location} can reach: {len(piece.possible_moves)}')
+
+    print(f'Number of prevention sets: {len(game_board.ant_mvt_prevention_sets)}')
+    print('Prevention sets:')
+    moveset = set(game_board.empty_spaces.keys())
+    for prevention_set in game_board.ant_mvt_prevention_sets:
+        print(prevention_set)
+        moveset = moveset.difference(prevention_set)
+    print('Free Empty Spaces Remaining:')
+    print(moveset)
+
+    print(f'Possible moves for Ant at (-2, 0): {game_board.pieces[(-2, 0)].possible_moves}')
+
+
+def test_game5():
+    test_sliding_rules()
+    game_board = brd.HiveGameBoard()
+    game_board.perform_action(brd.HiveGameBoard.PLACE_PIECE, (-3, 0), piece_type=spcs.Piece.ANT)
+    print(game_board)
+    game_board.print_board()
+    print('-' * 10)
+    game_board.perform_action(brd.HiveGameBoard.MOVE_PIECE, (2, 0), new_location=(1, 0))
+    print(game_board)
+    game_board.print_board()
+    print('-' * 10)
+    game_board.perform_action(brd.HiveGameBoard.MOVE_PIECE, (-3, 0), new_location=(-1, -3))
+    print(game_board)
+    game_board.print_board()
+    print('-' * 10)
+    game_board.perform_action(brd.HiveGameBoard.PLACE_PIECE, (2, 0), piece_type=spcs.Piece.ANT)
+    print(game_board)
+    game_board.print_board()
+    print('-' * 10)
 
 
 def test_game4():
@@ -225,9 +345,20 @@ def test_game4():
 
 # TODO: [UI] Make this nicer later on
 if __name__ == '__main__':
-    # play_game()
     # test_game1()
     # test_game2()
     # test_game3()
-    test_game4()
+    # test_game4()
+    # test_sliding_rules()
+    test_game5()
     # play_game()
+
+# TODO: [Bug] Error after the following sequence of moves:
+#       Spider placed at (0,0)
+#       Beetle placed at (0,1)
+#       Queen Bee placed at (-1,-1)
+#       Beetle moved to (0,0
+#       ~~~~~
+#       I am guessing that the issue is cause by an update being sent to Spider or a related peice, but since the
+#       Beetle is ontop of the Spider and relaced it within the game board, Spider specific actions are attempted to
+#       be performed on the Beetle
