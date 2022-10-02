@@ -65,6 +65,10 @@ class Beetle(Piece):
         self.update_board_moves()
         return self.possible_moves
 
+    def lock(self):
+        if not self.stacked_piece_obj:
+            super().lock()
+
     def remove(self):
         on_top_of_piece = self.stacked_piece_obj is not None
 
@@ -91,9 +95,11 @@ class Beetle(Piece):
 
             # Remove this piece from the board dictionaries
             if self.is_white:
-                board.HiveGameBoard().white_possible_moves.pop(self.location)
+                if self.location in board.HiveGameBoard().white_possible_moves:
+                    board.HiveGameBoard().white_possible_moves.pop(self.location)
             else:
-                board.HiveGameBoard().black_possible_moves.pop(self.location)
+                if self.location in board.HiveGameBoard().black_possible_moves:
+                    board.HiveGameBoard().black_possible_moves.pop(self.location)
 
             board.HiveGameBoard().pieces[self.location] = self.stacked_piece_obj
             self.stacked_piece_obj.prepare_for_update()
@@ -143,6 +149,32 @@ class Beetle(Piece):
             self.prepare_for_update()
         else:
             super()._set_location_to(new_location)
+
+    # ===== Adapter Design Pattern functions =====
+
+    def add_grasshopper_path(self, start_location):
+        if self.stacked_piece_obj.name == Piece.GRASSHOPPER:
+            self.stacked_piece_obj.add_grasshopper_path(start_location)
+        else:
+            raise RuntimeError('Beetle is not on top of a Grasshopper but a Grasshopper function call was attempted.')
+
+    def remove_grasshopper_path(self, start_location):
+        if self.stacked_piece_obj.name == Piece.GRASSHOPPER:
+            self.stacked_piece_obj.remove_grasshopper_path(start_location)
+        else:
+            raise RuntimeError('Beetle is not on top of a Grasshopper but a Grasshopper function call was attempted.')
+
+    def add_spider_path(self, start_location):
+        if self.stacked_piece_obj.name == Piece.SPIDER:
+            self.stacked_piece_obj.add_spider_path(start_location)
+        else:
+            raise RuntimeError('Beetle is not on top of a Spider but a Spider function call was attempted.')
+
+    def remove_spider_path(self, start_location, initial_call=False):
+        if self.stacked_piece_obj.name == Piece.SPIDER:
+            self.stacked_piece_obj.remove_spider_path(start_location, initial_call)
+        else:
+            raise RuntimeError('Beetle is not on top of a Spider but a Spider function call was attempted.')
 
 
 class Grasshopper(Piece):

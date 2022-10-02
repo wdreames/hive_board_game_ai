@@ -78,6 +78,7 @@ class HexSpace:
         self.linked_grasshoppers.add(grasshopper_location)
         board.HiveGameBoard().pieces[grasshopper_location].added_paths.add(self.location)
 
+    # TODO: [Organization] Refactor these functions back into grasshopper. This will make Beetle implementations easier
     def remove_link_to_grasshopper(self, grasshopper_location):
         if grasshopper_location in self.linked_grasshoppers:
             self.linked_grasshoppers.remove(grasshopper_location)

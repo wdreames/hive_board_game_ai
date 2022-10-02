@@ -21,7 +21,7 @@ class TestBeetle(unittest.TestCase):
         actual_possible_moves = board.HiveGameBoard().pieces[(-1, 1)].possible_moves
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
-    def test_beetle_on_grasshopper(self):
+    def test_beetle_on_grasshopper1(self):
         beetle_board1()
 
         # Move onto Grasshopper
@@ -42,6 +42,14 @@ class TestBeetle(unittest.TestCase):
         actual_grasshopper_moves = board.HiveGameBoard().pieces[(0, -1)].possible_moves
         self.assertEqual(expected_grasshopper_moves, actual_grasshopper_moves)
 
+    def test_beetle_on_grasshopper2(self):
+        # TODO: [Beetle] Also test:
+        #       - Move Beetle onto Piece on Grasshopper path
+        #       - Move Beetle off Piece
+        #       - Move Piece
+        #       - Check Grasshopper movement
+        beetle_board1()
+
     def test_beetle_on_spider(self):
         beetle_board1()
 
@@ -58,8 +66,10 @@ class TestBeetle(unittest.TestCase):
         # Move off Spider
         board.HiveGameBoard().move_piece((0, 1), (0, 0))
 
+        board.HiveGameBoard().print_board()
+
         # Test Spider movement
-        expected_spider_moves = {(-2, 0), (1, 3)}
+        expected_spider_moves = {(-2, -1), (2, 3)}
         actual_spider_moves = board.HiveGameBoard().pieces[(0, 1)].possible_moves
         self.assertEqual(expected_spider_moves, actual_spider_moves)
 
