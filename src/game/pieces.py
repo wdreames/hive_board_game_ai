@@ -389,7 +389,7 @@ class Spider(Piece):
         starts_to_paths = empty_space.connected_empty_spaces.difference(unavailable_moves)
 
         # Add this Spider's location as a possible move for Spider if depth=2 and Spider in empty_space.connected_pieces
-        if depth == 2 and self.location in starts_to_paths:
+        if depth == 2 and self.location in empty_space.connected_pieces:
             self.add_move(self.location)
 
         # Log the data

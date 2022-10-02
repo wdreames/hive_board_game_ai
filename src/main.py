@@ -303,17 +303,7 @@ if __name__ == '__main__':
     # test_game1()
     # test_game2()
     # test_game3()
-    test_game4()
+    # test_game4()
     # test_sliding_rules()
     # test_game5()
-    # play_game()
-
-# TODO: [Bug] Error after the following sequence of moves:
-#       Spider placed at (0,0)
-#       Beetle placed at (0,1)
-#       Queen Bee placed at (-1,-1)
-#       Beetle moved to (0,0
-#       ~~~~~
-#       I am guessing that the issue is cause by an update being sent to Spider or a related peice, but since the
-#       Beetle is ontop of the Spider and relaced it within the game board, Spider specific actions are attempted to
-#       be performed on the Beetle
+    play_game()

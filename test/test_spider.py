@@ -82,6 +82,7 @@ class TestSpiderMoveOntoSelf(unittest.TestCase):
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
+    # TODO: [Spider] This likely fails because of sliding rules enforced by the Spider's original location
     def test_spider2(self):
         # Test Spider at (1, 3)
         expected_possible_moves = {(-1, 3), (2, 1)}
