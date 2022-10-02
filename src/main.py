@@ -298,59 +298,14 @@ def test_game5():
     print('-' * 10)
 
 
-def test_game4():
-    board = brd.HiveGameBoard(new_board=True)
-    PLACE = brd.HiveGameBoard.PLACE_PIECE
-    MOVE = brd.HiveGameBoard.MOVE_PIECE
-
-    board.perform_action(PLACE, (0, 0), piece_type=spcs.Piece.BEETLE)
-    board.print_board()
-    print('-' * 10)
-    board.perform_action(PLACE, (1, 0), piece_type=spcs.Piece.GRASSHOPPER)
-    board.print_board()
-    print('-' * 10)
-    board.perform_action(PLACE, (-1, -1), piece_type=spcs.Piece.SPIDER)
-    board.print_board()
-    print('-' * 10)
-    board.perform_action(PLACE, (2, 0), piece_type=spcs.Piece.SPIDER)
-    board.print_board()
-    print('-' * 10)
-    board.perform_action(MOVE, (-1, -1), new_location=(2, -1))
-    print(board)
-    board.print_board()
-    print('-' * 10)
-    board.perform_action(PLACE, (3, 1), piece_type=spcs.Piece.GRASSHOPPER)
-    print(board)
-    board.print_board()
-    print('-' * 10)
-    board.perform_action(PLACE, (-1, 0), piece_type=spcs.Piece.QUEEN_BEE)
-    print(board)
-    board.print_board()
-    print('-' * 10)
-    board.perform_action(MOVE, (3, 1), new_location=(1, -1))
-    print(board)
-    board.print_board()
-    print('-' * 10)
-
-
-    # print(board)
-    #
-    # print(board.pieces[(2, 0)])
-    # print(board.pieces[(2, -1)])
-    # print(board.pieces[(-1, -1)])
-    # print(board.empty_spaces[(2, -1)])
-
-    # play_game()
-
-
 # TODO: [UI] Make this nicer later on
 if __name__ == '__main__':
     # test_game1()
     # test_game2()
     # test_game3()
-    # test_game4()
+    test_game4()
     # test_sliding_rules()
-    test_game5()
+    # test_game5()
     # play_game()
 
 # TODO: [Bug] Error after the following sequence of moves:
