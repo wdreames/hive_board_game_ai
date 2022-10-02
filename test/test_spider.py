@@ -10,8 +10,8 @@ class TestSpiderBoard1Move0(unittest.TestCase):
         game_board = board.HiveGameBoard(new_board=True)
         ant = spaces.Piece.ANT
         beetle = spaces.Piece.BEETLE
-        gh = spaces.Piece.GRASSHOPPER
-        qb = spaces.Piece.QUEEN_BEE
+        grasshopper = spaces.Piece.GRASSHOPPER
+        queen_bee = spaces.Piece.QUEEN_BEE
         spider = spaces.Piece.SPIDER
 
         game_board.place_piece(spider, (0, 0))  # White

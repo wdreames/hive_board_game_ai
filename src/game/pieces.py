@@ -58,7 +58,10 @@ class Beetle(Piece):
 
     def calc_possible_moves(self):
         # Can move to any space that is possible to move to (including on top of pieces)
-        self.possible_moves = self.connected_empty_spaces.union(self.connected_pieces).difference(self.cannot_move_to)
+        moveset = self.connected_empty_spaces.union(self.connected_pieces)
+        if not self.stacked_piece_obj:
+            moveset = moveset.difference(self.cannot_move_to)
+        self.possible_moves = moveset
         self.update_board_moves()
         return self.possible_moves
 
@@ -131,9 +134,11 @@ class Beetle(Piece):
             # TODO: [Movement] This could also be done with a lock action
             # Remove piece from board movement dictionaries
             if self.stacked_piece_obj.is_white:
-                board.HiveGameBoard().white_possible_moves.pop(self.stacked_piece_obj.location)
+                if self.stacked_piece_obj.location in board.HiveGameBoard().white_possible_moves:
+                    board.HiveGameBoard().white_possible_moves.pop(self.stacked_piece_obj.location)
             else:
-                board.HiveGameBoard().black_possible_moves.pop(self.stacked_piece_obj.location)
+                if self.stacked_piece_obj.location in board.HiveGameBoard().black_possible_moves:
+                    board.HiveGameBoard().black_possible_moves.pop(self.stacked_piece_obj.location)
 
             self.prepare_for_update()
         else:
