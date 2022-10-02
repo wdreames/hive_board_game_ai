@@ -50,7 +50,7 @@ class TestBeetle(unittest.TestCase):
         #       - Check Grasshopper movement
         beetle_board1()
 
-    def test_beetle_on_spider(self):
+    def test_beetle_on_spider1(self):
         beetle_board1()
 
         # Make move for Black
@@ -81,6 +81,12 @@ class TestBeetle(unittest.TestCase):
     #       Piece placed at (-2, -1)
     #       Beetle moved to (0, -1)
     #       Check Spider moves
+    def test_beetle_on_spider2(self):
+        beetle_board3()
+
+        expected_spider_moves = {(-3, -1), (0, -2)}
+        actual_spider_moves = board.HiveGameBoard().pieces[(0, 0)].possible_moves
+        self.assertEqual(expected_spider_moves, actual_spider_moves)
 
     def test_beetle_on_ant(self):
         beetle_board2()
@@ -127,6 +133,7 @@ class TestBeetle(unittest.TestCase):
 
     # TODO: [Beetle] Test moving onto a piece of opposite color
 
+
 def beetle_board1():
     game_board = board.HiveGameBoard(new_board=True)
     ant = spaces.Piece.ANT
@@ -169,6 +176,25 @@ def beetle_board2():
     game_board.place_piece(ant, (3, 0))  # Black
     game_board.place_piece(beetle, (-2, -3))  # White
     game_board.place_piece(beetle, (2, 0))  # Black
+
+    game_board.print_board()
+
+
+def beetle_board3():
+    game_board = board.HiveGameBoard(new_board=True)
+    ant = spaces.Piece.ANT
+    beetle = spaces.Piece.BEETLE
+    grasshopper = spaces.Piece.GRASSHOPPER
+    queen_bee = spaces.Piece.QUEEN_BEE
+    spider = spaces.Piece.SPIDER
+
+    # Make moves for a sample game
+    game_board.place_piece(spider, (0, 0))
+    game_board.place_piece(beetle, (0, 1))
+    game_board.place_piece(queen_bee, (-1, -1))
+    game_board.move_piece((0, 1), (0, 0))
+    game_board.place_piece(ant, (-2, -1))
+    game_board.move_piece((0, 0), (0, -1))
 
     game_board.print_board()
 
