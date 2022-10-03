@@ -215,11 +215,8 @@ class Grasshopper(Piece):
 
         current_location = start_location
         while current_location not in board.HiveGameBoard().empty_spaces:
-            if current_location in self.added_paths:
-                return
-            else:
-                board.HiveGameBoard().pieces[current_location].add_link_to_grasshopper(self.location)
-                current_location = self.get_next_space_in_direction(current_location, direction)
+            board.HiveGameBoard().pieces[current_location].add_link_to_grasshopper(self.location)
+            current_location = self.get_next_space_in_direction(current_location, direction)
 
         # current_location must be an EmptySpace
         board.HiveGameBoard().empty_spaces[current_location].add_link_to_grasshopper(self.location)
@@ -238,11 +235,8 @@ class Grasshopper(Piece):
         current_location = self.get_next_space_in_direction(current_location, direction)
 
         while current_location not in board.HiveGameBoard().empty_spaces:
-            if current_location in self.removed_paths:
-                return
-            else:
-                board.HiveGameBoard().pieces[current_location].remove_link_to_grasshopper(self.location)
-                current_location = self.get_next_space_in_direction(current_location, direction)
+            board.HiveGameBoard().pieces[current_location].remove_link_to_grasshopper(self.location)
+            current_location = self.get_next_space_in_direction(current_location, direction)
 
         # current_location must be an EmptySpace
         board.HiveGameBoard().empty_spaces[current_location].remove_link_to_grasshopper(self.location)
