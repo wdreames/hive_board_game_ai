@@ -43,12 +43,16 @@ class TestBeetle(unittest.TestCase):
         self.assertEqual(expected_grasshopper_moves, actual_grasshopper_moves)
 
     def test_beetle_on_grasshopper2(self):
-        # TODO: [Beetle] Also test:
-        #       - Move Beetle onto Piece on Grasshopper path
-        #       - Move Beetle off Piece
-        #       - Move Piece
-        #       - Check Grasshopper movement
-        beetle_board1()
+        # Move Beetle onto Piece on Grasshopper path
+        # Move Grasshopper
+        # Move Beetle off Piece
+        # Move Piece that used to be on Grasshopper path
+        # Check Grasshopper movement
+        beetle_board4()
+
+        expected_grasshopper_moves = {(-1, -1)}
+        actual_grasshopper_moves = board.HiveGameBoard().pieces[(1, -1)].possible_moves
+        self.assertEqual(expected_grasshopper_moves, actual_grasshopper_moves)
 
     def test_beetle_on_spider1(self):
         beetle_board1()
@@ -189,6 +193,35 @@ def beetle_board3():
     game_board.move_piece((0, 0), (0, -1))
 
     game_board.print_board()
+
+
+def beetle_board4():
+    game_board = board.HiveGameBoard(new_board=True)
+    ant = spaces.Piece.ANT
+    beetle = spaces.Piece.BEETLE
+    grasshopper = spaces.Piece.GRASSHOPPER
+    queen_bee = spaces.Piece.QUEEN_BEE
+    spider = spaces.Piece.SPIDER
+
+    # Make moves for a sample game
+    game_board.place_piece(ant, (0, 0))
+    game_board.place_piece(grasshopper, (-1, -1))
+    game_board.place_piece(queen_bee, (1, 1))
+    game_board.place_piece(queen_bee, (-1, -2))
+    game_board.place_piece(beetle, (0, 1))
+    game_board.move_piece((-1, -2), (0, -1))
+
+    # Move Beetle onto Piece on Grasshopper path
+    game_board.move_piece((0, 1), (1, 1))
+
+    # Move the Grasshopper
+    game_board.move_piece((-1, -1), (1, -1))
+
+    # Move the Beetle off of the Piece
+    game_board.move_piece((1, 1), (0, 1))
+
+    # Move the Piece that used to be on the Grasshopper path
+    game_board.move_piece((1, 1), (1, 2))
 
 
 if __name__ == '__main__':

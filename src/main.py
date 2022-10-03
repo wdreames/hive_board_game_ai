@@ -301,9 +301,9 @@ def test_game5():
 # TODO: [UI] Make this nicer later on
 if __name__ == '__main__':
     # test_game1()
-    # test_game2()
+    test_game2()
     # test_game3()
     # test_game4()
     # test_sliding_rules()
     # test_game5()
-    play_game()
+    # play_game()

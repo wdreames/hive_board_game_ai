@@ -87,12 +87,7 @@ class Beetle(Piece):
             self.preventing_sliding_for.clear()
 
             # Remove this piece from the board dictionaries
-            if self.is_white:
-                if self.location in board.HiveGameBoard().white_possible_moves:
-                    board.HiveGameBoard().white_possible_moves.pop(self.location)
-            else:
-                if self.location in board.HiveGameBoard().black_possible_moves:
-                    board.HiveGameBoard().black_possible_moves.pop(self.location)
+            board.HiveGameBoard().remove_possible_moves(self.location)
 
             board.HiveGameBoard().pieces[self.location] = self.stacked_piece_obj
             self.stacked_piece_obj.prepare_for_update()
@@ -132,12 +127,7 @@ class Beetle(Piece):
 
             # TODO: [Movement] This could also be done with a lock action
             # Remove piece from board movement dictionaries
-            if self.stacked_piece_obj.is_white:
-                if self.stacked_piece_obj.location in board.HiveGameBoard().white_possible_moves:
-                    board.HiveGameBoard().white_possible_moves.pop(self.stacked_piece_obj.location)
-            else:
-                if self.stacked_piece_obj.location in board.HiveGameBoard().black_possible_moves:
-                    board.HiveGameBoard().black_possible_moves.pop(self.stacked_piece_obj.location)
+            board.HiveGameBoard().remove_possible_moves(self.stacked_piece_obj.location)
 
             self.prepare_for_update()
         else:

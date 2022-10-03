@@ -447,10 +447,7 @@ class Piece(HexSpace):
         self.preventing_sliding_for.clear()
 
         # Remove this piece from the board dictionaries
-        if self.is_white:
-            board.HiveGameBoard().white_possible_moves.pop(self.location)
-        else:
-            board.HiveGameBoard().black_possible_moves.pop(self.location)
+        board.HiveGameBoard().remove_possible_moves(self.location)
 
         board.HiveGameBoard().pieces.pop(self.location)
 
@@ -655,15 +652,9 @@ class Piece(HexSpace):
 
     def update_board_moves(self):
         if self.can_move:
-            if self.is_white:
-                board.HiveGameBoard().white_possible_moves[self.location] = self.possible_moves
-            else:
-                board.HiveGameBoard().black_possible_moves[self.location] = self.possible_moves
+            board.HiveGameBoard().add_possible_moves(self.location)
         else:
-            if self.location in board.HiveGameBoard().white_possible_moves:
-                board.HiveGameBoard().white_possible_moves.pop(self.location)
-            elif self.location in board.HiveGameBoard().black_possible_moves:
-                board.HiveGameBoard().black_possible_moves.pop(self.location)
+            board.HiveGameBoard().remove_possible_moves(self.location)
 
     def add_connection_to_piece(self, location):
         super().add_connection_to_piece(location)

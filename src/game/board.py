@@ -133,6 +133,18 @@ class HiveGameBoard(object):
         else:
             return self.black_possible_moves
 
+    def add_possible_moves(self, piece_location):
+        if self.pieces[piece_location].is_white:
+            self.white_possible_moves[piece_location] = self.pieces[piece_location].possible_moves
+        else:
+            self.black_possible_moves[piece_location] = self.pieces[piece_location].possible_moves
+
+    def remove_possible_moves(self, piece_location):
+        if piece_location in self.white_possible_moves:
+            self.white_possible_moves.pop(piece_location)
+        if piece_location in self.black_possible_moves:
+            self.black_possible_moves.pop(piece_location)
+
     def place_piece(self, piece_type, location):
         """
         Place a piece on the game board.
