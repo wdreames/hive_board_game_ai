@@ -133,28 +133,26 @@ class Beetle(Piece):
         else:
             super()._set_location_to(new_location)
 
-    # ===== Adapter Design Pattern functions =====
-
     def add_grasshopper_path(self, start_location):
-        if self.stacked_piece_obj.name == Piece.GRASSHOPPER:
+        if self.stacked_piece_obj.name in [Piece.GRASSHOPPER, Piece.BEETLE]:
             self.stacked_piece_obj.add_grasshopper_path(start_location)
         else:
             raise RuntimeError('Beetle is not on top of a Grasshopper but a Grasshopper function call was attempted.')
 
     def remove_grasshopper_path(self, start_location):
-        if self.stacked_piece_obj.name == Piece.GRASSHOPPER:
+        if self.stacked_piece_obj.name in [Piece.GRASSHOPPER, Piece.BEETLE]:
             self.stacked_piece_obj.remove_grasshopper_path(start_location)
         else:
             raise RuntimeError('Beetle is not on top of a Grasshopper but a Grasshopper function call was attempted.')
 
     def add_spider_path(self, start_location):
-        if self.stacked_piece_obj.name == Piece.SPIDER:
+        if self.stacked_piece_obj.name in [Piece.SPIDER, Piece.BEETLE]:
             self.stacked_piece_obj.add_spider_path(start_location)
         else:
             raise RuntimeError('Beetle is not on top of a Spider but a Spider function call was attempted.')
 
     def remove_spider_path(self, start_location, initial_call=False):
-        if self.stacked_piece_obj.name == Piece.SPIDER:
+        if self.stacked_piece_obj.name in [Piece.SPIDER, Piece.BEETLE]:
             self.stacked_piece_obj.remove_spider_path(start_location, initial_call)
         else:
             raise RuntimeError('Beetle is not on top of a Spider but a Spider function call was attempted.')

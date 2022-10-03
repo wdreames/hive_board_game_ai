@@ -122,13 +122,55 @@ class TestBeetle(unittest.TestCase):
         self.assertEqual(expected_qb_moves, actual_qb_moves)
 
     def test_beetle_on_queen_bee_win(self):
-        beetle_board5()
+        game_board = board.HiveGameBoard(new_board=True)
+        ant = spaces.Piece.ANT
+        beetle = spaces.Piece.BEETLE
+        grasshopper = spaces.Piece.GRASSHOPPER
+        queen_bee = spaces.Piece.QUEEN_BEE
+        spider = spaces.Piece.SPIDER
+
+        # Make moves for a sample game
+        game_board.place_piece(queen_bee, (0, 0))
+        game_board.place_piece(beetle, (0, 1))
+        game_board.place_piece(ant, (0, -1))
+        game_board.place_piece(queen_bee, (1, 2))
+        game_board.place_piece(spider, (0, -2))
+        game_board.move_piece((1, 2), (1, 1))
+        game_board.place_piece(grasshopper, (0, -3))
+
+        # Move black beetle onto white queen bee, then begin placing pieces around the queen bee
+        game_board.move_piece((0, 1), (0, 0))
+        game_board.place_piece(beetle, (0, -4))
+        game_board.place_piece(ant, (0, 1))
+        game_board.place_piece(ant, (0, -5))
+        game_board.place_piece(ant, (-1, 1))
+        game_board.place_piece(beetle, (0, -6))
+        game_board.move_piece((-1, 1), (1, 0))
+        game_board.place_piece(grasshopper, (0, -7))
+        game_board.place_piece(beetle, (-1, 1))
+        game_board.place_piece(ant, (0, -8))
+        game_board.move_piece((-1, 1), (-1, 0))
+        game_board.place_piece(spider, (0, -9))
+        game_board.place_piece(ant, (-1, 1))
+        game_board.place_piece(grasshopper, (0, -10))
+        game_board.move_piece((-1, 1), (-1, -1))
+
+        game_board.print_board()
 
         expected_winner_result = 'black'
         actual_winner_result = board.HiveGameBoard().determine_winner()
         self.assertEqual(expected_winner_result, actual_winner_result)
 
+    # TODO: [Beetle] Test stacking multiple Beetles on top of each other
+    #       Also make sure piece functionality works several pieces down (i.e. Spider, Grasshopper)
     def test_beetle_stack(self):
+        # Ensure no errors occur when stacking/unstacking multiple beetles
+        game_board = board.HiveGameBoard(new_board=True)
+        ant = spaces.Piece.ANT
+        beetle = spaces.Piece.BEETLE
+        grasshopper = spaces.Piece.GRASSHOPPER
+        queen_bee = spaces.Piece.QUEEN_BEE
+        spider = spaces.Piece.SPIDER
         pass
 
 
@@ -224,43 +266,6 @@ def beetle_board4():
 
     # Move the Piece that used to be on the Grasshopper path
     game_board.move_piece((1, 1), (1, 2))
-
-
-def beetle_board5():
-    game_board = board.HiveGameBoard(new_board=True)
-    ant = spaces.Piece.ANT
-    beetle = spaces.Piece.BEETLE
-    grasshopper = spaces.Piece.GRASSHOPPER
-    queen_bee = spaces.Piece.QUEEN_BEE
-    spider = spaces.Piece.SPIDER
-
-    # Make moves for a sample game
-    game_board.place_piece(queen_bee, (0, 0))
-    game_board.place_piece(beetle, (0, 1))
-    game_board.place_piece(ant, (0, -1))
-    game_board.place_piece(queen_bee, (1, 2))
-    game_board.place_piece(spider, (0, -2))
-    game_board.move_piece((1, 2), (1, 1))
-    game_board.place_piece(grasshopper, (0, -3))
-
-    # Move black beetle onto white queen bee, then begin placing pieces around the queen bee
-    game_board.move_piece((0, 1), (0, 0))
-    game_board.place_piece(beetle, (0, -4))
-    game_board.place_piece(ant, (0, 1))
-    game_board.place_piece(ant, (0, -5))
-    game_board.place_piece(ant, (-1, 1))
-    game_board.place_piece(beetle, (0, -6))
-    game_board.move_piece((-1, 1), (1, 0))
-    game_board.place_piece(grasshopper, (0, -7))
-    game_board.place_piece(beetle, (-1, 1))
-    game_board.place_piece(ant, (0, -8))
-    game_board.move_piece((-1, 1), (-1, 0))
-    game_board.place_piece(spider, (0, -9))
-    game_board.place_piece(ant, (-1, 1))
-    game_board.place_piece(grasshopper, (0, -10))
-    game_board.move_piece((-1, 1), (-1, -1))
-
-    game_board.print_board()
 
 
 if __name__ == '__main__':
