@@ -47,10 +47,16 @@ class HexSpace:
 
     def _add_to_cannot_move_to(self, loc, loc_check1, loc_check2):
         pieces = board.HiveGameBoard().pieces
-        if {loc_check1, loc_check2}.isdisjoint(pieces) and loc in board.HiveGameBoard().empty_spaces:
+        if {loc_check1, loc_check2}.isdisjoint(pieces):  # and loc in board.HiveGameBoard().empty_spaces:
             self.cannot_move_to.add(loc)
         elif loc in self.cannot_move_to:
             self.cannot_move_to.remove(loc)
+
+    def add_new_sliding_prevention(self, prevented_space_location, piece_blocking_mvt_location):
+        if prevented_space_location in self.sliding_prevented_to:
+            self.sliding_prevented_to[prevented_space_location].add(piece_blocking_mvt_location)
+        else:
+            self.sliding_prevented_to[prevented_space_location] = {piece_blocking_mvt_location}
 
     @staticmethod
     def direction_from_a_to_b(piece_a, piece_b):

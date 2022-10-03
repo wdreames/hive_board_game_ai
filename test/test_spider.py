@@ -15,7 +15,7 @@ class TestSpiderBoard1Move0(unittest.TestCase):
         spider = spaces.Piece.SPIDER
 
         game_board.place_piece(spider, (0, 0))  # White
-        game_board.place_piece(ant, (0, 1))  # Black
+        game_board.place_piece(queen_bee, (0, 1))  # Black
 
         game_board.print_board()
 
@@ -39,16 +39,46 @@ class TestSpiderBoard1Move1(unittest.TestCase):
         spider = spaces.Piece.SPIDER
 
         game_board.place_piece(spider, (0, 0))  # White
-        game_board.place_piece(ant, (0, 1))  # Black
+        game_board.place_piece(queen_bee, (0, 1))  # Black
 
         game_board.place_piece(grasshopper, (0, -1))  # White
-        game_board.place_piece(queen_bee, (0, 2))  # Black
+        game_board.place_piece(ant, (0, 2))  # Black
 
         game_board.print_board()
 
     def test_spider1(self):
         # Test Spider at (0, 0)
         expected_possible_moves = {(0, -2), (-1, 2), (1, 3)}
+        actual_possible_moves = board.HiveGameBoard().pieces[(0, 0)].possible_moves
+
+        self.assertEqual(expected_possible_moves, actual_possible_moves)
+
+
+class TestSpiderBoard1Move2(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        game_board = board.HiveGameBoard(new_board=True)
+        ant = spaces.Piece.ANT
+        beetle = spaces.Piece.BEETLE
+        grasshopper = spaces.Piece.GRASSHOPPER
+        queen_bee = spaces.Piece.QUEEN_BEE
+        spider = spaces.Piece.SPIDER
+
+        game_board.place_piece(spider, (0, 0))  # White
+        game_board.place_piece(queen_bee, (0, 1))  # Black
+
+        game_board.place_piece(grasshopper, (0, -1))  # White
+        game_board.place_piece(ant, (0, 2))  # Black
+
+        game_board.place_piece(beetle, (1, 0))  # Black
+        game_board.move_piece((0, 2), (0, -2))  # White
+
+        game_board.print_board()
+
+    def test_spider1(self):
+        # Test Spider at (0, 0)
+        expected_possible_moves = {(0, 2), (-1, -3)}
         actual_possible_moves = board.HiveGameBoard().pieces[(0, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
@@ -75,6 +105,7 @@ class TestSpiderMoveOntoSelf(unittest.TestCase):
 
         game_board.print_board()
 
+    # TODO: [Spider] This fails because updates to sliding rules do not update Spider movement
     def test_spider1(self):
         # Test Spider at (-1, 1)
         expected_possible_moves = {(-1, 1), (-1, -1), (-1, 3)}
@@ -82,7 +113,10 @@ class TestSpiderMoveOntoSelf(unittest.TestCase):
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
-    # TODO: [Spider] This likely fails because of sliding rules enforced by the Spider's original location
+        # Move onto itself
+        board.HiveGameBoard().move_piece((-1, 1), (-1, 1))
+        self.assertEqual(expected_possible_moves, actual_possible_moves)
+
     def test_spider2(self):
         # Test Spider at (1, 3)
         expected_possible_moves = {(-1, 3), (2, 1)}

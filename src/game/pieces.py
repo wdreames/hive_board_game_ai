@@ -51,9 +51,10 @@ class Beetle(Piece):
 
     def calc_possible_moves(self):
         # Can move to any space that is possible to move to (including on top of pieces)
-        moveset = self.connected_empty_spaces.union(self.connected_pieces)
+        moveset = self.connected_empty_spaces
         if not self.stacked_piece_obj:
             moveset = moveset.difference(self.cannot_move_to)
+        moveset = moveset.union(self.connected_pieces)
         self.possible_moves = moveset
         self.update_board_moves()
         return self.possible_moves
@@ -144,12 +145,6 @@ class Beetle(Piece):
             self.stacked_piece_obj.remove_grasshopper_path(start_location)
         else:
             raise RuntimeError('Beetle is not on top of a Grasshopper but a Grasshopper function call was attempted.')
-
-    def add_spider_path(self, start_location):
-        if self.stacked_piece_obj.name in [Piece.SPIDER, Piece.BEETLE]:
-            self.stacked_piece_obj.add_spider_path(start_location)
-        else:
-            raise RuntimeError('Beetle is not on top of a Spider but a Spider function call was attempted.')
 
     def remove_spider_path(self, start_location, initial_call=False):
         if self.stacked_piece_obj.name in [Piece.SPIDER, Piece.BEETLE]:
@@ -268,31 +263,30 @@ class QueenBee(Piece):
 
 class Spider(Piece):
 
+    class SpiderPath:
+
+        def __init__(self, location, path_id, previous_location, next_locations, depth, visited):
+            self.location = location
+            self.path_id = path_id
+            self.previous_location = previous_location
+            self.next_locations = next_locations
+            self.depth = depth
+            self.visited = visited
+
     def __init__(self, x=0, y=0, is_white=True):
-
-        """
-        Dictionary formatted as the following:
-        self.path_data = {
-            (EmptySpace1.location): {
-                depth = #,
-                previous_locations = set(),
-                next_locations = set()
-            },
-            (EmptySpace2.location: {
-                ...
-            },
-            ...
-        }
-        """
-        self.path_data = dict()
         self.previous_path_starts = set()
+        self.current_path_id = 0
+        self.paths = dict()
 
-        # Elements formatted as (empty_space_location, previous_location, starting_depth)
         self.paths_to_add = set()
         self.initialize_paths = True
 
         super().__init__(x, y, is_white)
         self.name = Piece.SPIDER
+
+    def get_new_path_id(self):
+        self.current_path_id += 1
+        return self.current_path_id
 
     def update(self):
         super().update()
@@ -301,16 +295,21 @@ class Spider(Piece):
 
         if self.initialize_paths:
             # Add paths in direction of connected empty spaces
-            self.path_data.clear()
+            self.paths.clear()
             self.possible_moves.clear()
             for empty_space_location in starts_to_paths:
-                # (start_of_path, previous_location, initial_depth)
-                self.add_spider_path(empty_space_location, self.location, 1)
+                self.add_spider_path(empty_space_location)
             self.initialize_paths = False
         else:
             # Add recorded paths to add during update
-            for empty_space_location, previous_location, starting_depth in self.paths_to_add:
-                self.add_spider_path(empty_space_location, previous_location, starting_depth)
+            for spider_path in self.paths_to_add:
+                self.add_spider_path(
+                    empty_space_location=spider_path.location,
+                    previous_location=spider_path.previous_location,
+                    depth=spider_path.depth,
+                    path_id=spider_path.path_id,
+                    visited=spider_path.visited
+                )
 
             # Compare current path starts to previous path starts
             new_starting_paths = starts_to_paths.difference(self.previous_path_starts)
@@ -322,7 +321,7 @@ class Spider(Piece):
 
             # If there is a new start path, add it
             for path_start in new_starting_paths:
-                self.add_spider_path(path_start, self.location, depth=1)
+                self.add_spider_path(path_start)
 
         self.paths_to_add.clear()
         self.previous_path_starts = starts_to_paths
@@ -345,84 +344,127 @@ class Spider(Piece):
 
         super().remove()
 
-    def add_spider_path(self, empty_space_location, previous_location, depth):
+    def add_spider_path(self, empty_space_location, previous_location=None, depth=1, path_id=None, visited=None):
         # Ensure that this Empty Space is connected to pieces other than this Spider
         empty_space = board.HiveGameBoard().empty_spaces.get(empty_space_location)
-        if empty_space is None or len(
-                empty_space.connected_pieces) == 1 and self.location in empty_space.connected_pieces:
-            if previous_location != self.location and previous_location in self.path_data:
-                if empty_space_location in self.path_data[previous_location]['next_locations']:
-                    self.path_data[previous_location]['next_locations'].remove(empty_space_location)
+        if empty_space is None or len(empty_space.connected_pieces) == 1 and self.location in empty_space.connected_pieces:
             return
+        if previous_location is None:
+            previous_location = self.location
+        if path_id is None:
+            path_id = self.get_new_path_id()
+        if visited is None:
+            visited = {previous_location}
+        visited.add(empty_space_location)
+
+        # if empty_space_location in self.paths and path_id in self.paths[empty_space_location]:
+        #     print('Error! This line should never be called!')
+        #     print(self.paths)
+        #     return
 
         # Add a link to the empty space
         empty_space.linked_spiders.add(self.location)
-
         # Determine which locations to search:
-        unavailable_moves = empty_space.cannot_move_to.union(empty_space.sliding_prevented_to.keys())
-        unavailable_moves.add(previous_location)
+        unavailable_moves = self.get_cannot_path_to(empty_space_location).union(visited)
+        # unavailable_moves = empty_space.cannot_move_to.union(visited)
+        for prevented_location, piece_locations_preventing_mvt in empty_space.sliding_prevented_to.items():
+            if self.location not in piece_locations_preventing_mvt:
+                unavailable_moves.add(prevented_location)
         starts_to_paths = empty_space.connected_empty_spaces.difference(unavailable_moves)
 
-        # Add this Spider's location as a possible move for Spider if depth=2 and Spider in empty_space.connected_pieces
-        if depth == 2 and self.location in empty_space.connected_pieces:
-            self.add_move(self.location)
-
         # Log the data
-        if empty_space_location not in self.path_data:
-            self.path_data[empty_space_location] = {
-                'depth': depth,
-                'previous_locations': {previous_location},
-                'next_locations': starts_to_paths
-            }
+        current_path = self.SpiderPath(
+            location=empty_space_location,
+            path_id=path_id,
+            previous_location=previous_location,
+            next_locations=starts_to_paths,
+            depth=depth,
+            visited=visited
+        )
+        if empty_space_location in self.paths:
+            self.paths[empty_space_location][path_id] = current_path
         else:
-            # TODO: [Spider] Determine if the commented out stmt is necessary
-            # if self.path_data[empty_space_location]['depth'] < depth:
-            #     return
-            self.path_data[empty_space_location]['depth'] = depth
-            self.path_data[empty_space_location]['previous_locations'].add(previous_location)
-            self.path_data[empty_space_location]['next_locations'] = starts_to_paths
+            self.paths[empty_space_location] = {
+                path_id: current_path
+            }
+
+        # Add this Spider's location as a possible move for Spider if depth=2 and Spider in empty_space.connected_pieces
+        if depth == 2 and self.location in empty_space.connected_pieces.difference(unavailable_moves):
+            self.add_move(self.location)
+            self.paths[empty_space_location][path_id].next_locations.add(self.location)
 
         # If depth is 3, add this location as a possible move for the Spider
         if depth >= 3:
             self.add_move(empty_space_location)
-            self.path_data[empty_space_location]['next_locations'].clear()
+            self.paths[empty_space_location][path_id].next_locations.clear()
             return
 
         # Continue adding empty spaces to the path based on the determinations that were made
         for start_to_path in starts_to_paths.copy():
-            self.add_spider_path(start_to_path, empty_space_location, depth + 1)
+            self.add_spider_path(start_to_path, empty_space_location, depth + 1, path_id, visited)
 
-    def remove_spider_path(self, empty_space_location, initial_call=False):
+    def remove_spider_path(self, empty_space_location, initial_call=False, path_id=None):
         # Get data stored for this spider location
-        if empty_space_location in self.path_data:
-            location_data = self.path_data[empty_space_location]
-        else:
+        if empty_space_location not in self.paths:
             return
 
-        # If depth = 3, remove this location as a possible move for Spider
-        if location_data['depth'] == 3:
-            self.remove_move(empty_space_location)
-
-        # Remove this Spider's location as a possible move for Spider if depth = 2
-        # and Spider in empty_space.connected_pieces
-        if location_data['depth'] == 2 and self.location in location_data['next_locations']:
-            self.remove_move(self.location)
-
-        if initial_call:
-            for previous_location in location_data['previous_locations']:
-                if previous_location in self.path_data:
-                    if empty_space_location in self.path_data[previous_location]['next_locations']:
-                        self.path_data[previous_location]['next_locations'].remove(empty_space_location)
-                    for previous_previous_location in self.path_data[previous_location]['previous_locations']:
-                        previous_location_depth = self.path_data[previous_location]['depth']
-                        path_to_add = (previous_location, previous_previous_location, previous_location_depth)
-                        self.paths_to_add.add(path_to_add)
-                    self.prepare_for_update()
-
-        # Call recursive function for next locations
-        for next_location in location_data['next_locations']:
-            self.remove_spider_path(next_location)
+        location_data = self.paths[empty_space_location]
 
         # Clear data stored for this spider location
-        self.path_data.pop(empty_space_location)
+        self.paths.pop(empty_space_location)
         board.HiveGameBoard().empty_spaces[empty_space_location].linked_spiders.remove(self.location)
+
+        # Check each path stored at this location
+        if path_id is not None:
+            spider_paths = [location_data[path_id]]
+        else:
+            spider_paths = [spider_path for spider_path in location_data.values()]
+
+        for spider_path in spider_paths:
+            # If depth = 3, remove this location as a possible move for Spider
+            if spider_path.depth == 3:
+                self.remove_move(spider_path.location)
+
+            # Remove this Spider's location as a possible move for Spider if depth = 2
+            # and Spider in empty_space.connected_pieces
+            if spider_path.depth == 2 and self.location in spider_path.next_locations:
+                self.remove_move(self.location)
+
+            if initial_call:
+                # Prepare the previous location to add to its path
+                previous_location = spider_path.previous_location
+                if previous_location != self.location:
+                    previous_path_node = self.paths[previous_location][spider_path.path_id]
+                    self.paths_to_add.add(previous_path_node)
+                    self.prepare_for_update()
+                else:
+                    self.initialize_paths = True
+                    self.prepare_for_update()
+
+            # Call recursive function for next locations
+            for next_path_location in spider_path.next_locations:
+                self.remove_spider_path(next_path_location, path_id=spider_path.path_id)
+
+    # TODO: [Organization] Maybe try to find an easier way to do this?
+    def get_cannot_path_to(self, location):
+        x = location[0]
+        y = location[1]
+
+        cannot_path_to_set = set()
+
+        cannot_path_to_set.add(self.cannot_path_to_helper((x, y - 1), (x - 1, y - 1), (x + 1, y)))
+        cannot_path_to_set.add(self.cannot_path_to_helper((x + 1, y), (x, y - 1), (x + 1, y + 1)))
+        cannot_path_to_set.add(self.cannot_path_to_helper((x + 1, y + 1), (x + 1, y), (x, y + 1)))
+        cannot_path_to_set.add(self.cannot_path_to_helper((x, y + 1), (x - 1, y), (x + 1, y + 1)))
+        cannot_path_to_set.add(self.cannot_path_to_helper((x - 1, y), (x - 1, y - 1), (x, y + 1)))
+        cannot_path_to_set.add(self.cannot_path_to_helper((x - 1, y - 1), (x, y - 1), (x - 1, y)))
+
+        return cannot_path_to_set
+
+    def cannot_path_to_helper(self, location, location_check1, location_check2):
+        pieces_minus_spider = board.HiveGameBoard().pieces.copy()
+        pieces_minus_spider.pop(self.location)
+        if {location_check1, location_check2}.isdisjoint(pieces_minus_spider):
+            return location
+        else:
+            return None

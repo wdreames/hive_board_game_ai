@@ -188,9 +188,12 @@ def test_game4():
     board.perform_action(PLACE, (-1, -1), piece_type=spcs.Piece.SPIDER)
     board.print_board()
     print('-' * 10)
+    print(board)
     board.perform_action(PLACE, (2, 0), piece_type=spcs.Piece.SPIDER)
     board.print_board()
     print('-' * 10)
+    print(board)
+    return
     board.perform_action(MOVE, (-1, -1), new_location=(2, -1))
     print(board)
     board.print_board()
@@ -301,9 +304,9 @@ def test_game5():
 # TODO: [UI] Make this nicer later on
 if __name__ == '__main__':
     # test_game1()
-    test_game2()
+    # test_game2()
     # test_game3()
-    # test_game4()
+    test_game4()
     # test_sliding_rules()
     # test_game5()
     # play_game()
