@@ -166,7 +166,6 @@ class EmptySpace(HexSpace):
         board.HiveGameBoard().empty_spaces[self.location] = self
 
         # TODO: [Efficiency] This may not need to be called *every* time an Empty Space is placed
-        # TODO: [Ant] Need to update all Ant pieces since this empty space will count as a new potential move
         for ant_location in board.HiveGameBoard().ant_locations:
             board.HiveGameBoard().pieces[ant_location].prepare_for_update()
 
@@ -194,14 +193,11 @@ class EmptySpace(HexSpace):
                 else:
                     self.num_black_connected += 1
 
-            # TODO: [Ant]   Check QB moves
-            #               Check for spaces in a prevention set
-            #               If 1+ connected free spaces, clear connected prevention sets
-            #               Elif 1 connected prevention set, join it
-            #               Elif 2+ connected prevention sets, union them and join
             surrounding_moves = self.get_queen_bee_moves()
             found_free_space = False
             prevention_set_index = -1
+
+            # Check for connected spaces in prevention sets
             for space_location in surrounding_moves:
                 # TODO: [Efficiency] The methods I'm using don't feel super efficient. Looks like O(n^2) here
                 current_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(space_location)
@@ -218,14 +214,14 @@ class EmptySpace(HexSpace):
                 # Found a free space
                 else:
                     found_free_space = True
+
+            # If 1+ connected free spaces, clear connected prevention sets
             if found_free_space and prevention_set_index > -1:
                 board.HiveGameBoard().clear_ant_movement_prevention_set(prevention_set_index)
+            # If only 1 connected prevention set, join it
             elif prevention_set_index > -1:
                 board.HiveGameBoard().ant_mvt_prevention_sets[prevention_set_index].add(self.location)
             elif not found_free_space:
-                # Are surrounding moves that exist (free spaces or spaces in prevention sets)
-                # Did not find any free spaces (therefore there must be prevention sets)
-                # Did not find a prevention index (therefore there must be free spaces)
                 raise RuntimeError('Error! This line should never be called!')
 
             self.prepare_for_update()
@@ -278,7 +274,6 @@ class EmptySpace(HexSpace):
             spider.remove_spider_path(self.location, initial_call=True)
 
         # TODO: [Efficiency] This may not need to be called *every* time an Empty Space is placed
-        # TODO: [Ant] Need to update all Ant pieces since this empty space will no longer count as a new potential move
         for ant_location in board.HiveGameBoard().ant_locations:
             board.HiveGameBoard().pieces[ant_location].prepare_for_update()
 
@@ -391,9 +386,6 @@ class Piece(HexSpace):
             raise ValueError('Cannot move {} at {} to {}'.format(self.name, self.location, new_location))
 
     def remove(self):
-        # TODO: [Movement] Unlock any relevant pieces that used to be connected
-        #       Also need to see if any cannot_move_to sets need to be updated
-
         # Update pieces that are no longer prevented from sliding
         all_spaces = board.HiveGameBoard().get_all_spaces()
         for limited_space_loc, locations in self.preventing_sliding_for.items():
@@ -411,24 +403,19 @@ class Piece(HexSpace):
                 # The limited space is able to slide into the specified location now
                 limited_space.sliding_prevented_to.pop(loc)
 
-                # TODO: [Ant]
-                #       limited_space and loc should be a pair
-                #       if both are empty spaces:
-                #           if one is in a prevented set but the other is not:
-                #               clear the prevented set
-                #           elif both in separate prevented sets:
-                #               union the two sets
-
+                # limited_space_loc and loc are a piar of spaces prevented from sliding
                 if limited_space_loc in board.HiveGameBoard().empty_spaces and \
                         loc in board.HiveGameBoard().empty_spaces:
                     space1_prevention_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(
                         limited_space_loc)
                     space2_prevention_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(loc)
 
+                    # Both are empty spaces in different ant movement prevention sets
                     if space1_prevention_index > -1 and space2_prevention_index > -1:
                         if space1_prevention_index != space2_prevention_index:
                             board.HiveGameBoard().union_ant_movement_prevention_sets(space1_prevention_index,
                                                                                      space2_prevention_index)
+                    # Only one is an empty space
                     elif space1_prevention_index > -1:
                         board.HiveGameBoard().clear_ant_movement_prevention_set(space1_prevention_index)
                     elif space2_prevention_index > -1:
@@ -554,21 +541,6 @@ class Piece(HexSpace):
             self._helper_add_to_dict_set(space1.sliding_prevented_to, space2_loc, other_piece_loc)
             self._helper_add_to_dict_set(space2.sliding_prevented_to, space1_loc, self.location)
             self._helper_add_to_dict_set(space2.sliding_prevented_to, space1_loc, other_piece_loc)
-
-            # TODO: [Ant]
-            #       If space1 and space2 are empty spaces:
-            #           If space1 and space2 free spaces:
-            #               Determine if either space is on the outside edge of the board
-            #               If none on outside:
-            #                   traverse separately and add to different new prevention sets
-            #               If one on outside:
-            #                   traverse side on inside and add to new prevention set
-            #           Elif space1 and space2 are prevented spaces and within different prevention sets:
-            #               Choose one space from the pair
-            #               traverse it, remove it from its prevention set, and add it to the other's prevention set
-            #           Else:
-            #               This should never happen in theory. If this is true, logic could be altered to improve
-            #               efficiency.
 
             # Update Ant movement prevention sets
             if space1_loc in board.HiveGameBoard().empty_spaces and space2_loc in board.HiveGameBoard().empty_spaces:

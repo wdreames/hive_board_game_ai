@@ -73,14 +73,6 @@ class TestBeetle(unittest.TestCase):
         actual_spider_moves = board.HiveGameBoard().pieces[(0, 1)].possible_moves
         self.assertEqual(expected_spider_moves, actual_spider_moves)
 
-    # TODO: [Beetle] Another possible test case; currently is functional:
-    #       Spider placed at (0,0)
-    #       Beetle placed at (0,1)
-    #       Queen Bee placed at (-1,-1)
-    #       Beetle moved to (0,0)
-    #       Piece placed at (-2, -1)
-    #       Beetle moved to (0, -1)
-    #       Check Spider moves
     def test_beetle_on_spider2(self):
         beetle_board3()
 

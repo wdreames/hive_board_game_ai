@@ -16,7 +16,6 @@ class Ant(Piece):
         super()._set_location_to(new_location)
         board.HiveGameBoard().ant_locations.add(new_location)
 
-    # TODO: [Ant] Update this to Ant movement (rather than QB mvt)
     def calc_possible_moves(self):
         # Can move to any open space that it can slide to
         can_slide_into = self.connected_empty_spaces.difference(self.sliding_prevented_to.keys())
@@ -49,12 +48,6 @@ class Beetle(Piece):
 
         # Only used when Piece is a Beetle; Needs to be of type Piece; NOT A COORDINATE
         self.stacked_piece_obj = None
-
-    # TODO: [Beetle] Beetle will require a lot of new infrastructure in order to stack on top of pieces
-    #       * I could rewrite the remove() and _set_location_to() methods here, but this would be somewhat bad
-    #         practice. Although if enough will need to be altered, this could be reasonable.
-    #       * OR... I could get a space from HiveGameBoard.get_all_pieces() and gather connections from there. Then I
-    #         can implement more specific functionality based on space type.
 
     def calc_possible_moves(self):
         # Can move to any space that is possible to move to (including on top of pieces)
