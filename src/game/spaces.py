@@ -187,11 +187,11 @@ class EmptySpace(HexSpace):
 
             # TODO: [Efficiency] If the pieces also store this info, this loop would be unecessary
             # Check which player can place here
-            for piece in self.connected_pieces:
-                if board.HiveGameBoard().pieces[piece].is_white:
-                    self.num_white_connected += 1
-                else:
-                    self.num_black_connected += 1
+            # for piece in self.connected_pieces:
+            #     if board.HiveGameBoard().pieces[piece].is_white:
+            #         self.num_white_connected += 1
+            #     else:
+            #         self.num_black_connected += 1
 
             surrounding_moves = self.get_queen_bee_moves()
             found_free_space = False
