@@ -57,6 +57,7 @@ class HexSpace:
             self.sliding_prevented_to[prevented_space_location].add(piece_blocking_mvt_location)
         else:
             self.sliding_prevented_to[prevented_space_location] = {piece_blocking_mvt_location}
+        self.prepare_for_update()
 
     def remove_sliding_prevention(self, prevented_space_location, piece_blocking_mvt_location):
         # The limited space is no longer blocked by this piece
@@ -70,6 +71,8 @@ class HexSpace:
 
         # The limited space is able to slide into the specified location now
         self.sliding_prevented_to.pop(prevented_space_location)
+
+        self.prepare_for_update()
 
     @staticmethod
     def direction_from_a_to_b(piece_a, piece_b):
@@ -181,6 +184,7 @@ class EmptySpace(HexSpace):
         self.num_black_connected = 0
 
         self.linked_spiders = set()
+        self.previous_queen_bee_moves = set()
 
         board.HiveGameBoard().empty_spaces[self.location] = self
 
@@ -203,14 +207,6 @@ class EmptySpace(HexSpace):
             self.connected_empty_spaces = connected_emt_spcs
             self.sliding_prevented_to = sliding_prevented_to
             self.cannot_move_to = cannot_move_to
-
-            # TODO: [Efficiency] If the pieces also store this info, this loop would be unecessary
-            # Check which player can place here
-            # for piece in self.connected_pieces:
-            #     if board.HiveGameBoard().pieces[piece].is_white:
-            #         self.num_white_connected += 1
-            #     else:
-            #         self.num_black_connected += 1
 
             surrounding_moves = self.get_queen_bee_moves()
             found_free_space = False
@@ -253,6 +249,16 @@ class EmptySpace(HexSpace):
         super().update()
         self.update_placement_options()
 
+        # Check if a Spider path needs to be updated
+        queen_bee_moves = self.get_queen_bee_moves()
+        if self.previous_queen_bee_moves != queen_bee_moves:
+            self.previous_queen_bee_moves = queen_bee_moves
+            for spider_location in self.linked_spiders.copy():
+                if spider_location in board.HiveGameBoard().pieces:
+                    board.HiveGameBoard().pieces[spider_location].update_path_from_location(self.location)
+                else:
+                    self.linked_spiders.remove(spider_location)
+
     def update_placement_options(self):
         """
         Determines if white or black pieces can be placed here based on the number of connected pieces.
@@ -289,8 +295,9 @@ class EmptySpace(HexSpace):
 
         # If this Empty Space is part of a path for a spider, remove the path.
         for spider_location in self.linked_spiders.copy():
-            spider = board.HiveGameBoard().pieces[spider_location]
-            spider.remove_spider_path(self.location, initial_call=True)
+            if spider_location in board.HiveGameBoard().pieces:
+                spider = board.HiveGameBoard().pieces[spider_location]
+                spider.remove_spider_path(self.location, initial_call=True)
 
         # TODO: [Efficiency] This may not need to be called *every* time an Empty Space is placed
         for ant_location in board.HiveGameBoard().ant_locations:

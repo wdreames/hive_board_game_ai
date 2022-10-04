@@ -174,6 +174,8 @@ class TestSpiderBoard2Move1(unittest.TestCase):
         game_board.place_piece(spider, (-1, -1))
         game_board.place_piece(spider, (2, 0))
 
+        game_board.print_board()
+
         game_board.move_piece((-1, -1), (2, -1))
 
         game_board.print_board()

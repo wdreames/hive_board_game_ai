@@ -277,6 +277,7 @@ class Spider(Piece):
         self.previous_path_starts = set()
         self.current_path_id = 0
         self.paths = dict()
+        self.path_roots = dict()
 
         self.paths_to_add = set()
         self.initialize_paths = True
@@ -344,6 +345,16 @@ class Spider(Piece):
 
         super().remove()
 
+    def update_path_from_location(self, empty_space_location):
+        if empty_space_location in self.paths:
+            for path_id, _ in self.paths[empty_space_location].items():
+                path_root = self.path_roots[path_id]
+                # Need to clear the root of this path and start it fresh.
+
+                self.remove_spider_path(path_root.location, initial_call=True, path_id=path_id)
+                self.paths_to_add.add(path_root)
+                self.prepare_for_update()
+
     def add_spider_path(self, empty_space_location, previous_location=None, depth=1, path_id=None, visited=None):
         # Ensure that this Empty Space is connected to pieces other than this Spider
         empty_space = board.HiveGameBoard().empty_spaces.get(empty_space_location)
@@ -357,20 +368,11 @@ class Spider(Piece):
             visited = {previous_location}
         visited.add(empty_space_location)
 
-        # if empty_space_location in self.paths and path_id in self.paths[empty_space_location]:
-        #     print('Error! This line should never be called!')
-        #     print(self.paths)
-        #     return
-
         # Add a link to the empty space
         empty_space.linked_spiders.add(self.location)
-        # Determine which locations to search:
-        unavailable_moves = self.get_cannot_path_to(empty_space_location).union(visited)
-        # unavailable_moves = empty_space.cannot_move_to.union(visited)
-        for prevented_location, piece_locations_preventing_mvt in empty_space.sliding_prevented_to.items():
-            if self.location not in piece_locations_preventing_mvt:
-                unavailable_moves.add(prevented_location)
-        starts_to_paths = empty_space.connected_empty_spaces.difference(unavailable_moves)
+
+        # Determine which locations to search
+        starts_to_paths = self.get_starts_to_paths(empty_space_location, visited)
 
         # Log the data
         current_path = self.SpiderPath(
@@ -388,7 +390,13 @@ class Spider(Piece):
                 path_id: current_path
             }
 
+        # Add a root node
+        if depth == 1:
+            self.path_roots[path_id] = current_path
+
         # Add this Spider's location as a possible move for Spider if depth=2 and Spider in empty_space.connected_pieces
+        visited_minus_self = visited.difference({self.location})
+        unavailable_moves = self.get_cannot_path_to(empty_space_location).union(visited_minus_self)
         if depth == 2 and self.location in empty_space.connected_pieces.difference(unavailable_moves):
             self.add_move(self.location)
             self.paths[empty_space_location][path_id].next_locations.add(self.location)
@@ -421,14 +429,18 @@ class Spider(Piece):
             spider_paths = [spider_path for spider_path in location_data.values()]
 
         for spider_path in spider_paths:
-            # If depth = 3, remove this location as a possible move for Spider
-            if spider_path.depth == 3:
-                self.remove_move(spider_path.location)
+            # If depth = 1, remove this from the dictionary of root nodes
+            if spider_path.depth == 1:
+                self.path_roots.pop(spider_path.path_id)
 
             # Remove this Spider's location as a possible move for Spider if depth = 2
             # and Spider in empty_space.connected_pieces
             if spider_path.depth == 2 and self.location in spider_path.next_locations:
                 self.remove_move(self.location)
+
+            # If depth = 3, remove this location as a possible move for Spider
+            if spider_path.depth == 3:
+                self.remove_move(spider_path.location)
 
             if initial_call:
                 # Prepare the previous location to add to its path
@@ -444,6 +456,14 @@ class Spider(Piece):
             # Call recursive function for next locations
             for next_path_location in spider_path.next_locations:
                 self.remove_spider_path(next_path_location, path_id=spider_path.path_id)
+
+    def get_starts_to_paths(self, empty_space_location, visited):
+        unavailable_moves = self.get_cannot_path_to(empty_space_location).union(visited)
+        empty_space = board.HiveGameBoard().empty_spaces[empty_space_location]
+        for prevented_location, piece_locations_preventing_mvt in empty_space.sliding_prevented_to.items():
+            if self.location not in piece_locations_preventing_mvt:
+                unavailable_moves.add(prevented_location)
+        return empty_space.connected_empty_spaces.difference(unavailable_moves)
 
     # TODO: [Organization] Maybe try to find an easier way to do this?
     def get_cannot_path_to(self, location):

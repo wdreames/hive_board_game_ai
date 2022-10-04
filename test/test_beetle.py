@@ -54,8 +54,6 @@ class TestBeetle(unittest.TestCase):
         actual_grasshopper_moves = board.HiveGameBoard().pieces[(1, -1)].possible_moves
         self.assertEqual(expected_grasshopper_moves, actual_grasshopper_moves)
 
-    # TODO: [Beetle] This might be failing since Spider moves are only updated when an EmptySpace is removed. It does
-    #       not account for Beetle hopping onto a Piece.
     def test_beetle_on_spider1(self):
         beetle_board1()
 
