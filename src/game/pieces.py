@@ -154,6 +154,17 @@ class Beetle(Piece):
         else:
             raise RuntimeError('Beetle is not on top of a Grasshopper but a Grasshopper function call was attempted.')
 
+    def add_connection_to_piece(self, location):
+        super().add_connection_to_piece(location)
+        if self.stacked_piece_obj is not None and self.stacked_piece_obj.name in [Piece.GRASSHOPPER, Piece.BEETLE]:
+            self.stacked_piece_obj.add_connection_to_piece(location)
+
+    def _remove_grasshopper_path(self, start_location, initial_call=True):
+        if self.stacked_piece_obj.name in [Piece.GRASSHOPPER, Piece.BEETLE]:
+            self.stacked_piece_obj._remove_grasshopper_path(start_location, initial_call=initial_call)
+        else:
+            raise RuntimeError('Beetle is not on top of a Grasshopper but a Grasshopper function call was attempted.')
+
     def update_spider_path(self, empty_space_location):
         if self.stacked_piece_obj.name in [Piece.SPIDER, Piece.BEETLE]:
             self.stacked_piece_obj.update_spider_path(empty_space_location)
@@ -239,14 +250,6 @@ class Grasshopper(Piece):
         board.HiveGameBoard().pieces[location].add_to_grasshopper_path(self.location)
 
         self.paths_to_add.add(self.GrasshopperPath(location, is_empty_space=False))
-        self.prepare_for_update()
-        # self._add_grasshopper_path(location)
-
-    def remove_connection_to_piece(self, location):
-        super().remove_connection_to_piece(location)
-        board.HiveGameBoard().pieces[location].remove_from_grasshopper_path(self.location)
-
-        self._remove_grasshopper_path(location)
 
     def add_grasshopper_path_link(self, location):
         self.added_paths.add(location)
@@ -305,10 +308,6 @@ class Grasshopper(Piece):
             previous_location = self.location
         if direction is None:
             direction = self.direction_from_a_to_b(previous_location, location)
-
-        # # Add a link to the space on the path
-        # space = board.HiveGameBoard().get_all_spaces()[location]
-        # space.linked_grasshoppers.add(self.location)
 
         space_is_empty_space = location not in board.HiveGameBoard().pieces
 
