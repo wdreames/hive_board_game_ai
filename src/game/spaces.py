@@ -58,6 +58,19 @@ class HexSpace:
         else:
             self.sliding_prevented_to[prevented_space_location] = {piece_blocking_mvt_location}
 
+    def remove_sliding_prevention(self, prevented_space_location, piece_blocking_mvt_location):
+        # The limited space is no longer blocked by this piece
+        self.sliding_prevented_to[prevented_space_location].remove(piece_blocking_mvt_location)
+
+        # There are always two pieces preventing sliding. The other piece no longer has a pair and can
+        # be cleared as well
+        other_limiting_piece_location = self.sliding_prevented_to[prevented_space_location].pop()
+        other_limiting_piece_obj = board.HiveGameBoard().get_all_spaces()[other_limiting_piece_location]
+        other_limiting_piece_obj.preventing_sliding_for[self.location].remove(prevented_space_location)
+
+        # The limited space is able to slide into the specified location now
+        self.sliding_prevented_to.pop(prevented_space_location)
+
     @staticmethod
     def direction_from_a_to_b(piece_a, piece_b):
         x_diff = piece_b[0] - piece_a[0]
@@ -399,15 +412,7 @@ class Piece(HexSpace):
 
             for loc in locations:
                 # The limited space is no longer blocked by this piece
-                limited_space.sliding_prevented_to[loc].remove(self.location)
-
-                # There are always two pieces preventing sliding. The other piece no longer has a pair and can
-                # be cleared as well
-                other_limiting_piece_loc = limited_space.sliding_prevented_to[loc].pop()
-                all_spaces[other_limiting_piece_loc].preventing_sliding_for[limited_space_loc].remove(loc)
-
-                # The limited space is able to slide into the specified location now
-                limited_space.sliding_prevented_to.pop(loc)
+                limited_space.remove_sliding_prevention(loc, self.location)
 
                 # limited_space_loc and loc are a piar of spaces prevented from sliding
                 if limited_space_loc in board.HiveGameBoard().empty_spaces and \
