@@ -97,21 +97,25 @@ class HexSpace:
             return None
 
     def add_link_to_grasshopper(self, grasshopper_location):
+        return
         self.linked_grasshoppers.add(grasshopper_location)
-        board.HiveGameBoard().pieces[grasshopper_location].added_paths.add(self.location)
+        board.HiveGameBoard().pieces[grasshopper_location].add_grasshopper_path_link(self.location)
 
     # TODO: [Organization] Refactor these functions back into grasshopper. This will make Beetle implementations easier
     def remove_link_to_grasshopper(self, grasshopper_location):
+        return
         if grasshopper_location in self.linked_grasshoppers:
             self.linked_grasshoppers.remove(grasshopper_location)
-            board.HiveGameBoard().pieces[grasshopper_location].removed_paths.add(self.location)
+            board.HiveGameBoard().pieces[grasshopper_location].remove_grasshopper_path_link(self.location)
 
     def add_to_grasshopper_path(self, grasshopper_location):
+        return
         grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
         grasshopper.pieces_to_add_to_path.add(self.location)
         grasshopper.prepare_for_update()
 
     def remove_from_grasshopper_path(self, grasshopper_location):
+        return
         grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
         grasshopper.remove_grasshopper_path(self.location)
 
@@ -255,7 +259,7 @@ class EmptySpace(HexSpace):
             self.previous_queen_bee_moves = queen_bee_moves
             for spider_location in self.linked_spiders.copy():
                 if spider_location in board.HiveGameBoard().pieces:
-                    board.HiveGameBoard().pieces[spider_location].update_path_from_location(self.location)
+                    board.HiveGameBoard().pieces[spider_location].update_spider_path(self.location)
                 else:
                     self.linked_spiders.remove(spider_location)
 
@@ -297,7 +301,13 @@ class EmptySpace(HexSpace):
         for spider_location in self.linked_spiders.copy():
             if spider_location in board.HiveGameBoard().pieces:
                 spider = board.HiveGameBoard().pieces[spider_location]
-                spider.remove_spider_path(self.location, initial_call=True)
+                spider.remove_spider_path(self.location)
+
+        # If this Empty Space is part of a path for a grasshopper, remove the path.
+        for grasshopper_location in self.linked_grasshoppers.copy():
+            if grasshopper_location in board.HiveGameBoard().pieces:
+                grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
+                grasshopper._remove_grasshopper_path(self.location)
 
         # TODO: [Efficiency] This may not need to be called *every* time an Empty Space is placed
         for ant_location in board.HiveGameBoard().ant_locations:
@@ -396,7 +406,7 @@ class Piece(HexSpace):
 
         # TODO: [Organization] This assumes that this color piece can be placed here without issue
         if self.location in board.HiveGameBoard().empty_spaces:
-            self._set_location_to(self.location)
+            self.set_location_to(self.location)
         else:
             raise ValueError('No empty space at {} to place a new {}'.format(self.location, self.name))
 
@@ -407,7 +417,7 @@ class Piece(HexSpace):
     def move_to(self, new_location):
         if new_location in self.possible_moves:
             self.remove()
-            self._set_location_to(new_location)
+            self.set_location_to(new_location)
         else:
             raise ValueError('Cannot move {} at {} to {}'.format(self.name, self.location, new_location))
 
@@ -451,14 +461,20 @@ class Piece(HexSpace):
             all_board_spaces[space].add_connection_to_empty_space(self.location)
 
         # Check if this piece was part of a path for a grasshopper
-        if self.linked_grasshoppers:
-            for grasshopper_location in self.linked_grasshoppers.copy():
+        # if self.linked_grasshoppers:
+        #     for grasshopper_location in self.linked_grasshoppers.copy():
+        #
+        #         self.remove_from_grasshopper_path(grasshopper_location)
+        #
+        #         new_empty_space.add_link_to_grasshopper(grasshopper_location)
+        #         if grasshopper_location not in self.get_all_surrounding_locations():
+        #             board.HiveGameBoard().pieces[grasshopper_location].add_move(self.location)
 
-                self.remove_from_grasshopper_path(grasshopper_location)
-
-                new_empty_space.add_link_to_grasshopper(grasshopper_location)
-                if grasshopper_location not in self.get_all_surrounding_locations():
-                    board.HiveGameBoard().pieces[grasshopper_location].add_move(self.location)
+        # If this Piece is part of a path for a grasshopper, remove the path.
+        for grasshopper_location in self.linked_grasshoppers.copy():
+            if grasshopper_location in board.HiveGameBoard().pieces:
+                grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
+                grasshopper._remove_grasshopper_path(self.location)
 
         self.linked_grasshoppers.clear()
 
@@ -470,7 +486,7 @@ class Piece(HexSpace):
         board.HiveGameBoard().pieces.pop(self.location)
 
     # TODO: [Formatting] Reformat this function for added readability
-    def _set_location_to(self, new_location):
+    def set_location_to(self, new_location):
         """
         Moves this piece to a new location. This also updates any previous/new connections to other pieces. No movement
         will happen if the move is invalid.
@@ -492,11 +508,11 @@ class Piece(HexSpace):
         self.cannot_move_to = related_empty_space.cannot_move_to
 
         # If this space was a possible move for a grasshopper, remove it and add a new path
-        if related_empty_space.linked_grasshoppers:
-            for grasshopper_location in related_empty_space.linked_grasshoppers:
-                if grasshopper_location in board.HiveGameBoard().pieces:
-                    board.HiveGameBoard().pieces[grasshopper_location].remove_move(self.location)
-                    self.add_to_grasshopper_path(grasshopper_location)
+        # if related_empty_space.linked_grasshoppers:
+        #     for grasshopper_location in related_empty_space.linked_grasshoppers:
+        #         if grasshopper_location in board.HiveGameBoard().pieces:
+        #             board.HiveGameBoard().pieces[grasshopper_location].remove_move(self.location)
+        #             self.add_to_grasshopper_path(grasshopper_location)
 
         # Update all the piece and empty space connections
         all_connected_spaces = self.connected_empty_spaces.union(self.connected_pieces)
@@ -642,12 +658,12 @@ class Piece(HexSpace):
         #     board.HiveGameBoard().loop_was_formed = True
 
     def lock(self):
-        print('{} located at {} has been locked'.format(self.name, self.location))
+        # print('{} located at {} has been locked'.format(self.name, self.location))
         self.can_move = False
         self.update_board_moves()  # TODO: [Lock/Unlock] Determine if this should prepare for update instead
 
     def unlock(self):
-        print('{} located at {} has been unlocked'.format(self.name, self.location))
+        # print('{} located at {} has been unlocked'.format(self.name, self.location))
         self.can_move = True
         self.update_board_moves()  # TODO: [Lock/Unlock] Determine if this should prepare for update instead
 
@@ -660,11 +676,11 @@ class Piece(HexSpace):
         pass
 
     def add_move(self, location):
-        # print(f'Adding {location} as a possible move for {self.name} at {self.location}')
+        print(f'{self.location} - {self.name} - Adding {location} to possible moves')
         self.possible_moves.add(location)
 
     def remove_move(self, location):
-        # print(f'Removing {location} as a possible move for {self.name} at {self.location}')
+        print(f'{self.location} - {self.name} - Removing {location} from possible moves')
         if location in self.possible_moves:
             self.possible_moves.remove(location)
 

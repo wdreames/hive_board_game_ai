@@ -16,10 +16,10 @@ class HiveGameBoard(object):
     MOVE_PIECE = 'Move piece'
     PLACE_PIECE = 'Place piece'
 
-    # def __init__(self):
-    #     # TODO: [Formatting] Clean this up
-    #     self.loop_was_formed = False
-
+    # TODO: [AI] Would it be possible to have this return whatever the current instance of the board is?
+    #       This way the AI could traverse down multiple layers, but the internal code would not need to change.
+    #       Question: Would this also be able to manage Piece interactions?
+    #       Maybe have an instance=board_instance parameter?
     def __new__(cls, new_board=False):
         """
         Method used to get an instance of the game board. A singleton design pattern is used here so the class is
