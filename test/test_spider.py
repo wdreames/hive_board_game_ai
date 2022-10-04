@@ -328,7 +328,7 @@ class TestSpiderOverlappingPaths(unittest.TestCase):
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
-    def test_3_spider_moves_updated(self):
+    def test_spider_moves_updated(self):
         self.setup_spider_test_board()
         board.HiveGameBoard().move_piece((-4, -4), (-3, -1))
 
@@ -346,6 +346,23 @@ class TestSpiderOverlappingPaths(unittest.TestCase):
         actual_possible_moves = board.HiveGameBoard().pieces[(-3, -1)].possible_moves
 
         self.assertEqual(all_expected_possible_moves, actual_possible_moves)
+
+    def test_spider_moves_updated2(self):
+        self.setup_spider_test_board()
+        board.HiveGameBoard().move_piece((-4, -4), (-3, -1))
+        board.HiveGameBoard().move_piece((1, 2), (-1, 0))
+
+        # Make a move for white
+        board.HiveGameBoard().place_piece(spaces.Piece.GRASSHOPPER, (-4, -3))
+
+        # Move the grasshopper back out
+        board.HiveGameBoard().move_piece((-1, 0), (1, 0))
+
+        # Check the moves for the Spider at (-3, -1) after moving the grasshopper
+        expected_possible_moves = {(-5, -4), (-4, 1), (-2, -3), (-2, 2)}
+        actual_possible_moves = board.HiveGameBoard().pieces[(-3, -1)].possible_moves
+
+        self.assertEqual(expected_possible_moves, actual_possible_moves)
 
 
 if __name__ == '__main__':
