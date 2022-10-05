@@ -96,29 +96,6 @@ class HexSpace:
         else:
             return None
 
-    def add_link_to_grasshopper(self, grasshopper_location):
-        return
-        self.linked_grasshoppers.add(grasshopper_location)
-        board.HiveGameBoard().pieces[grasshopper_location].add_grasshopper_path_link(self.location)
-
-    # TODO: [Organization] Refactor these functions back into grasshopper. This will make Beetle implementations easier
-    def remove_link_to_grasshopper(self, grasshopper_location):
-        return
-        if grasshopper_location in self.linked_grasshoppers:
-            self.linked_grasshoppers.remove(grasshopper_location)
-            board.HiveGameBoard().pieces[grasshopper_location].remove_grasshopper_path_link(self.location)
-
-    def add_to_grasshopper_path(self, grasshopper_location):
-        return
-        grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
-        grasshopper.pieces_to_add_to_path.add(self.location)
-        grasshopper.prepare_for_update()
-
-    def remove_from_grasshopper_path(self, grasshopper_location):
-        return
-        grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
-        grasshopper.remove_grasshopper_path(self.location)
-
     def get_all_surrounding_locations(self):
         return {(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x + 1, self.y),
                 (self.x + 1, self.y + 1), (self.x, self.y + 1), (self.x - 1, self.y)}
@@ -307,7 +284,7 @@ class EmptySpace(HexSpace):
         for grasshopper_location in self.linked_grasshoppers.copy():
             if grasshopper_location in board.HiveGameBoard().pieces:
                 grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
-                grasshopper._remove_grasshopper_path(self.location)
+                grasshopper.remove_grasshopper_path(self.location)
 
         # TODO: [Efficiency] This may not need to be called *every* time an Empty Space is placed
         for ant_location in board.HiveGameBoard().ant_locations:
@@ -450,8 +427,8 @@ class Piece(HexSpace):
                         board.HiveGameBoard().clear_ant_movement_prevention_set(space2_prevention_index)
 
         # Create a new empty space here
-        new_empty_space = EmptySpace(self.x, self.y, self.connected_pieces, self.connected_empty_spaces,
-                                     self.sliding_prevented_to, self.cannot_move_to)
+        EmptySpace(self.x, self.y, self.connected_pieces, self.connected_empty_spaces, self.sliding_prevented_to,
+                   self.cannot_move_to)
 
         self.update_one_hive_rule(self_is_placing=False)
 
@@ -460,21 +437,11 @@ class Piece(HexSpace):
             all_board_spaces[space].remove_connection_to_piece(self.location)
             all_board_spaces[space].add_connection_to_empty_space(self.location)
 
-        # Check if this piece was part of a path for a grasshopper
-        # if self.linked_grasshoppers:
-        #     for grasshopper_location in self.linked_grasshoppers.copy():
-        #
-        #         self.remove_from_grasshopper_path(grasshopper_location)
-        #
-        #         new_empty_space.add_link_to_grasshopper(grasshopper_location)
-        #         if grasshopper_location not in self.get_all_surrounding_locations():
-        #             board.HiveGameBoard().pieces[grasshopper_location].add_move(self.location)
-
         # If this Piece is part of a path for a grasshopper, remove the path.
         for grasshopper_location in self.linked_grasshoppers.copy():
             if grasshopper_location in board.HiveGameBoard().pieces:
                 grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
-                grasshopper._remove_grasshopper_path(self.location)
+                grasshopper.remove_grasshopper_path(self.location)
 
         self.linked_grasshoppers.clear()
 
@@ -506,13 +473,6 @@ class Piece(HexSpace):
         self.connected_empty_spaces = related_empty_space.connected_empty_spaces
         self.sliding_prevented_to = related_empty_space.sliding_prevented_to
         self.cannot_move_to = related_empty_space.cannot_move_to
-
-        # If this space was a possible move for a grasshopper, remove it and add a new path
-        # if related_empty_space.linked_grasshoppers:
-        #     for grasshopper_location in related_empty_space.linked_grasshoppers:
-        #         if grasshopper_location in board.HiveGameBoard().pieces:
-        #             board.HiveGameBoard().pieces[grasshopper_location].remove_move(self.location)
-        #             self.add_to_grasshopper_path(grasshopper_location)
 
         # Update all the piece and empty space connections
         all_connected_spaces = self.connected_empty_spaces.union(self.connected_pieces)

@@ -136,32 +136,14 @@ class Beetle(Piece):
         else:
             super().set_location_to(new_location)
 
-    def add_grasshopper_path_link(self, location):
-        if self.stacked_piece_obj.name in [Piece.GRASSHOPPER, Piece.BEETLE]:
-            self.stacked_piece_obj.add_grasshopper_path_link(location)
-        else:
-            raise RuntimeError('Beetle is not on top of a Grasshopper but a Grasshopper function call was attempted.')
-
-    def remove_grasshopper_path_link(self, location):
-        if self.stacked_piece_obj.name in [Piece.GRASSHOPPER, Piece.BEETLE]:
-            self.stacked_piece_obj.remove_grasshopper_path_link(location)
-        else:
-            raise RuntimeError('Beetle is not on top of a Grasshopper but a Grasshopper function call was attempted.')
-
-    def remove_grasshopper_path(self, start_location):
-        if self.stacked_piece_obj.name in [Piece.GRASSHOPPER, Piece.BEETLE]:
-            self.stacked_piece_obj.remove_grasshopper_path(start_location)
-        else:
-            raise RuntimeError('Beetle is not on top of a Grasshopper but a Grasshopper function call was attempted.')
-
     def add_connection_to_piece(self, location):
         super().add_connection_to_piece(location)
         if self.stacked_piece_obj is not None and self.stacked_piece_obj.name in [Piece.GRASSHOPPER, Piece.BEETLE]:
             self.stacked_piece_obj.add_connection_to_piece(location)
 
-    def _remove_grasshopper_path(self, start_location, initial_call=True):
+    def remove_grasshopper_path(self, start_location, initial_call=True):
         if self.stacked_piece_obj.name in [Piece.GRASSHOPPER, Piece.BEETLE]:
-            self.stacked_piece_obj._remove_grasshopper_path(start_location, initial_call=initial_call)
+            self.stacked_piece_obj.remove_grasshopper_path(start_location, initial_call=initial_call)
         else:
             raise RuntimeError('Beetle is not on top of a Grasshopper but a Grasshopper function call was attempted.')
 
@@ -207,11 +189,11 @@ class Grasshopper(Piece):
 
         if self.initialize_paths:
             for piece_location in self.connected_pieces:
-                self._add_grasshopper_path(piece_location)
+                self.add_grasshopper_path(piece_location)
             self.initialize_paths = False
         else:
             for path_data in self.paths_to_add:
-                self._add_grasshopper_path(path_data.location, path_data.previous_location, path_data.direction)
+                self.add_grasshopper_path(path_data.location, path_data.previous_location, path_data.direction)
 
         self.pieces_to_add_to_path.clear()
         self.added_paths.clear()
@@ -229,80 +211,21 @@ class Grasshopper(Piece):
     def remove(self):
         # Unlink pieces on the movement path. This needs to happen *before* this grasshopper's location is updated
         for piece_location in self.connected_pieces:
-            piece = board.HiveGameBoard().pieces[piece_location]
-            piece.remove_from_grasshopper_path(self.location)
-
-            self._remove_grasshopper_path(piece_location)
+            self.remove_grasshopper_path(piece_location)
 
         super().remove()
         self.possible_moves.clear()
 
     def set_location_to(self, new_location):
         super().set_location_to(new_location)
-        for piece_location in self.connected_pieces:
-            board.HiveGameBoard().pieces[piece_location].add_to_grasshopper_path(self.location)
-
         self.initialize_paths = True
         self.prepare_for_update()
 
     def add_connection_to_piece(self, location):
         super().add_connection_to_piece(location)
-        board.HiveGameBoard().pieces[location].add_to_grasshopper_path(self.location)
-
         self.paths_to_add.add(self.GrasshopperPath(location, is_empty_space=False))
 
-    def add_grasshopper_path_link(self, location):
-        self.added_paths.add(location)
-
-    def remove_grasshopper_path_link(self, location):
-        self.removed_paths.add(location)
-
-    def add_grasshopper_path(self, start_location):
-        return
-        print(f'\tAdding grashopper path. Possible moves beforehand: {self.possible_moves}')
-        if start_location in self.added_paths:
-            return
-        if start_location in board.HiveGameBoard().empty_spaces:
-            board.HiveGameBoard().empty_spaces[start_location].add_link_to_grasshopper(self.location)
-            return
-
-        direction = self.direction_from_a_to_b(self.location, start_location)
-
-        current_location = start_location
-        while current_location not in board.HiveGameBoard().empty_spaces:
-            board.HiveGameBoard().pieces[current_location].add_link_to_grasshopper(self.location)
-            current_location = self.get_next_space_in_direction(current_location, direction)
-
-        # current_location must be an EmptySpace
-        board.HiveGameBoard().empty_spaces[current_location].add_link_to_grasshopper(self.location)
-        self.add_move(current_location)
-        print(f'\tmoves after addition: {self.possible_moves}')
-
-    def remove_grasshopper_path(self, start_location):
-        return
-        print(f'\tRemoving grashopper path. Possible moves beforehand: {self.possible_moves}')
-        if start_location in self.removed_paths:
-            return
-
-        direction = self.direction_from_a_to_b(self.location, start_location)
-
-        current_location = start_location
-        board.HiveGameBoard().get_all_spaces()[current_location].remove_link_to_grasshopper(self.location)
-        if current_location in board.HiveGameBoard().empty_spaces:
-            self.remove_move(current_location)
-        current_location = self.get_next_space_in_direction(current_location, direction)
-
-        while current_location not in board.HiveGameBoard().empty_spaces:
-            board.HiveGameBoard().pieces[current_location].remove_link_to_grasshopper(self.location)
-            current_location = self.get_next_space_in_direction(current_location, direction)
-
-        # current_location must be an EmptySpace
-        board.HiveGameBoard().empty_spaces[current_location].remove_link_to_grasshopper(self.location)
-        self.remove_move(current_location)
-
-        print(f'\tmoves after removal: {self.possible_moves}')
-
-    def _add_grasshopper_path(self, location, previous_location=None, direction=None):
+    def add_grasshopper_path(self, location, previous_location=None, direction=None):
         print(f'{self.location} - adding path {location}')
         if previous_location is None:
             previous_location = self.location
@@ -332,9 +255,9 @@ class Grasshopper(Piece):
 
         # Continue adding to the path
         if next_location is not None:
-            self._add_grasshopper_path(next_location, location, direction)
+            self.add_grasshopper_path(next_location, location, direction)
 
-    def _remove_grasshopper_path(self, location, initial_call=True):
+    def remove_grasshopper_path(self, location, initial_call=True):
         print(f'{self.location} - removing path {location}')
         if location not in self.paths:
             return
@@ -359,7 +282,7 @@ class Grasshopper(Piece):
                 self.prepare_for_update()
 
         if path_data.next_location is not None:
-            self._remove_grasshopper_path(path_data.next_location, initial_call=False)
+            self.remove_grasshopper_path(path_data.next_location, initial_call=False)
 
 
 class QueenBee(Piece):
