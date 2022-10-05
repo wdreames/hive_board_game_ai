@@ -161,7 +161,7 @@ class TestSampleGameWithNoMovement(unittest.TestCase):
 
     def test_l_has_winner(self):
         # Check for a winner
-        expected_winner = 'white'
+        expected_winner = board.HiveGameBoard.WHITE_WINNER
         actual_winner = board.HiveGameBoard().determine_winner()
         self.assertEqual(expected_winner, actual_winner)
 

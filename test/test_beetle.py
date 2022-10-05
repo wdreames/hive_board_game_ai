@@ -161,7 +161,7 @@ class TestBeetle(unittest.TestCase):
 
         game_board.print_board()
 
-        expected_winner_result = 'black'
+        expected_winner_result = board.HiveGameBoard.BLACK_WINNER
         actual_winner_result = board.HiveGameBoard().determine_winner()
         self.assertEqual(expected_winner_result, actual_winner_result)
 
