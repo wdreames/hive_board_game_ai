@@ -128,7 +128,6 @@ class Beetle(Piece):
                         connected_emt_spc.num_black_connected += 1
                     connected_emt_spc.prepare_for_update()
 
-            # TODO: [Movement] This could also be done with a lock action
             # Remove piece from board movement dictionaries
             self.stacked_piece_obj.lock()
 
@@ -226,7 +225,6 @@ class Grasshopper(Piece):
         self.paths_to_add.add(self.GrasshopperPath(location, is_empty_space=False))
 
     def add_grasshopper_path(self, location, previous_location=None, direction=None):
-        print(f'{self.location} - adding path {location}')
         if previous_location is None:
             previous_location = self.location
         if direction is None:
@@ -258,7 +256,6 @@ class Grasshopper(Piece):
             self.add_grasshopper_path(next_location, location, direction)
 
     def remove_grasshopper_path(self, location, initial_call=True):
-        print(f'{self.location} - removing path {location}')
         if location not in self.paths:
             return
 

@@ -52,7 +52,7 @@ class HexSpace:
         elif loc in self.cannot_move_to:
             self.cannot_move_to.remove(loc)
 
-    def add_new_sliding_prevention(self, prevented_space_location, piece_blocking_mvt_location):
+    def add_sliding_prevention(self, prevented_space_location, piece_blocking_mvt_location):
         if prevented_space_location in self.sliding_prevented_to:
             self.sliding_prevented_to[prevented_space_location].add(piece_blocking_mvt_location)
         else:
@@ -116,22 +116,18 @@ class HexSpace:
     def remove(self):
         pass
 
-    @abstractmethod
     def add_connection_to_piece(self, location):
         self.connected_pieces.add(location)
         self.prepare_for_update()
 
-    @abstractmethod
     def remove_connection_to_piece(self, location):
         self.connected_pieces.remove(location)
         self.prepare_for_update()
 
-    @abstractmethod
     def add_connection_to_empty_space(self, location):
         self.connected_empty_spaces.add(location)
         self.prepare_for_update()
 
-    @abstractmethod
     def remove_connection_to_empty_space(self, location):
         self.connected_empty_spaces.remove(location)
         self.prepare_for_update()
@@ -636,11 +632,11 @@ class Piece(HexSpace):
         pass
 
     def add_move(self, location):
-        print(f'{self.location} - {self.name} - Adding {location} to possible moves')
+        # print(f'{self.location} - {self.name} - Adding {location} to possible moves')
         self.possible_moves.add(location)
 
     def remove_move(self, location):
-        print(f'{self.location} - {self.name} - Removing {location} from possible moves')
+        # print(f'{self.location} - {self.name} - Removing {location} from possible moves')
         if location in self.possible_moves:
             self.possible_moves.remove(location)
 

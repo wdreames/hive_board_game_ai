@@ -28,7 +28,6 @@ class TestBeetle(unittest.TestCase):
         print('moving beetle onto gh')
         board.HiveGameBoard().move_piece((1, -1), (0, -1))
 
-
         # Move other Pieces
         print('moving (0, 2) to (1, 2)')
         board.HiveGameBoard().move_piece((0, 2), (1, 2))

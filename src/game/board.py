@@ -15,11 +15,17 @@ class HiveGameBoard(object):
 
     MOVE_PIECE = 'Move piece'
     PLACE_PIECE = 'Place piece'
+    WHITE_WINNER = 'White'
+    BLACK_WINNER = 'Black'
+    DRAW = 'Draw'
 
     # TODO: [AI] Would it be possible to have this return whatever the current instance of the board is?
-    #       This way the AI could traverse down multiple layers, but the internal code would not need to change.
-    #       Question: Would this also be able to manage Piece interactions?
-    #       Maybe have an instance=board_instance parameter?
+    #       - This way the AI could traverse down multiple layers, but the internal code would not need to change.
+    #       - Question: Would this also be able to manage Piece interactions?
+    #         - As long as all actions are called via the board, it should be okay
+    #       - Maybe have an instance=board_instance parameter?
+    #       - Or I could have a separate BoardManager class that uses Singleton, but can control which board instance
+    #       to return when requested.
     def __new__(cls, new_board=False):
         """
         Method used to get an instance of the game board. A singleton design pattern is used here so the class is
@@ -369,11 +375,11 @@ class HiveGameBoard(object):
             Returns 'draw' if the game is a draw
         """
         if self._black_queen_surrounded() and self._white_queen_surrounded():
-            return 'draw'
+            return HiveGameBoard.DRAW
         elif self._black_queen_surrounded():
-            return 'white'
+            return HiveGameBoard.WHITE_WINNER
         elif self._white_queen_surrounded():
-            return 'black'
+            return HiveGameBoard.BLACK_WINNER
         else:
             return None
 

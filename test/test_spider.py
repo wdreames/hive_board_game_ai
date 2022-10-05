@@ -105,7 +105,6 @@ class TestSpiderMoveOntoSelf(unittest.TestCase):
 
         game_board.print_board()
 
-    # TODO: [Spider] This fails because updates to sliding rules do not update Spider movement
     def test_spider1(self):
         # Test Spider at (-1, 1)
         expected_possible_moves = {(-1, 1), (-1, -1), (-1, 3)}
