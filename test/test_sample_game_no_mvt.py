@@ -122,12 +122,12 @@ class TestSampleGameWithNoMovement(unittest.TestCase):
 
     def test_i_end_game_correct_num_turns(self):
         # Continue making moves
-        self.assertRaises(ValueError,
+        self.assertRaises(RuntimeError,
                           board.HiveGameBoard().place_piece, 'Ant', (-2, -2))  # Black; Meant to fail & be skipped
-        self.assertRaises(ValueError,
+        self.assertRaises(RuntimeError,
                           board.HiveGameBoard().place_piece, 'Queen Bee', (-1, 0))  # Black; Meant to fail & be skipped
         board.HiveGameBoard().place_piece('Queen Bee', (-2, -2))  # Black
-        self.assertRaises(ValueError,
+        self.assertRaises(RuntimeError,
                           board.HiveGameBoard().place_piece, 'Queen Bee', (1, 1))  # White; Meant to fail & be skipped
         board.HiveGameBoard().place_piece('Ant', (1, 1))  # White
         board.HiveGameBoard().place_piece('Grasshopper', (-3, -3))  # Black

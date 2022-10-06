@@ -169,27 +169,39 @@ class HiveGameBoard(object):
         # Gather the valid pieces and locations
         pieces_to_place, locations_to_place = self.get_all_possible_placements()
 
-        # Ensure the move is legal then place the piece
-        if pieces_to_place.get(piece_type, 0) > 0 and location in locations_to_place:
-            pieces_to_place[piece_type] -= 1
-            if piece_type == Piece.ANT:
-                Ant(location[0], location[1], is_white=self.is_white_turn())
-            elif piece_type == Piece.BEETLE:
-                Beetle(location[0], location[1], is_white=self.is_white_turn())
-            elif piece_type == Piece.GRASSHOPPER:
-                Grasshopper(location[0], location[1], is_white=self.is_white_turn())
-            elif piece_type == Piece.QUEEN_BEE:
-                QueenBee(location[0], location[1], is_white=self.is_white_turn())
-                if self.is_white_turn():
-                    self.white_pieces_to_place[Piece.QUEEN_BEE] = 0
-                else:
-                    self.black_pieces_to_place[Piece.QUEEN_BEE] = 0
-            elif piece_type == Piece.SPIDER:
-                Spider(location[0], location[1], is_white=self.is_white_turn())
+        # Ensure action validity
+        player = 'White' if self.is_white_turn() else 'Black'
+        if piece_type not in pieces_to_place:
+            if pieces_to_place == {Piece.QUEEN_BEE: 1}:
+                raise RuntimeError('You must place your Queen Bee by your fourth turn.')
             else:
-                raise ValueError(f'{piece_type} is not a valid type of piece.')
-        else:
-            raise ValueError('You either do not have any more of this type of piece or cannot place a piece there.')
+                raise RuntimeError(f'{piece_type} is not a valid type of piece.')
+        if pieces_to_place[piece_type] <= 0:
+            raise RuntimeError(f'{player} does not have any more {piece_type}s to place')
+        if location not in locations_to_place:
+            raise RuntimeError(f'{player} cannot place a piece at {location}')
+
+        # Place the piece
+        pieces_to_place[piece_type] -= 1
+
+        if piece_type == Piece.ANT:
+            Ant(location[0], location[1], is_white=self.is_white_turn())
+
+        elif piece_type == Piece.BEETLE:
+            Beetle(location[0], location[1], is_white=self.is_white_turn())
+
+        elif piece_type == Piece.GRASSHOPPER:
+            Grasshopper(location[0], location[1], is_white=self.is_white_turn())
+
+        elif piece_type == Piece.QUEEN_BEE:
+            QueenBee(location[0], location[1], is_white=self.is_white_turn())
+            if self.is_white_turn():
+                self.white_pieces_to_place[Piece.QUEEN_BEE] = 0
+            else:
+                self.black_pieces_to_place[Piece.QUEEN_BEE] = 0
+
+        elif piece_type == Piece.SPIDER:
+            Spider(location[0], location[1], is_white=self.is_white_turn())
 
         self.update_pieces()
         self.turn_number += 1
@@ -198,9 +210,30 @@ class HiveGameBoard(object):
         if piece_location == new_location:
             return
 
-        if self.is_white_turn() and self.white_queen_location is None or \
-                not self.is_white_turn() and self.black_queen_location is None:
-            raise RuntimeError('You must place your Queen Bee before you can perform a move action.')
+        # Ensure the move is legal
+        QUEEN_BEE_ERR = 'You must place your Queen Bee before you can perform a move action.'
+        WHITE_MOVE_ERR = "Illegal action. It is white's turn, but a move for black was attempted."
+        BLACK_MOVE_ERR = "Illegal action. It is black's turn, but a move for white was attempted."
+        ONE_HIVE_ERR = 'Illegal action. This piece cannot move based on the "One Hive" rule.'
+        INVALID_MOVE_ERR = 'Illegal action. This piece cannot move to the specified location.'
+        if self.is_white_turn():
+            if self.white_queen_location is None:
+                raise RuntimeError(QUEEN_BEE_ERR)
+            elif not self.pieces[piece_location].is_white:
+                raise RuntimeError(WHITE_MOVE_ERR)
+            elif piece_location not in self.white_possible_moves:
+                raise RuntimeError(ONE_HIVE_ERR)
+            elif new_location not in self.white_possible_moves[piece_location]:
+                raise RuntimeError(INVALID_MOVE_ERR)
+        else:
+            if self.black_queen_location is None:
+                raise RuntimeError(QUEEN_BEE_ERR)
+            elif self.pieces[piece_location].is_white:
+                raise RuntimeError(BLACK_MOVE_ERR)
+            elif piece_location not in self.black_possible_moves:
+                raise RuntimeError(ONE_HIVE_ERR)
+            elif new_location not in self.black_possible_moves[piece_location]:
+                raise RuntimeError(INVALID_MOVE_ERR)
 
         self.pieces[piece_location].move_to(new_location)
 

@@ -25,21 +25,19 @@ class TestBeetle(unittest.TestCase):
         beetle_board1()
 
         # Move onto Grasshopper
-        print('moving beetle onto gh')
         board.HiveGameBoard().move_piece((1, -1), (0, -1))
 
         # Move other Pieces
-        print('moving (0, 2) to (1, 2)')
         board.HiveGameBoard().move_piece((0, 2), (1, 2))
-        print('moving (0, -2) to (-1, -2)')
         board.HiveGameBoard().move_piece((0, -2), (-1, -2))
+        board.HiveGameBoard().move_piece((-1, 1), (0, 1))
 
         expected_beetle_moves = {(-1, -1), (-1, -2), (0, -2), (1, -1), (1, 0), (0, 0)}
         actual_beetle_moves = board.HiveGameBoard().pieces[(0, -1)].possible_moves
         self.assertEqual(expected_beetle_moves, actual_beetle_moves)
 
         # Move off of Grasshopper
-        print('moving beetle off grasshopper')
+        board.HiveGameBoard().print_board()
         board.HiveGameBoard().move_piece((0, -1), (0, 0))
 
         expected_grasshopper_moves = {(0, 2), (-2, -3)}

@@ -381,18 +381,15 @@ class Piece(HexSpace):
         if self.location in board.HiveGameBoard().empty_spaces:
             self.set_location_to(self.location)
         else:
-            raise ValueError('No empty space at {} to place a new {}'.format(self.location, self.name))
+            raise RuntimeError('No empty space at {} to place a new {}'.format(self.location, self.name))
 
     def update(self):
         super().update()
         self.calc_possible_moves()
 
     def move_to(self, new_location):
-        if new_location in self.possible_moves:
-            self.remove()
-            self.set_location_to(new_location)
-        else:
-            raise ValueError('Cannot move {} at {} to {}'.format(self.name, self.location, new_location))
+        self.remove()
+        self.set_location_to(new_location)
 
     def remove(self):
         # Update pieces that are no longer prevented from sliding
