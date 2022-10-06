@@ -549,14 +549,6 @@ class Piece(HexSpace):
                         board.HiveGameBoard().ant_mvt_preventions_to_add.add(space1_loc)
                     else:
                         raise RuntimeError('Error! This line should never be executed!')
-                # Both are within different prevention sets
-                elif space1_prevention_index != space2_prevention_index and \
-                        space1_prevention_index > -1 and space2_prevention_index > -1:
-                    # TODO: [Efficiency] Could combine these statements into a single method recursion
-                    board.HiveGameBoard().remove_from_ant_movement_prevention_set(space1_loc,
-                                                                                  space1_prevention_index)
-                    board.HiveGameBoard().add_to_ant_movement_prevention_set(space1_loc, space2_prevention_index)
-                    board.HiveGameBoard().clear_ant_movement_prevention_set(space1_prevention_index)
                 else:
                     raise RuntimeError('Error! This line should never be executed!')
 

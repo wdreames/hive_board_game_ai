@@ -293,17 +293,6 @@ class HiveGameBoard(object):
         for connected_space in self.empty_spaces[current_space].get_queen_bee_moves().difference(visited_spaces):
             self.add_to_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
 
-    def remove_from_ant_movement_prevention_set(self, current_space, set_index, visited_spaces=None):
-        if current_space not in self.empty_spaces or current_space not in self.ant_mvt_prevention_sets[set_index]:
-            return
-        if visited_spaces is None:
-            visited_spaces = set()
-        self.ant_mvt_prevention_sets[set_index].remove(current_space)
-        visited_spaces.add(current_space)
-
-        for connected_space in current_space.get_queen_bee_moves().difference(visited_spaces):
-            self.remove_from_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
-
     def union_ant_movement_prevention_sets(self, set_index1, set_index2):
         if set_index1 == set_index2:
             return set_index1
