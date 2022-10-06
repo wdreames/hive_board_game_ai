@@ -348,8 +348,19 @@ def beetle_board3():
     game_board.place_piece(spider, (0, 0))
     game_board.place_piece(beetle, (0, 1))
     game_board.place_piece(queen_bee, (-1, -1))
+
+    game_board.place_piece(queen_bee, (1, 2))
+    game_board.move_piece((-1, -1), (-1, 0))
+    game_board.move_piece((1, 2), (1, 1))
+    game_board.move_piece((-1, 0), (-1, -1))
+
     game_board.move_piece((0, 1), (0, 0))
-    game_board.place_piece(ant, (-2, -1))
+    game_board.place_piece(ant, (-2, -2))
+
+    game_board.move_piece((1, 1), (1, 0))
+    game_board.move_piece((-2, -2), (-1, 0))
+    game_board.move_piece((1, 0), (0, -1))
+    game_board.move_piece((-1, 0), (-2, -1))
     game_board.move_piece((0, 0), (0, -1))
 
     game_board.print_board()

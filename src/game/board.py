@@ -198,6 +198,10 @@ class HiveGameBoard(object):
         if piece_location == new_location:
             return
 
+        if self.is_white_turn() and self.white_queen_location is None or \
+                not self.is_white_turn() and self.black_queen_location is None:
+            raise RuntimeError('You must place your Queen Bee before you can perform a move action.')
+
         self.pieces[piece_location].move_to(new_location)
 
         self.update_pieces()

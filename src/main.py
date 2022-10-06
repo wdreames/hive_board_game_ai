@@ -193,7 +193,6 @@ def test_game4():
     board.print_board()
     print('-' * 10)
     print(board)
-    return
     board.perform_action(MOVE, (-1, -1), new_location=(2, -1))
     print(board)
     board.print_board()
@@ -306,7 +305,7 @@ if __name__ == '__main__':
     # test_game1()
     # test_game2()
     # test_game3()
-    test_game4()
+    # test_game4()
     # test_sliding_rules()
     # test_game5()
-    # play_game()
+    play_game()

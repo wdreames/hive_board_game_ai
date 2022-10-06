@@ -135,8 +135,8 @@ class TestSpiderBoard2Move0(unittest.TestCase):
         queen_bee = spaces.Piece.QUEEN_BEE
         spider = spaces.Piece.SPIDER
 
-        game_board.place_piece(beetle, (0, 0))
-        game_board.place_piece(grasshopper, (1, 0))
+        game_board.place_piece(queen_bee, (0, 0))
+        game_board.place_piece(queen_bee, (1, 0))
         game_board.place_piece(spider, (-1, -1))
         game_board.place_piece(spider, (2, 0))
 
@@ -168,8 +168,8 @@ class TestSpiderBoard2Move1(unittest.TestCase):
         queen_bee = spaces.Piece.QUEEN_BEE
         spider = spaces.Piece.SPIDER
 
-        game_board.place_piece(beetle, (0, 0))
-        game_board.place_piece(grasshopper, (1, 0))
+        game_board.place_piece(queen_bee, (0, 0))
+        game_board.place_piece(queen_bee, (1, 0))
         game_board.place_piece(spider, (-1, -1))
         game_board.place_piece(spider, (2, 0))
 
@@ -205,15 +205,15 @@ class TestSpiderBoard2Move2(unittest.TestCase):
         queen_bee = spaces.Piece.QUEEN_BEE
         spider = spaces.Piece.SPIDER
 
-        game_board.place_piece(beetle, (0, 0))
-        game_board.place_piece(grasshopper, (1, 0))
+        game_board.place_piece(queen_bee, (0, 0))
+        game_board.place_piece(queen_bee, (1, 0))
         game_board.place_piece(spider, (-1, -1))
         game_board.place_piece(spider, (2, 0))
 
         game_board.move_piece((-1, -1), (2, -1))
 
         game_board.place_piece(grasshopper, (3, 1))
-        game_board.place_piece(queen_bee, (-1, 0))
+        game_board.place_piece(beetle, (-1, 0))
 
         game_board.print_board()
 
@@ -243,15 +243,15 @@ class TestSpiderBoard2Move3(unittest.TestCase):
         queen_bee = spaces.Piece.QUEEN_BEE
         spider = spaces.Piece.SPIDER
 
-        game_board.place_piece(beetle, (0, 0))
-        game_board.place_piece(grasshopper, (1, 0))
+        game_board.place_piece(queen_bee, (0, 0))
+        game_board.place_piece(queen_bee, (1, 0))
         game_board.place_piece(spider, (-1, -1))
         game_board.place_piece(spider, (2, 0))
 
         game_board.move_piece((-1, -1), (2, -1))
 
         game_board.place_piece(grasshopper, (3, 1))
-        game_board.place_piece(queen_bee, (-1, 0))
+        game_board.place_piece(beetle, (-1, 0))
 
         game_board.move_piece((3, 1), (1, -1))
 
