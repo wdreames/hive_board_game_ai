@@ -171,19 +171,21 @@ class HiveGameBoard(object):
 
         # Ensure action validity
         player = 'White' if self.is_white_turn() else 'Black'
+        NO_QUEEN_BEE_ERR = 'You must place your Queen Bee by your fourth turn.'
+        INVALID_PIECE_ERR = f'{piece_type} is not a valid type of piece.'
+        NO_PIECE_ERR = f'{player} does not have any more {piece_type}s to place'
+        INVALID_LOCATION_ERR = f'{player} cannot place a piece at {location}'
         if piece_type not in pieces_to_place:
             if pieces_to_place == {Piece.QUEEN_BEE: 1}:
-                raise RuntimeError('You must place your Queen Bee by your fourth turn.')
+                raise RuntimeError(NO_QUEEN_BEE_ERR)
             else:
-                raise RuntimeError(f'{piece_type} is not a valid type of piece.')
+                raise RuntimeError(INVALID_PIECE_ERR)
         if pieces_to_place[piece_type] <= 0:
-            raise RuntimeError(f'{player} does not have any more {piece_type}s to place')
+            raise RuntimeError(NO_PIECE_ERR)
         if location not in locations_to_place:
-            raise RuntimeError(f'{player} cannot place a piece at {location}')
+            raise RuntimeError(INVALID_LOCATION_ERR)
 
         # Place the piece
-        pieces_to_place[piece_type] -= 1
-
         if piece_type == Piece.ANT:
             Ant(location[0], location[1], is_white=self.is_white_turn())
 
@@ -195,13 +197,15 @@ class HiveGameBoard(object):
 
         elif piece_type == Piece.QUEEN_BEE:
             QueenBee(location[0], location[1], is_white=self.is_white_turn())
-            if self.is_white_turn():
-                self.white_pieces_to_place[Piece.QUEEN_BEE] = 0
-            else:
-                self.black_pieces_to_place[Piece.QUEEN_BEE] = 0
 
         elif piece_type == Piece.SPIDER:
             Spider(location[0], location[1], is_white=self.is_white_turn())
+
+        # Reduce piece counts
+        if self.is_white_turn():
+            self.white_pieces_to_place[piece_type] -= 1
+        else:
+            self.black_pieces_to_place[piece_type] -= 1
 
         self.update_pieces()
         self.turn_number += 1
