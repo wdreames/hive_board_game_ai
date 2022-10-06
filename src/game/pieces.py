@@ -19,6 +19,8 @@ class Ant(Piece):
     def calc_possible_moves(self):
         # Can move to any open space that it can slide to
         can_slide_into = self.connected_empty_spaces.difference(self.sliding_prevented_to.keys())
+        can_slide_into_prevention_sets = set()
+        spaces_in_connected_prevention_sets = set()
         if not can_slide_into:
             self.possible_moves = set()
         else:
@@ -26,8 +28,17 @@ class Ant(Piece):
             for prevention_set in board.HiveGameBoard().ant_mvt_prevention_sets:
                 # If the Ant cannot slide into a given prevention set,
                 # those potential moves are removed from the moveset
-                if len(can_slide_into.intersection(prevention_set)) == 0:
+                overlap_with_prevention_set = can_slide_into.intersection(prevention_set)
+                if not overlap_with_prevention_set:
                     moveset = moveset.difference(prevention_set)
+                else:
+                    can_slide_into_prevention_sets = can_slide_into_prevention_sets.union(overlap_with_prevention_set)
+                    spaces_in_connected_prevention_sets = spaces_in_connected_prevention_sets.union(prevention_set)
+
+            # Check if every move the Ant has is within a prevention set. In this scenario, the base set of
+            # Empty Spaces are not added into the moveset
+            if not can_slide_into.difference(can_slide_into_prevention_sets):
+                moveset = spaces_in_connected_prevention_sets
 
             # Check if any surrounding Empty Spaces are only connected to this Piece. If so, that is not a possible move
             for space_location in can_slide_into.intersection(self.cannot_move_to):
