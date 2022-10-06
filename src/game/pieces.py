@@ -78,11 +78,11 @@ class Beetle(Piece):
         on_top_of_piece = self.stacked_piece_obj is not None
 
         if on_top_of_piece:
-            self.stacked_piece_obj.connected_pieces = self.connected_pieces
-            self.stacked_piece_obj.connected_empty_spaces = self.connected_empty_spaces
-            self.stacked_piece_obj.sliding_prevented_to = self.sliding_prevented_to
-            self.stacked_piece_obj.cannot_move_to = self.cannot_move_to
-            self.stacked_piece_obj.preventing_sliding_for = self.preventing_sliding_for
+            self.stacked_piece_obj.connected_pieces = self.connected_pieces.copy()
+            self.stacked_piece_obj.connected_empty_spaces = self.connected_empty_spaces.copy()
+            self.stacked_piece_obj.sliding_prevented_to = self.sliding_prevented_to.copy()
+            self.stacked_piece_obj.cannot_move_to = self.cannot_move_to.copy()
+            self.stacked_piece_obj.preventing_sliding_for = self.preventing_sliding_for.copy()
 
             # Need to update num white/black connected in nearby empty spaces
             if self.is_white != self.stacked_piece_obj.is_white:

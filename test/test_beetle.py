@@ -165,9 +165,7 @@ class TestBeetle(unittest.TestCase):
         actual_winner_result = board.HiveGameBoard().determine_winner()
         self.assertEqual(expected_winner_result, actual_winner_result)
 
-    # TODO: [Beetle] Test stacking multiple Beetles on top of each other
-    #       Also make sure piece functionality works several pieces down (i.e. Spider, Grasshopper)
-    def test_beetle_stack(self):
+    def test_beetle_stack_on_grasshopper(self):
         # Ensure no errors occur when stacking/unstacking multiple beetles
         game_board = board.HiveGameBoard(new_board=True)
         ant = spaces.Piece.ANT
@@ -175,7 +173,121 @@ class TestBeetle(unittest.TestCase):
         grasshopper = spaces.Piece.GRASSHOPPER
         queen_bee = spaces.Piece.QUEEN_BEE
         spider = spaces.Piece.SPIDER
-        pass
+
+        # Set up the board
+        game_board.place_piece(grasshopper, (0, 0))
+        game_board.place_piece(beetle, (1, 0))
+        game_board.place_piece(beetle, (-1, 0))
+        game_board.place_piece(beetle, (2, 1))
+        game_board.place_piece(beetle, (-2, 0))
+        game_board.place_piece(queen_bee, (1, -1))
+        game_board.place_piece(queen_bee, (-1, 1))
+
+        # Move the pieces
+        game_board.move_piece((1, -1), (0, -1))
+        game_board.move_piece((-1, 1), (0, 1))
+
+        game_board.move_piece((2, 1), (1, 1))
+        game_board.move_piece((-2, 0), (-1, 0))
+        game_board.move_piece((1, 1), (0, 0))
+        game_board.move_piece((-1, 0), (0, 0))
+        game_board.move_piece((1, 0), (0, 0))
+        game_board.move_piece((-1, 0), (0, 0))
+
+        expected_beetle_moves = {(-1, -1), (0, -1), (1, 0), (1, 1), (0, 1), (-1, 0)}
+        actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves
+        self.assertEqual(expected_beetle_moves, actual_beetle_moves)
+
+        # Move the queen bees
+        game_board.move_piece((0, -1), (1, 0))
+        game_board.move_piece((0, 1), (1, 1))
+
+        # Begin moving beetles off the stack
+        game_board.move_piece((0, 0), (0, 1))
+        expected_beetle_moves = {(-1, -1), (0, -1), (1, 0), (1, 1), (0, 1), (-1, 0)}
+        actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves
+        self.assertEqual(expected_beetle_moves, actual_beetle_moves)
+
+        game_board.move_piece((0, 0), (0, -1))
+        expected_beetle_moves = {(-1, -1), (0, -1), (1, 0), (1, 1), (0, 1), (-1, 0)}
+        actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves
+        self.assertEqual(expected_beetle_moves, actual_beetle_moves)
+
+        game_board.move_piece((0, 0), (0, -1))
+        expected_beetle_moves = {(-1, -1), (0, -1), (1, 0), (1, 1), (0, 1), (-1, 0)}
+        actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves
+        self.assertEqual(expected_beetle_moves, actual_beetle_moves)
+
+        game_board.move_piece((0, 0), (1, 1))
+
+        game_board.print_board()
+
+        # Check the moves of the grasshopper
+        expected_beetle_moves = {(0, 2), (0, -2), (2, 2), (2, 0)}
+        actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves
+        self.assertEqual(expected_beetle_moves, actual_beetle_moves)
+
+    def test_beetle_stack_on_spider(self):
+        # Ensure no errors occur when stacking/unstacking multiple beetles
+        game_board = board.HiveGameBoard(new_board=True)
+        ant = spaces.Piece.ANT
+        beetle = spaces.Piece.BEETLE
+        grasshopper = spaces.Piece.GRASSHOPPER
+        queen_bee = spaces.Piece.QUEEN_BEE
+        spider = spaces.Piece.SPIDER
+
+        # Set up the board
+        game_board.place_piece(spider, (0, 0))
+        game_board.place_piece(beetle, (1, 0))
+        game_board.place_piece(beetle, (-1, 0))
+        game_board.place_piece(beetle, (2, 1))
+        game_board.place_piece(beetle, (-2, 0))
+        game_board.place_piece(queen_bee, (1, -1))
+        game_board.place_piece(queen_bee, (-1, 1))
+
+        # Move the pieces
+        game_board.move_piece((1, -1), (0, -1))
+        game_board.move_piece((-1, 1), (0, 1))
+
+        game_board.move_piece((2, 1), (1, 1))
+        game_board.move_piece((-2, 0), (-1, 0))
+        game_board.move_piece((1, 1), (0, 0))
+        game_board.move_piece((-1, 0), (0, 0))
+        game_board.move_piece((1, 0), (0, 0))
+        game_board.move_piece((-1, 0), (0, 0))
+
+        expected_beetle_moves = {(-1, -1), (0, -1), (1, 0), (1, 1), (0, 1), (-1, 0)}
+        actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves
+        self.assertEqual(expected_beetle_moves, actual_beetle_moves)
+
+        # Move the queen bees
+        game_board.move_piece((0, -1), (1, 0))
+        game_board.move_piece((0, 1), (1, 1))
+
+        # Begin moving beetles off the stack
+        game_board.move_piece((0, 0), (1, 0))
+        expected_beetle_moves = {(-1, -1), (0, -1), (1, 0), (1, 1), (0, 1), (-1, 0)}
+        actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves
+        self.assertEqual(expected_beetle_moves, actual_beetle_moves)
+
+        game_board.move_piece((0, 0), (0, -1))
+        expected_beetle_moves = {(-1, -1), (0, -1), (1, 0), (1, 1), (0, 1), (-1, 0)}
+        actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves
+        self.assertEqual(expected_beetle_moves, actual_beetle_moves)
+
+        game_board.move_piece((0, 0), (0, -1))
+        expected_beetle_moves = {(-1, -1), (0, -1), (1, 0), (1, 1), (0, 1), (-1, 0)}
+        actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves
+        self.assertEqual(expected_beetle_moves, actual_beetle_moves)
+
+        game_board.move_piece((0, 0), (1, 1))
+
+        game_board.print_board()
+
+        # Check the moves of the grasshopper
+        expected_beetle_moves = {(2, 2), (0, -2)}
+        actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves
+        self.assertEqual(expected_beetle_moves, actual_beetle_moves)
 
 
 def beetle_board1():

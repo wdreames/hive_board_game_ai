@@ -20,6 +20,7 @@ class TestInitializationAndPlacements(unittest.TestCase):
         expected_white_queen_loc = None
         expected_black_queen_loc = None
         expected_is_white_turn = True
+        expected_winner = None
 
         self.assertEqual(expected_pieces.keys(), board.HiveGameBoard().pieces.keys())
         self.assertEqual(expected_empty_spaces.keys(), board.HiveGameBoard().empty_spaces.keys())
@@ -28,6 +29,7 @@ class TestInitializationAndPlacements(unittest.TestCase):
         self.assertEqual(expected_white_queen_loc, board.HiveGameBoard().white_queen_location)
         self.assertEqual(expected_black_queen_loc, board.HiveGameBoard().black_queen_location)
         self.assertEqual(expected_is_white_turn, board.HiveGameBoard().is_white_turn())
+        self.assertEqual(expected_winner, board.HiveGameBoard().determine_winner())
 
     def test_create_ant(self):
         # Resets the board
