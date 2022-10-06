@@ -366,6 +366,5 @@ def ant_board2():
     game_board.place_piece(ant, (-3, -3))  # White
 
 
-
 if __name__ == '__main__':
     unittest.main()
