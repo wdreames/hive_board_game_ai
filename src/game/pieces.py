@@ -141,19 +141,19 @@ class Beetle(Piece):
             self.stacked_piece_obj.add_connection_to_piece(location)
 
     def remove_grasshopper_path(self, start_location, initial_call=True):
-        if self.stacked_piece_obj.name in [Piece.GRASSHOPPER, Piece.BEETLE]:
+        if self.stacked_piece_obj is not None and self.stacked_piece_obj.name in [Piece.GRASSHOPPER, Piece.BEETLE]:
             self.stacked_piece_obj.remove_grasshopper_path(start_location, initial_call=initial_call)
         else:
             raise RuntimeError('Beetle is not on top of a Grasshopper but a Grasshopper function call was attempted.')
 
     def update_spider_path(self, empty_space_location):
-        if self.stacked_piece_obj.name in [Piece.SPIDER, Piece.BEETLE]:
+        if self.stacked_piece_obj is not None and self.stacked_piece_obj.name in [Piece.SPIDER, Piece.BEETLE]:
             self.stacked_piece_obj.update_spider_path(empty_space_location)
         else:
             raise RuntimeError('Beetle is not on top of a Spider but a Spider function call was attempted.')
 
     def remove_spider_path(self, start_location, initial_call=True):
-        if self.stacked_piece_obj.name in [Piece.SPIDER, Piece.BEETLE]:
+        if self.stacked_piece_obj is not None and self.stacked_piece_obj.name in [Piece.SPIDER, Piece.BEETLE]:
             self.stacked_piece_obj.remove_spider_path(start_location, initial_call)
         else:
             raise RuntimeError('Beetle is not on top of a Spider but a Spider function call was attempted.')
@@ -183,9 +183,6 @@ class Grasshopper(Piece):
         self.name = Piece.GRASSHOPPER
 
     def update(self):
-        for piece_location in self.pieces_to_add_to_path:
-            self.add_grasshopper_path(piece_location)
-
         if self.initialize_paths:
             for piece_location in self.connected_pieces:
                 self.add_grasshopper_path(piece_location)

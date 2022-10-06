@@ -524,10 +524,10 @@ class Piece(HexSpace):
             self._helper_add_to_dict_set(self.preventing_sliding_for, space2_loc, space1_loc)
             self._helper_add_to_dict_set(other_piece.preventing_sliding_for, space2_loc, space1_loc)
 
-            self._helper_add_to_dict_set(space1.sliding_prevented_to, space2_loc, self.location)
-            self._helper_add_to_dict_set(space1.sliding_prevented_to, space2_loc, other_piece_loc)
-            self._helper_add_to_dict_set(space2.sliding_prevented_to, space1_loc, self.location)
-            self._helper_add_to_dict_set(space2.sliding_prevented_to, space1_loc, other_piece_loc)
+            space1.add_sliding_prevention(space2_loc, self.location)
+            space1.add_sliding_prevention(space2_loc, other_piece_loc)
+            space2.add_sliding_prevention(space1_loc, self.location)
+            space2.add_sliding_prevention(space1_loc, other_piece_loc)
 
             # Update Ant movement prevention sets
             if space1_loc in board.HiveGameBoard().empty_spaces and space2_loc in board.HiveGameBoard().empty_spaces:
