@@ -605,12 +605,12 @@ class Piece(HexSpace):
     def lock(self):
         # print('{} located at {} has been locked'.format(self.name, self.location))
         self.can_move = False
-        self.update_board_moves()  # TODO: [Lock/Unlock] Determine if this should prepare for update instead
+        self.calc_possible_moves()  # TODO: [Lock/Unlock] Determine if this should prepare for update instead
 
     def unlock(self):
         # print('{} located at {} has been unlocked'.format(self.name, self.location))
         self.can_move = True
-        self.update_board_moves()  # TODO: [Lock/Unlock] Determine if this should prepare for update instead
+        self.calc_possible_moves()  # TODO: [Lock/Unlock] Determine if this should prepare for update instead
 
     @abstractmethod
     def calc_possible_moves(self):

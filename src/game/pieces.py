@@ -54,11 +54,10 @@ class Ant(Piece):
 class Beetle(Piece):
 
     def __init__(self, x=0, y=0, is_white=True):
+        self.stacked_piece_obj = None
+
         super().__init__(x, y, is_white)
         self.name = Piece.BEETLE
-
-        # Only used when Piece is a Beetle; Needs to be of type Piece; NOT A COORDINATE
-        self.stacked_piece_obj = None
 
     def calc_possible_moves(self):
         # Can move to any space that is possible to move to (including on top of pieces)
@@ -249,7 +248,8 @@ class Grasshopper(Piece):
         # Determine the next location
         if space_is_empty_space:
             # If the space is an EmptySpace, add a possible move
-            self.add_move(location)
+            if location not in self.get_all_surrounding_locations():
+                self.add_move(location)
             board.HiveGameBoard().empty_spaces[location].linked_grasshoppers.add(self.location)
             next_location = None
         else:

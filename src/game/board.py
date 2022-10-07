@@ -162,6 +162,7 @@ class HiveGameBoard(object):
             - Piece.GRASSHOPPER
             - Piece.QUEEN_BEE
             - Piece.BEETLE
+            - Piece.SPIDER
         :param location: tuple
             Coordinate of the location this piece will be placed. This location must be in the list of possible
             locations for the current player to place a piece or it will not be placed.
@@ -171,13 +172,13 @@ class HiveGameBoard(object):
 
         # Ensure action validity
         player = 'White' if self.is_white_turn() else 'Black'
-        NO_QUEEN_BEE_ERR = 'You must place your Queen Bee by your fourth turn.'
-        INVALID_PIECE_ERR = f'{piece_type} is not a valid type of piece.'
-        NO_PIECE_ERR = f'{player} does not have any more {piece_type}s to place'
-        INVALID_LOCATION_ERR = f'{player} cannot place a piece at {location}'
+        NO_QUEEN_BEE_PLACED_ERR = 'Illegal action. You must place your Queen Bee by your fourth turn.'
+        INVALID_PIECE_ERR = f'Illegal action. {piece_type} is not a valid type of piece.'
+        NO_PIECE_ERR = f'Illegal action. {player} does not have any more {piece_type}s to place'
+        INVALID_LOCATION_ERR = f'Illegal action. {player} cannot place a piece at {location}'
         if piece_type not in pieces_to_place:
             if pieces_to_place == {Piece.QUEEN_BEE: 1}:
-                raise RuntimeError(NO_QUEEN_BEE_ERR)
+                raise RuntimeError(NO_QUEEN_BEE_PLACED_ERR)
             else:
                 raise RuntimeError(INVALID_PIECE_ERR)
         if pieces_to_place[piece_type] <= 0:
@@ -215,14 +216,14 @@ class HiveGameBoard(object):
             return
 
         # Ensure the move is legal
-        QUEEN_BEE_ERR = 'You must place your Queen Bee before you can perform a move action.'
+        NO_QUEEN_BEE_MOVE_ERR = 'Illegal action. You must place your Queen Bee before you can perform a move action.'
         WHITE_MOVE_ERR = "Illegal action. It is white's turn, but a move for black was attempted."
         BLACK_MOVE_ERR = "Illegal action. It is black's turn, but a move for white was attempted."
         ONE_HIVE_ERR = 'Illegal action. This piece cannot move based on the "One Hive" rule.'
         INVALID_MOVE_ERR = 'Illegal action. This piece cannot move to the specified location.'
         if self.is_white_turn():
             if self.white_queen_location is None:
-                raise RuntimeError(QUEEN_BEE_ERR)
+                raise RuntimeError(NO_QUEEN_BEE_MOVE_ERR)
             elif not self.pieces[piece_location].is_white:
                 raise RuntimeError(WHITE_MOVE_ERR)
             elif piece_location not in self.white_possible_moves:
@@ -231,7 +232,7 @@ class HiveGameBoard(object):
                 raise RuntimeError(INVALID_MOVE_ERR)
         else:
             if self.black_queen_location is None:
-                raise RuntimeError(QUEEN_BEE_ERR)
+                raise RuntimeError(NO_QUEEN_BEE_MOVE_ERR)
             elif self.pieces[piece_location].is_white:
                 raise RuntimeError(BLACK_MOVE_ERR)
             elif piece_location not in self.black_possible_moves:
@@ -277,11 +278,15 @@ class HiveGameBoard(object):
 
             # TODO: [Efficiency] I feel like there may be an easier/faster way to do this
             non_articulation_points = set(self.pieces.keys()).difference(articulation_points)
-            self.white_possible_moves.clear()
-            self.black_possible_moves.clear()
+            # self.white_possible_moves.clear()
+            # self.black_possible_moves.clear()
+            # for piece_location in non_articulation_points:
+            #     self.pieces[piece_location].can_move = True
+            #     self.pieces[piece_location].calc_possible_moves()
+            for piece_location in articulation_points:
+                self.pieces[piece_location].lock()
             for piece_location in non_articulation_points:
-                self.pieces[piece_location].can_move = True
-                self.pieces[piece_location].calc_possible_moves()
+                self.pieces[piece_location].unlock()
 
         self.prepare_to_find_articulation_pts = False
 

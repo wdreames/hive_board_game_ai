@@ -52,7 +52,7 @@ class TestBeetle(unittest.TestCase):
         # Check Grasshopper movement
         beetle_board4()
 
-        expected_grasshopper_moves = {(-1, -1)}
+        expected_grasshopper_moves = {(-1, -1), (-1, -3)}
         actual_grasshopper_moves = board.HiveGameBoard().pieces[(1, -1)].possible_moves
         self.assertEqual(expected_grasshopper_moves, actual_grasshopper_moves)
 
@@ -66,8 +66,11 @@ class TestBeetle(unittest.TestCase):
         board.HiveGameBoard().move_piece((-1, 1), (0, 1))
 
         # Move other pieces
-        board.HiveGameBoard().move_piece((0, 2), (1, 2))
         board.HiveGameBoard().move_piece((2, 0), (-1, 0))
+        board.HiveGameBoard().move_piece((0, 2), (1, 2))
+        board.HiveGameBoard().move_piece((1, -1), (1, 0))
+
+        board.HiveGameBoard().print_board()
 
         # Move off Spider
         board.HiveGameBoard().move_piece((0, 1), (0, 0))
@@ -199,6 +202,7 @@ class TestBeetle(unittest.TestCase):
         # Move the queen bees
         game_board.move_piece((0, -1), (1, 0))
         game_board.move_piece((0, 1), (1, 1))
+        game_board.move_piece((1, 0), (2, 1))
 
         # Begin moving beetles off the stack
         game_board.move_piece((0, 0), (0, 1))
@@ -221,9 +225,9 @@ class TestBeetle(unittest.TestCase):
         game_board.print_board()
 
         # Check the moves of the grasshopper
-        expected_beetle_moves = {(0, 2), (0, -2), (2, 2), (2, 0)}
-        actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves
-        self.assertEqual(expected_beetle_moves, actual_beetle_moves)
+        expected_grasshopper_moves = {(0, 2), (0, -2), (2, 2)}
+        actual_grasshopper_moves = game_board.pieces[(0, 0)].possible_moves
+        self.assertEqual(expected_grasshopper_moves, actual_grasshopper_moves)
 
     def test_beetle_stack_on_spider(self):
         # Ensure no errors occur when stacking/unstacking multiple beetles
@@ -261,6 +265,7 @@ class TestBeetle(unittest.TestCase):
         # Move the queen bees
         game_board.move_piece((0, -1), (1, 0))
         game_board.move_piece((0, 1), (1, 1))
+        game_board.move_piece((1, 0), (2, 1))
 
         # Begin moving beetles off the stack
         game_board.move_piece((0, 0), (1, 0))
@@ -388,6 +393,8 @@ def beetle_board4():
 
     # Move the Beetle off of the Piece
     game_board.move_piece((1, 1), (0, 1))
+
+    game_board.place_piece(beetle, (0, -2))
 
     # Move the Piece that used to be on the Grasshopper path
     game_board.move_piece((1, 1), (1, 2))
