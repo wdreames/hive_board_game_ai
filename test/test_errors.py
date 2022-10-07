@@ -45,7 +45,7 @@ class TestWhitePlacementErrors(unittest.TestCase):
             f'Illegal action. White does not have any more Beetles to place.',
             game_board.perform_action,
             game_board.PLACE_PIECE,
-            (0, -3),
+            (0, -2),
             piece_type=spaces.Piece.BEETLE,
         )
 
@@ -84,16 +84,68 @@ class TestWhiteMoveErrors(unittest.TestCase):
 class TestBlackPlacementErrors(unittest.TestCase):
 
     def test_no_queen_turn_4(self):
-        pass
+        game_board = board.HiveGameBoard(new_board=True)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.QUEEN_BEE)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.ANT)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.ANT)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, 2), piece_type=spaces.Piece.BEETLE)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, -2), piece_type=spaces.Piece.ANT)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, 3), piece_type=spaces.Piece.BEETLE)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, -3), piece_type=spaces.Piece.ANT)
+        self.assertRaisesRegex(
+            RuntimeError,
+            'Illegal action. You must place your Queen Bee by your fourth turn.',
+            game_board.perform_action,
+            game_board.PLACE_PIECE,
+            (0, 4),
+            piece_type=spaces.Piece.GRASSHOPPER
+        )
 
     def test_invalid_piece_type(self):
-        pass
+        bad_piece_type = 'BadPiece'
+        game_board = board.HiveGameBoard(new_board=True)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.QUEEN_BEE)
+        self.assertRaisesRegex(
+            RuntimeError,
+            f'Illegal action. {bad_piece_type} is not a valid type of piece.',
+            game_board.perform_action,
+            game_board.PLACE_PIECE,
+            (0, -3),
+            piece_type=bad_piece_type,
+        )
 
     def test_piece_not_available(self):
-        pass
+        game_board = board.HiveGameBoard(new_board=True)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.BEETLE)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.BEETLE)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.BEETLE)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, 2), piece_type=spaces.Piece.BEETLE)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, -2), piece_type=spaces.Piece.SPIDER)
+        self.assertRaisesRegex(
+            RuntimeError,
+            f'Illegal action. Black does not have any more Beetles to place.',
+            game_board.perform_action,
+            game_board.PLACE_PIECE,
+            (0, 3),
+            piece_type=spaces.Piece.BEETLE,
+        )
 
     def test_invalid_location(self):
-        pass
+        game_board = board.HiveGameBoard(new_board=True)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.BEETLE)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.BEETLE)
+        game_board.perform_action(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.BEETLE)
+
+        player = 'Black'
+        invalid_location = (1, 1)
+        self.assertRaisesRegex(
+            RuntimeError,
+            f'Illegal action. {player} cannot place a piece at {invalid_location}.',
+            game_board.perform_action,
+            game_board.PLACE_PIECE,
+            invalid_location,
+            piece_type=spaces.Piece.BEETLE,
+        )
 
 
 class TestBlackMoveErrors(unittest.TestCase):
