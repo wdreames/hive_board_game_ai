@@ -307,5 +307,5 @@ if __name__ == '__main__':
     # test_game3()
     # test_game4()
     # test_sliding_rules()
-    # test_game5()
-    play_game()
+    test_game5()
+    # play_game()
