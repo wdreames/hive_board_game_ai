@@ -7,6 +7,7 @@ from src.game.pieces import QueenBee
 from src.game.pieces import Spider
 
 
+# TODO: Update Documentation
 class HiveGameBoard(object):
     """
     This class is used to store the board state of the game. A singleton design pattern is used for this class so there
@@ -19,6 +20,7 @@ class HiveGameBoard(object):
     BLACK_WINNER = 'Black'
     DRAW = 'Draw'
 
+    # TODO: Update Documentation
     # TODO: [AI] Would it be possible to have this return whatever the current instance of the board is?
     #       - This way the AI could traverse down multiple layers, but the internal code would not need to change.
     #       - Question: Would this also be able to manage Piece interactions?
@@ -86,6 +88,7 @@ class HiveGameBoard(object):
 
         return cls.instance
 
+    # TODO: Documentation
     def perform_action(self, action_type, piece_location, new_location=None, piece_type=None):
 
         # TODO: [Movement] Will need to ensure Queen Bee is placed <= turn 4. Cannot move if QB not placed
@@ -101,6 +104,7 @@ class HiveGameBoard(object):
         # self.update_pieces()
         # self.turn_number += 1
 
+    # TODO: Documentation
     def get_all_possible_actions(self):
         pieces_to_play, locations_to_place = self.get_all_possible_placements()
         possible_moves_dict = self.get_all_possible_moves()
@@ -133,24 +137,28 @@ class HiveGameBoard(object):
 
         return pieces_to_play, locations_to_place
 
+    # TODO: Documentation
     def get_all_possible_moves(self):
         if self.is_white_turn():
             return self.white_possible_moves
         else:
             return self.black_possible_moves
 
+    # TODO: Documentation
     def add_possible_moves(self, piece_location):
         if self.pieces[piece_location].is_white:
             self.white_possible_moves[piece_location] = self.pieces[piece_location].possible_moves
         else:
             self.black_possible_moves[piece_location] = self.pieces[piece_location].possible_moves
 
+    # TODO: Documentation
     def remove_possible_moves(self, piece_location):
         if piece_location in self.white_possible_moves:
             self.white_possible_moves.pop(piece_location)
         if piece_location in self.black_possible_moves:
             self.black_possible_moves.pop(piece_location)
 
+    # TODO: Update Documentation
     def place_piece(self, piece_type, location):
         """
         Place a piece on the game board.
@@ -211,6 +219,7 @@ class HiveGameBoard(object):
         self.update_pieces()
         self.turn_number += 1
 
+    # TODO: Documentation
     def move_piece(self, piece_location, new_location):
         if piece_location == new_location:
             return
@@ -245,6 +254,7 @@ class HiveGameBoard(object):
         self.update_pieces()
         self.turn_number += 1
 
+    # TODO: Documentation
     def update_pieces(self):
         # TODO: [Efficiency] Add to these sets directly instead of having to use an intersection
         empty_spaces_requiring_updates = self.spaces_requiring_updates.intersection(self.empty_spaces.keys())
@@ -258,6 +268,7 @@ class HiveGameBoard(object):
             self.pieces[piece_location].update()
         self.spaces_requiring_updates.clear()
 
+    # TODO: Documentation
     def update_piece_movement(self):
         # Ant movement specific
         for location in self.ant_mvt_preventions_to_add:
@@ -292,6 +303,7 @@ class HiveGameBoard(object):
 
         self.prepare_to_find_articulation_pts = False
 
+    # TODO: Documentation
     def find_articulation_pts(self, current_coordinate, visited, ap, parent, low, disc_time):
         # Parameters:   current_coordinate: (x,y),
         #               visited: set(coordinates),
@@ -321,6 +333,7 @@ class HiveGameBoard(object):
             elif parent.get(current_coordinate) and connected_location != parent.get(current_coordinate):
                 low[current_coordinate] = min(low[current_coordinate], disc_time[connected_location])
 
+    # TODO: Documentation
     def add_to_ant_movement_prevention_set(self, current_space, set_index=None, visited_spaces=None):
         if current_space not in self.empty_spaces:
             return
@@ -341,6 +354,7 @@ class HiveGameBoard(object):
         for connected_space in self.empty_spaces[current_space].get_queen_bee_moves().difference(visited_spaces):
             self.add_to_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
 
+    # TODO: Documentation
     def union_ant_movement_prevention_sets(self, set_index1, set_index2):
         if set_index1 == set_index2:
             return set_index1
@@ -359,9 +373,11 @@ class HiveGameBoard(object):
         self.clear_ant_movement_prevention_set(i2)
         return i1
 
+    # TODO: Documentation
     def clear_ant_movement_prevention_set(self, set_index):
         self.ant_mvt_prevention_sets.pop(set_index)
 
+    # TODO: Documentation
     # Returns index if it exists
     def empty_space_in_ant_movement_prevention_set(self, space_location):
         for set_index, prevention_set in enumerate(self.ant_mvt_prevention_sets):
@@ -369,6 +385,7 @@ class HiveGameBoard(object):
                 return set_index
         return -1
 
+    # TODO: Documentation
     def get_all_spaces(self):
         # Merges the dictionaries
         # Pieces will overwrite empty spaces at the same location

@@ -26,12 +26,15 @@ class HexSpace:
 
         self.linked_grasshoppers = set()
 
+    # TODO: Documentation
     def prepare_for_update(self):
         board.HiveGameBoard().spaces_requiring_updates.add(self.location)
 
+    # TODO: Documentation
     def update(self):
         self.update_cannot_move_to()
 
+    # TODO: Documentation
     def update_cannot_move_to(self):
         # If pieces at specific locations do not exist, you cannot slide in certain directions without disconnecting
         # from the Hive
@@ -45,6 +48,7 @@ class HexSpace:
         self._add_to_cannot_move_to((x - 1, y), (x - 1, y - 1), (x, y + 1))
         self._add_to_cannot_move_to((x - 1, y - 1), (x, y - 1), (x - 1, y))
 
+    # TODO: Documentation
     def _add_to_cannot_move_to(self, loc, loc_check1, loc_check2):
         pieces = board.HiveGameBoard().pieces
         if {loc_check1, loc_check2}.isdisjoint(pieces):  # and loc in board.HiveGameBoard().empty_spaces:
@@ -52,6 +56,7 @@ class HexSpace:
         elif loc in self.cannot_move_to:
             self.cannot_move_to.remove(loc)
 
+    # TODO: Documentation
     def add_sliding_prevention(self, prevented_space_location, piece_blocking_mvt_location):
         if prevented_space_location in self.sliding_prevented_to:
             self.sliding_prevented_to[prevented_space_location].add(piece_blocking_mvt_location)
@@ -59,6 +64,7 @@ class HexSpace:
             self.sliding_prevented_to[prevented_space_location] = {piece_blocking_mvt_location}
         self.prepare_for_update()
 
+    # TODO: Documentation
     def remove_sliding_prevention(self, prevented_space_location, piece_blocking_mvt_location):
         # The limited space is no longer blocked by this piece
         self.sliding_prevented_to[prevented_space_location].remove(piece_blocking_mvt_location)
@@ -74,6 +80,7 @@ class HexSpace:
 
         self.prepare_for_update()
 
+    # TODO: Documentation
     @staticmethod
     def direction_from_a_to_b(piece_a, piece_b):
         x_diff = piece_b[0] - piece_a[0]
@@ -84,6 +91,7 @@ class HexSpace:
         else:
             return x_diff // divisor, y_diff // divisor
 
+    # TODO: Documentation
     @staticmethod
     def get_next_space_in_direction(start_location, direction):
         # If the direction is 0, this would return the same location, possibly leading to an infinite loop
@@ -96,38 +104,42 @@ class HexSpace:
         else:
             return None
 
+    # TODO: Documentation
     def get_all_surrounding_locations(self):
         return {(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x + 1, self.y),
                 (self.x + 1, self.y + 1), (self.x, self.y + 1), (self.x - 1, self.y)}
 
-    def get_all_surrounding_locations_ordered(self):
-        return [(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x + 1, self.y),
-                (self.x + 1, self.y + 1), (self.x, self.y + 1), (self.x - 1, self.y)]
-
+    # TODO: Documentation
     def get_queen_bee_moves(self):
         unavailable_moves = self.cannot_move_to.union(self.sliding_prevented_to.keys())
         queen_bee_moves = self.connected_empty_spaces.difference(unavailable_moves)
         return queen_bee_moves
 
+    # TODO: Documentation
     def get_total_num_connections(self):
         return len(self.connected_pieces) + len(self.connected_empty_spaces)
 
+    # TODO: Documentation
     @abstractmethod
     def remove(self):
         pass
 
+    # TODO: Documentation
     def add_connection_to_piece(self, location):
         self.connected_pieces.add(location)
         self.prepare_for_update()
 
+    # TODO: Documentation
     def remove_connection_to_piece(self, location):
         self.connected_pieces.remove(location)
         self.prepare_for_update()
 
+    # TODO: Documentation
     def add_connection_to_empty_space(self, location):
         self.connected_empty_spaces.add(location)
         self.prepare_for_update()
 
+    # TODO: Documentation
     def remove_connection_to_empty_space(self, location):
         self.connected_empty_spaces.remove(location)
         self.prepare_for_update()
@@ -139,6 +151,7 @@ class EmptySpace(HexSpace):
     where pieces can be placed or moved.
     """
 
+    # TODO: Update Documentation
     def __init__(self, x=0, y=0, connected_pcs=None, connected_emt_spcs=None, sliding_prevented_to=None,
                  cannot_move_to=None):
         """
@@ -218,6 +231,7 @@ class EmptySpace(HexSpace):
 
             self.prepare_for_update()
 
+    # TODO: Documentation
     def update(self):
         if len(self.connected_pieces) == 0:
             self.remove()
@@ -257,6 +271,7 @@ class EmptySpace(HexSpace):
             if self.location in board.HiveGameBoard().white_locations_to_place:
                 board.HiveGameBoard().white_locations_to_place.remove(self.location)
 
+    # TODO: Update Documentation
     def remove(self):
         """
         Removes this empty space from the game board. This also removes this spot from each player's list of locations
@@ -308,6 +323,7 @@ class EmptySpace(HexSpace):
         """
         return not self.num_white_connected
 
+    # TODO: Documentation
     def add_connection_to_piece(self, location):
         super().add_connection_to_piece(location)
         if board.HiveGameBoard().pieces[location].is_white:
@@ -315,6 +331,7 @@ class EmptySpace(HexSpace):
         else:
             self.num_black_connected += 1
 
+    # TODO: Documentation
     def remove_connection_to_piece(self, location):
         super().remove_connection_to_piece(location)
 
@@ -325,10 +342,12 @@ class EmptySpace(HexSpace):
 
         self.prepare_for_update()
 
+    # TODO: Documentation
     def add_connection_to_empty_space(self, location):
         super().add_connection_to_empty_space(location)
         board.HiveGameBoard().empty_spaces[location].connected_empty_spaces.add(self.location)
 
+    # TODO: Documentation
     def remove_connection_to_empty_space(self, location):
         super().remove_connection_to_empty_space(location)
 
@@ -349,7 +368,7 @@ class EmptySpace(HexSpace):
 class Piece(HexSpace):
     """
     Used to represent a piece on the game board. This is an abstract class.
-    Superclass for Ant, Grasshopper, and QueenBee.
+    Superclass for Ant, Beetle, Grasshopper, QueenBee, and Spider.
     """
 
     GENERIC = 'Generic Piece'
@@ -383,14 +402,17 @@ class Piece(HexSpace):
         else:
             raise RuntimeError('No empty space at {} to place a new {}'.format(self.location, self.name))
 
+    # TODO: Documentation
     def update(self):
         super().update()
         self.calc_possible_moves()
 
+    # TODO: Documentation
     def move_to(self, new_location):
         self.remove()
         self.set_location_to(new_location)
 
+    # TODO: Documentation
     def remove(self):
         # Update pieces that are no longer prevented from sliding
         all_spaces = board.HiveGameBoard().get_all_spaces()
@@ -445,6 +467,7 @@ class Piece(HexSpace):
 
         board.HiveGameBoard().pieces.pop(self.location)
 
+    # TODO: Documentation
     # TODO: [Formatting] Reformat this function for added readability
     def set_location_to(self, new_location):
         """
@@ -481,6 +504,7 @@ class Piece(HexSpace):
 
         self.update_one_hive_rule(self_is_placing=True)
 
+    # TODO: Documentation
     def _create_surrounding_emt_spcs(self):
         # Helper function for move_to(location)
         # Add new empty spaces
@@ -493,6 +517,7 @@ class Piece(HexSpace):
         for point in locations_for_new_empty_spaces:
             EmptySpace(point[0], point[1])
 
+    # TODO: Documentation
     def _update_sliding(self):
         # Helper function for move_to(location)
         x = self.x
@@ -504,6 +529,7 @@ class Piece(HexSpace):
         self._check_if_preventing_sliding((x + 1, y - 1), (x + 1, y), (x, y - 1))
         self._check_if_preventing_sliding((x - 1, y - 2), (x, y - 1), (x - 1, y - 1))
 
+    # TODO: Documentation
     def _check_if_preventing_sliding(self, other_piece_loc, space1_loc, space2_loc):
         # Helper function
         # Spaces at (location1) and (location2) cannot slide to each other
@@ -549,6 +575,7 @@ class Piece(HexSpace):
                 else:
                     raise RuntimeError('Error! This line should never be executed!')
 
+    # TODO: Documentation
     # TODO: [Formatting] Put this function into a utils class
     @staticmethod
     def _helper_add_to_dict_set(dictionary, key, value):
@@ -557,6 +584,7 @@ class Piece(HexSpace):
         else:
             dictionary[key] = {value}
 
+    # TODO: Documentation
     def update_one_hive_rule(self, self_is_placing=True):
         n = len(self.connected_pieces)
 
@@ -572,45 +600,15 @@ class Piece(HexSpace):
             board.HiveGameBoard().prepare_to_find_articulation_pts = True
             return
 
-        # TODO: [Efficiency] Determine if the below code would still be useful
-        # Determine if all the connected pieces are in a single, connected line
-        # ordered_list = self.get_all_surrounding_locations_ordered()
-        # for index, _ in enumerate(ordered_list):
-        #     if index + n > len(ordered_list):
-        #         current_group = ordered_list[index:] + ordered_list[:(index + n) % len(ordered_list)]
-        #     else:
-        #         current_group = ordered_list[index:(index + n)]
-        #
-        #     if self.connected_pieces == set(current_group):
-        #         # Found the line of pieces. Now lock/unlock relevant locations
-        #         inner_group = current_group[1:-1]
-        #         for piece_location in inner_group:
-        #             related_piece = board.HiveGameBoard().pieces[piece_location]
-        #             direction = self.direction_from_a_to_b(self.location, related_piece.location)
-        #             next_location = self.get_next_space_in_direction(related_piece.location, direction)
-        #             if next_location in board.HiveGameBoard().empty_spaces:
-        #                 if self_is_placing:
-        #                     related_piece.unlock()
-        #                 else:
-        #                     related_piece.lock()
-        #         return
-        #
-        # # If we reach this point, a single line of pieces was not found. This means a loop was formed/broken
-        # # At this point, it is unknown which pieces need to be updated, and a DFS algorithm needs to be used to update
-        # # all pieces on the board. O(NumPieces + NumPieceConnections)
-        # print('A loop has been formed/broken!!!')
-        # if self_is_placing:
-        #     board.HiveGameBoard().loop_was_formed = True
-
+    # TODO: Documentation
     def lock(self):
-        # print('{} located at {} has been locked'.format(self.name, self.location))
         self.can_move = False
-        self.calc_possible_moves()  # TODO: [Lock/Unlock] Determine if this should prepare for update instead
+        self.calc_possible_moves()
 
+    # TODO: Documentation
     def unlock(self):
-        # print('{} located at {} has been unlocked'.format(self.name, self.location))
         self.can_move = True
-        self.calc_possible_moves()  # TODO: [Lock/Unlock] Determine if this should prepare for update instead
+        self.calc_possible_moves()
 
     @abstractmethod
     def calc_possible_moves(self):
@@ -620,31 +618,36 @@ class Piece(HexSpace):
         """
         pass
 
+    # TODO: Documentation
     def add_move(self, location):
-        # print(f'{self.location} - {self.name} - Adding {location} to possible moves')
         self.possible_moves.add(location)
 
+    # TODO: Documentation
     def remove_move(self, location):
-        # print(f'{self.location} - {self.name} - Removing {location} from possible moves')
         if location in self.possible_moves:
             self.possible_moves.remove(location)
 
+    # TODO: Documentation
     def update_board_moves(self):
         if self.can_move:
             board.HiveGameBoard().add_possible_moves(self.location)
         else:
             board.HiveGameBoard().remove_possible_moves(self.location)
 
+    # TODO: Documentation
     def add_connection_to_piece(self, location):
         super().add_connection_to_piece(location)
 
+    # TODO: Documentation
     def remove_connection_to_piece(self, location):
         super().remove_connection_to_piece(location)
 
+    # TODO: Documentation
     def add_connection_to_empty_space(self, location):
         super().add_connection_to_empty_space(location)
         board.HiveGameBoard().empty_spaces[location].add_connection_to_piece(self.location)
 
+    # TODO: Documentation
     def remove_connection_to_empty_space(self, location):
         super().remove_connection_to_empty_space(location)
 
