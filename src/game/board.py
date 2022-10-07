@@ -174,8 +174,8 @@ class HiveGameBoard(object):
         player = 'White' if self.is_white_turn() else 'Black'
         NO_QUEEN_BEE_PLACED_ERR = 'Illegal action. You must place your Queen Bee by your fourth turn.'
         INVALID_PIECE_ERR = f'Illegal action. {piece_type} is not a valid type of piece.'
-        NO_PIECE_ERR = f'Illegal action. {player} does not have any more {piece_type}s to place'
-        INVALID_LOCATION_ERR = f'Illegal action. {player} cannot place a piece at {location}'
+        NO_PIECE_ERR = f'Illegal action. {player} does not have any more {piece_type}s to place.'
+        INVALID_LOCATION_ERR = f'Illegal action. {player} cannot place a piece at {location}.'
         if piece_type not in pieces_to_place:
             if pieces_to_place == {Piece.QUEEN_BEE: 1}:
                 raise RuntimeError(NO_QUEEN_BEE_PLACED_ERR)
