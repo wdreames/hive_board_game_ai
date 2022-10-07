@@ -265,7 +265,9 @@ class HiveGameBoard(object):
         self.ant_mvt_preventions_to_add.clear()
 
         # Determine which pieces can move under the OneHive rule
-        if self.prepare_to_find_articulation_pts:
+        if self.turn_number <= 2:
+            [piece.unlock() for piece in self.pieces.values()]
+        elif self.prepare_to_find_articulation_pts:
             # TODO: [Efficiency] See if there is a faster way to find a starting coordinate
             start_coordinate = set(self.pieces.keys()).pop()
             visited_pieces = set()
