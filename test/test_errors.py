@@ -58,7 +58,7 @@ class TestWhitePlacementErrors(unittest.TestCase):
         invalid_location = (1, 1)
         self.assertRaisesRegex(
             RuntimeError,
-            f'Illegal action. {player} cannot place a piece at {invalid_location}.',
+            f'[Illegal action. {player} cannot place a piece at {invalid_location}.]',
             game_board.perform_action,
             game_board.PLACE_PIECE,
             invalid_location,
@@ -180,7 +180,7 @@ class TestBlackPlacementErrors(unittest.TestCase):
         invalid_location = (1, 1)
         self.assertRaisesRegex(
             RuntimeError,
-            f'Illegal action. {player} cannot place a piece at {invalid_location}.',
+            f'[Illegal action. {player} cannot place a piece at {invalid_location}.]',
             game_board.perform_action,
             game_board.PLACE_PIECE,
             invalid_location,
