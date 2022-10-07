@@ -249,5 +249,20 @@ class TestBlackMoveErrors(unittest.TestCase):
         )
 
 
+class TestPerformBadAction(unittest.TestCase):
+
+    def test_perform_bad_action(self):
+        game_board = board.HiveGameBoard(new_board=True)
+
+        self.assertRaisesRegex(
+            ValueError,
+            "Action type can only be MOVE_PIECE or PLACE_PIECE.",
+            game_board.perform_action,
+            'Invalid action type',
+            (0, 0),
+            piece_type=spaces.Piece.QUEEN_BEE
+        )
+
+
 if __name__ == '__main__':
     unittest.main()

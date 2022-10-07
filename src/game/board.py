@@ -94,7 +94,7 @@ class HiveGameBoard(object):
         elif action_type == HiveGameBoard.PLACE_PIECE:
             self.place_piece(piece_type, piece_location)
         else:
-            raise ValueError('Action type can only be MOVE_PIECE or PLACE_PIECE')
+            raise ValueError('Action type can only be MOVE_PIECE or PLACE_PIECE.')
 
         # TODO: [Organization] Test cases will need to be restructured in order to call the following here
         # End of action bookkeeping
