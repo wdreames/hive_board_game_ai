@@ -26,18 +26,27 @@ class HexSpace:
 
         self.linked_grasshoppers = set()
 
-    # TODO: Documentation
     def prepare_for_update(self):
+        """
+        Notifies the game board that this HexSpace should be updated at the end of the current turn.
+        """
         board.HiveGameBoard().spaces_requiring_updates.add(self.location)
 
     # TODO: Documentation
     def update(self):
+        """
+        Updates information stored for this HexSpace.
+        This involves:
+        - Updating self.cannot_move_to
+        """
         self.update_cannot_move_to()
 
-    # TODO: Documentation
     def update_cannot_move_to(self):
-        # If pieces at specific locations do not exist, you cannot slide in certain directions without disconnecting
-        # from the Hive
+        """
+        This function marks certain locations that this space cannot move to. In order to move somewhere in Hive, you
+        must slide along a Piece. In some cases, there is not a piece to slide against, meaning some spaces are
+        unreachable for certain Pieces.
+        """
         x = self.x
         y = self.y
 
@@ -48,24 +57,52 @@ class HexSpace:
         self._add_to_cannot_move_to((x - 1, y), (x - 1, y - 1), (x, y + 1))
         self._add_to_cannot_move_to((x - 1, y - 1), (x, y - 1), (x - 1, y))
 
-    # TODO: Documentation
-    def _add_to_cannot_move_to(self, loc, loc_check1, loc_check2):
+    def _add_to_cannot_move_to(self, move_location, piece_location_check1, piece_location_check2):
+        """
+        Helper function. Checks if Pieces exist in the specified locations (piece_location_check1 and
+        piece_location_check2). If not, move_location is marked as a spot this HexSpace cannot move to.
+        """
         pieces = board.HiveGameBoard().pieces
-        if {loc_check1, loc_check2}.isdisjoint(pieces):  # and loc in board.HiveGameBoard().empty_spaces:
-            self.cannot_move_to.add(loc)
-        elif loc in self.cannot_move_to:
-            self.cannot_move_to.remove(loc)
+        if {piece_location_check1, piece_location_check2}.isdisjoint(pieces):
+            self.cannot_move_to.add(move_location)
+        elif move_location in self.cannot_move_to:
+            self.cannot_move_to.remove(move_location)
 
-    # TODO: Documentation
     def add_sliding_prevention(self, prevented_space_location, piece_blocking_mvt_location):
+        """
+        Based on the rules of Hive, Ants, Queen Bees, and Spiders must all slide on the game board rather than be
+        picked up. Because of this, there can be certain locations these pieces cannot move into even if the space is
+        open.
+
+        This method is used to mark a location as unavailable, and allows the HexSpace to know that it cannot move
+        into that space.
+
+        :param prevented_space_location:
+            Coordinate (x, y) that has beem blocked
+        :param piece_blocking_mvt_location:
+            Coordinate (x, y) of the Piece that is blocking movement.
+        """
         if prevented_space_location in self.sliding_prevented_to:
             self.sliding_prevented_to[prevented_space_location].add(piece_blocking_mvt_location)
         else:
             self.sliding_prevented_to[prevented_space_location] = {piece_blocking_mvt_location}
         self.prepare_for_update()
 
-    # TODO: Documentation
     def remove_sliding_prevention(self, prevented_space_location, piece_blocking_mvt_location):
+        """
+        Based on the rules of Hive, Ants, Queen Bees, and Spiders must all slide on the game board rather than be
+        picked up. Because of this, there can be certain locations these pieces cannot move into even if the space is
+        open.
+
+        This method is used to mark a location as available again, and allows the HexSpace to know that it is no longer
+        prevented from moving into that space.
+
+        :param prevented_space_location:
+            Coordinate (x, y) that is no longer blocked
+        :param piece_blocking_mvt_location:
+            Coordinate (x, y) of the Piece that is no longer blocking movement.
+        """
+
         # The limited space is no longer blocked by this piece
         self.sliding_prevented_to[prevented_space_location].remove(piece_blocking_mvt_location)
 
@@ -80,9 +117,20 @@ class HexSpace:
 
         self.prepare_for_update()
 
-    # TODO: Documentation
     @staticmethod
     def direction_from_a_to_b(piece_a, piece_b):
+        """
+        Returns the direction from location a to location b. The values returned will always be within the set returned
+        by self.get_all_surrounding_locations().
+        Example: is location a is at (0, 1) and location b is at (3, 4), then the direction will be (1, 1).
+
+        :param piece_a:
+            coordinate (x, y)
+        :param piece_b:
+            coordinate (x, y)
+        :return:
+            direction coordinate (delta x, delta y)
+        """
         x_diff = piece_b[0] - piece_a[0]
         y_diff = piece_b[1] - piece_a[1]
         divisor = max(abs(x_diff), abs(y_diff))
@@ -91,9 +139,22 @@ class HexSpace:
         else:
             return x_diff // divisor, y_diff // divisor
 
-    # TODO: Documentation
     @staticmethod
     def get_next_space_in_direction(start_location, direction):
+        """
+        Returns the next space on the game board based on a starting location and a direction.
+        Example: If the location is (2, 3) and the direction is (1, 0), then the returned location will be (3, 3).
+
+        :param start_location:
+            coordinate (x, y)
+        :param direction:
+            coordinate (delta x, delta y)
+        :raises ValueError:
+            A ValueError will be raised if a direction of (0, 0) is inputted.
+        :return:
+            Returns the next space in the given direction.
+            If the location is not in the game board, then None is returned instead.
+        """
         # If the direction is 0, this would return the same location, possibly leading to an infinite loop
         if direction == (0, 0):
             raise ValueError('Direction cannot be (0, 0).')
@@ -104,43 +165,79 @@ class HexSpace:
         else:
             return None
 
-    # TODO: Documentation
     def get_all_surrounding_locations(self):
+        """
+        Returns all locations surrounding this HexSpace
+
+        :return: set of locations
+        """
         return {(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x + 1, self.y),
                 (self.x + 1, self.y + 1), (self.x, self.y + 1), (self.x - 1, self.y)}
 
-    # TODO: Documentation
     def get_queen_bee_moves(self):
+        """
+        Returns the set of moves that would be available if this HexSpace was a Queen Bee.
+
+        :return: set of locations
+        """
+
         unavailable_moves = self.cannot_move_to.union(self.sliding_prevented_to.keys())
         queen_bee_moves = self.connected_empty_spaces.difference(unavailable_moves)
         return queen_bee_moves
 
-    # TODO: Documentation
     def get_total_num_connections(self):
+        """
+        Returns the total number of connections for this HexSpace. That is, the number of connected Pieces
+        combined with the number of connected EmptySpaces.
+
+        :return: integer representing the total number of connections for this HexSpace
+        """
         return len(self.connected_pieces) + len(self.connected_empty_spaces)
 
-    # TODO: Documentation
     @abstractmethod
     def remove(self):
+        """
+        Removes this HexSpace from the game board.
+        """
         pass
 
-    # TODO: Documentation
     def add_connection_to_piece(self, location):
+        """
+        Connects this HexSpace to a Piece at the specified location.
+
+        :param location:
+            Coordinate (x, y) of the Piece.
+        """
         self.connected_pieces.add(location)
         self.prepare_for_update()
 
-    # TODO: Documentation
     def remove_connection_to_piece(self, location):
+        """
+        This HexSpace removes a connection previously made to a Piece at the specified location.
+
+        :param location:
+            Coordinate (x, y) of the Piece.
+        """
         self.connected_pieces.remove(location)
         self.prepare_for_update()
 
-    # TODO: Documentation
     def add_connection_to_empty_space(self, location):
+        """
+        Connects this HexSpace to an EmptySpace at the specified location.
+
+        :param location:
+            Coordinate (x, y) of the EmptySpace.
+        """
         self.connected_empty_spaces.add(location)
         self.prepare_for_update()
 
-    # TODO: Documentation
     def remove_connection_to_empty_space(self, location):
+        """
+        This HexSpace removes a connection previously made to a EmptySpace at the specified location.
+
+        :param location:
+            Coordinate (x, y) of the EmptySpace.
+        """
         self.connected_empty_spaces.remove(location)
         self.prepare_for_update()
 
