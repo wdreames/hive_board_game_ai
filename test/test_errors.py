@@ -256,7 +256,7 @@ class TestPerformBadAction(unittest.TestCase):
 
         self.assertRaisesRegex(
             ValueError,
-            "Action type can only be MOVE_PIECE or PLACE_PIECE.",
+            "Action type can only be HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE.",
             game_board.perform_action,
             'Invalid action type',
             (0, 0),

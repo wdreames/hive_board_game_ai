@@ -20,7 +20,6 @@ class HiveGameBoard(object):
     BLACK_WINNER = 'Black'
     DRAW = 'Draw'
 
-    # TODO: Update Documentation
     # TODO: [AI] Would it be possible to have this return whatever the current instance of the board is?
     #       - This way the AI could traverse down multiple layers, but the internal code would not need to change.
     #       - Question: Would this also be able to manage Piece interactions?
@@ -88,24 +87,43 @@ class HiveGameBoard(object):
 
         return cls.instance
 
-    # TODO: Documentation
     def perform_action(self, action_type, piece_location, new_location=None, piece_type=None):
+        """
+        Performs an action on the game board. Possible actions are HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE
 
-        # TODO: [Movement] Will need to ensure Queen Bee is placed <= turn 4. Cannot move if QB not placed
+        :param action_type:
+            Must be HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE
+        :param piece_location: (x, y)
+            When placing a Piece, this is the location the Piece will be placed.
+            When moving a Piece, this is the initial location of the Piece.
+        :param new_location: (x, y)
+            This parameter is only used when moving a Piece. This is the location the Piece is moving to.
+        :param piece_type:
+            This parameter is only used when placing a Piece. This specifies the type of Piece being placed.
+            Must be Piece.ANT, Piece.BEETLE, Piece.GRASSHOPPER, Piece.QUEEN_BEE, or Piece.SPIDER.
+        :raises ValueError:
+            A ValueError will be raised if action_types other than HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE
+            are used.
+        """
+
         if action_type == HiveGameBoard.MOVE_PIECE:
             self.move_piece(piece_location, new_location)
         elif action_type == HiveGameBoard.PLACE_PIECE:
             self.place_piece(piece_type, piece_location)
         else:
-            raise ValueError('Action type can only be MOVE_PIECE or PLACE_PIECE.')
+            raise ValueError('Action type can only be HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE.')
 
-        # TODO: [Organization] Test cases will need to be restructured in order to call the following here
-        # End of action bookkeeping
-        # self.update_pieces()
-        # self.turn_number += 1
-
-    # TODO: Documentation
     def get_all_possible_actions(self):
+        """
+        Gathers all possible actions (possible moves for Pieces on the board and locations to place new Pieces)
+        for the current player.
+
+        :return: (dict, set, dict)
+            The returned tuple contains:
+            0. A dictionary of {piece_type: amount_of_that_type}
+            1. A set of possible locations to place new pieces
+            2. A dictionary of {piece_location: possible_moves_for_that_piece}
+        """
         pieces_to_play, locations_to_place = self.get_all_possible_placements()
         possible_moves_dict = self.get_all_possible_moves()
         return pieces_to_play, locations_to_place, possible_moves_dict
@@ -137,43 +155,67 @@ class HiveGameBoard(object):
 
         return pieces_to_play, locations_to_place
 
-    # TODO: Documentation
     def get_all_possible_moves(self):
+        """
+        Gathers the set of all possible moves for the current player. This is stored as a dictionary where Piece
+        locations are keys and their set of possible moves are the values.
+
+        :return: dict {piece_location: possible_moves_for_that_piece}
+        """
         if self.is_white_turn():
+            if self.white_queen_location is None:
+                return dict()
             return self.white_possible_moves
         else:
+            if self.black_queen_location is None:
+                return dict()
             return self.black_possible_moves
 
-    # TODO: Documentation
     def add_possible_moves(self, piece_location):
+        """
+        Gathers an updated set of moves for the Piece at the specified location.
+
+        :param piece_location: (x, y)
+            Location of the Piece which has new moves to add to the game board.
+        """
         if self.pieces[piece_location].is_white:
             self.white_possible_moves[piece_location] = self.pieces[piece_location].possible_moves
         else:
             self.black_possible_moves[piece_location] = self.pieces[piece_location].possible_moves
 
-    # TODO: Documentation
     def remove_possible_moves(self, piece_location):
+        """
+        Removes all moves recorded in the game board for the Piece at the specified location.
+
+        :param piece_location: (x, y)
+            Location of the Piece which will no longer have any moves on game board.
+        """
         if piece_location in self.white_possible_moves:
             self.white_possible_moves.pop(piece_location)
         if piece_location in self.black_possible_moves:
             self.black_possible_moves.pop(piece_location)
 
-    # TODO: Update Documentation
     def place_piece(self, piece_type, location):
         """
-        Place a piece on the game board.
+        Place a Piece on the game board.
 
-        :param piece_type: string
-            String represenation of the type of piece being placed. If there are no more pieces of this type to place,
-            the piece will not be placed. These are the options currently implemented:
+        :param piece_type:
+            The following are the options for the types of Pieces that can be placed:
             - Piece.ANT
             - Piece.GRASSHOPPER
             - Piece.QUEEN_BEE
             - Piece.BEETLE
             - Piece.SPIDER
-        :param location: tuple
-            Coordinate of the location this piece will be placed. This location must be in the list of possible
-            locations for the current player to place a piece or it will not be placed.
+        :param location: (x, y)
+            Location where this piece will be placed. This location must be in the list of possible
+            locations for the current player to place a piece.
+        :raises RuntimeError:
+            A RuntimeError will be raised in the following cases:
+            - The current player is placing a Piece other than a Queen Bee on their fourth turn and a Queen Bee has not
+              been placed prior to this turn. The Queen Bee must be placed before or on the player's fourth turn.
+            - An invalid Piece type is entered.
+            - The player does not have any more of the specified type of Piece in their reserve.
+            - The player cannot place a Piece at the specified location.
         """
         # Gather the valid pieces and locations
         pieces_to_place, locations_to_place = self.get_all_possible_placements()
@@ -197,16 +239,12 @@ class HiveGameBoard(object):
         # Place the piece
         if piece_type == Piece.ANT:
             Ant(location[0], location[1], is_white=self.is_white_turn())
-
         elif piece_type == Piece.BEETLE:
             Beetle(location[0], location[1], is_white=self.is_white_turn())
-
         elif piece_type == Piece.GRASSHOPPER:
             Grasshopper(location[0], location[1], is_white=self.is_white_turn())
-
         elif piece_type == Piece.QUEEN_BEE:
             QueenBee(location[0], location[1], is_white=self.is_white_turn())
-
         elif piece_type == Piece.SPIDER:
             Spider(location[0], location[1], is_white=self.is_white_turn())
 
@@ -216,11 +254,24 @@ class HiveGameBoard(object):
         else:
             self.black_pieces_to_place[piece_type] -= 1
 
-        self.update_pieces()
+        self.update_spaces()
         self.turn_number += 1
 
-    # TODO: Documentation
     def move_piece(self, piece_location, new_location):
+        """
+        Move a Piece on the game board.
+
+        :param piece_location: (x, y)
+            Initial location of the Piece
+        :param new_location: (x, y)
+            New location for the Piece.
+        :raises RuntimeError:
+            A RuntimeError will be raised in the following cases:
+            - The current player has not placed a Queen Bee before making a move action.
+            - The current player attempts to make a move for a Piece they do not control.
+            - The specified Piece cannot move based on the "One Hive" rule.
+            - The new location is not within the Piece's list of possible moves.
+        """
         if piece_location == new_location:
             return
 
@@ -251,11 +302,14 @@ class HiveGameBoard(object):
 
         self.pieces[piece_location].move_to(new_location)
 
-        self.update_pieces()
+        self.update_spaces()
         self.turn_number += 1
 
     # TODO: Documentation
-    def update_pieces(self):
+    def update_spaces(self):
+        """
+        Updates all spaces on the game board requiring an update. This should only be called at the end of a turn.
+        """
         # TODO: [Efficiency] Add to these sets directly instead of having to use an intersection
         empty_spaces_requiring_updates = self.spaces_requiring_updates.intersection(self.empty_spaces.keys())
         for empty_space_location in empty_spaces_requiring_updates:
@@ -268,8 +322,11 @@ class HiveGameBoard(object):
             self.pieces[piece_location].update()
         self.spaces_requiring_updates.clear()
 
-    # TODO: Documentation
     def update_piece_movement(self):
+        """
+        Updates the movement for certain Pieces. This involves updating Ant movement prevention sets, along with
+        updating movement rules for all Pieces based on the "One Hive" rule.
+        """
         # Ant movement specific
         for location in self.ant_mvt_preventions_to_add:
             self.add_to_ant_movement_prevention_set(location)
@@ -291,11 +348,6 @@ class HiveGameBoard(object):
 
             # TODO: [Efficiency] I feel like there may be an easier/faster way to do this
             non_articulation_points = set(self.pieces.keys()).difference(articulation_points)
-            # self.white_possible_moves.clear()
-            # self.black_possible_moves.clear()
-            # for piece_location in non_articulation_points:
-            #     self.pieces[piece_location].can_move = True
-            #     self.pieces[piece_location].calc_possible_moves()
             for piece_location in articulation_points:
                 self.pieces[piece_location].lock()
             for piece_location in non_articulation_points:
@@ -303,14 +355,27 @@ class HiveGameBoard(object):
 
         self.prepare_to_find_articulation_pts = False
 
-    # TODO: Documentation
     def find_articulation_pts(self, current_coordinate, visited, ap, parent, low, disc_time):
-        # Parameters:   current_coordinate: (x,y),
-        #               visited: set(coordinates),
-        #               articulation_points: set(coordinates),
-        #               parent: dict(coordinate: coordinate),
-        #               low: int,
-        #               disc_time: int
+        """
+        This is used to determine which Pieces can move under the "One Hive" rule. It finds all Pieces that are
+        articulation points, or points within a graph that cannot be removed without splitting the graph. This
+        function implements Tarjan's algorithm.
+
+        :param current_coordinate: (x, y)
+            Location of the current Piece being checked.
+        :param visited: set {(x1, y1), (x2, y2)}
+            Set of locations the algorithm has already seen.
+        :param ap: set {(x1, y1), (x2, y2)}
+            Set of all articulation points.
+        :param parent: dict {(x, y): (parent_x, parent_y)}
+            Dictionary relating a location to its parent location within the graph traversal tree.
+        :param low: dict {(x, y): low_value}
+            Dictionary relating a location to the minimum discovery step. Indicated the topmost reachable ancestor
+            within the traversal.
+        :param disc_time: dict {(x, y): discovery_time}
+            Dictionary relating a location to the step in the traversal that it was discovered.
+        :return:
+        """
         children = 0
         visited.add(current_coordinate)
         disc_time[current_coordinate] = self.tarjan_discovery_time
@@ -333,8 +398,21 @@ class HiveGameBoard(object):
             elif parent.get(current_coordinate) and connected_location != parent.get(current_coordinate):
                 low[current_coordinate] = min(low[current_coordinate], disc_time[connected_location])
 
-    # TODO: Documentation
     def add_to_ant_movement_prevention_set(self, current_space, set_index=None, visited_spaces=None):
+        """
+        Adds EmptySpaces to an Ant movement prevention set. This starts at an initial location, then uses a
+        depth-first search algorithm to add any other empty spaces the given location can slide into.
+
+        :param current_space: (x, y)
+            The location to add to the set.
+        :param set_index: int
+            The index of the prevention set within self.ant_mvt_prevention_sets. If None is entered for the set index,
+            a new set is added to the list of prevention sets.
+            Default is None.
+        :param visited_spaces: set
+            Set of spaces the algorithm has seen already.
+            Default is an empty set.
+        """
         if current_space not in self.empty_spaces:
             return
         if visited_spaces is None:
@@ -356,6 +434,18 @@ class HiveGameBoard(object):
 
     # TODO: Documentation
     def remove_from_ant_movement_prevention_set(self, current_space, set_index, visited_spaces=None):
+        """
+        Removes EmptySpaces from an Ant movement prevention set. This starts at an initial location, then uses a
+        depth-first search algorithm to remove any other empty spaces the given location can slide into.
+
+        :param current_space: (x, y)
+            The location to remove from the set.
+        :param set_index: int
+            The index of the prevention set within self.ant_mvt_prevention_sets.
+        :param visited_spaces: set
+            Set of spaces the algorithm has seen already.
+            Default is an empty set.
+        """
         if current_space not in self.empty_spaces or current_space not in self.ant_mvt_prevention_sets[set_index]:
             return
         if visited_spaces is None:
@@ -366,8 +456,17 @@ class HiveGameBoard(object):
         for connected_space in self.empty_spaces[current_space].get_queen_bee_moves().difference(visited_spaces):
             self.remove_from_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
 
-    # TODO: Documentation
     def union_ant_movement_prevention_sets(self, set_index1, set_index2):
+        """
+        Combines to Ant movement prevention sets into one set.
+
+        :param set_index1: int
+            Index of the first set within self.ant_mvt_prevention_sets
+        :param set_index2: int
+            Index of the second set within self.ant_mvt_prevention_sets
+        :return: int
+            Index of the resulting set.
+        """
         if set_index1 == set_index2:
             return set_index1
 
@@ -385,21 +484,38 @@ class HiveGameBoard(object):
         self.clear_ant_movement_prevention_set(i2)
         return i1
 
-    # TODO: Documentation
     def clear_ant_movement_prevention_set(self, set_index):
-        self.ant_mvt_prevention_sets.pop(set_index)
+        """
+        Removes an Ant movement prevention set from self.ant_mvt_prevention_sets
 
-    # TODO: Documentation
-    # Returns index if it exists
+        :param set_index: int
+            Index of the set to remove from the list
+        """
+        del self.ant_mvt_prevention_sets[set_index]
+
     def empty_space_in_ant_movement_prevention_set(self, space_location):
+        """
+        Check if an EmptySpace exists within an Ant movement prevention set. If it does, this function returns the
+        index of that set. If it does not, the function will return -1.
+
+        :param space_location: (x, y)
+            Location of the EmptySpace to find in an Ant movement prevention set.
+        :return: int
+            Index of the set the EmptySpace resides in. If the EmptySpace could not be found in any Ant movement
+            prevention set, -1 is returned instead.
+        """
         for set_index, prevention_set in enumerate(self.ant_mvt_prevention_sets):
             if space_location in prevention_set:
                 return set_index
         return -1
 
-    # TODO: Documentation
     def get_all_spaces(self):
-        # Merges the dictionaries
+        """
+        Gathers all spaces (Pieces and EmptySpaces) on the game board
+
+        :return: dict {(x, y): HexSpace}
+            Dictionary relating a location to the HexSpace object at that location.
+        """
         # Pieces will overwrite empty spaces at the same location
         return {**self.empty_spaces, **self.pieces}
 
