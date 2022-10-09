@@ -192,7 +192,8 @@ class HexSpace:
     @abstractmethod
     def remove(self):
         """
-        Removes this HexSpace from the game board.
+        This is an abstract method meant to be implemented within Piece and EmptySpace. This function removes this
+        HexSpace from the game board.
         """
         pass
 
@@ -543,7 +544,7 @@ class Piece(HexSpace):
     def remove(self):
         """
         Removes this Piece from the game board. This also updates any relevant sliding rules, creates a new EmptySpace
-        at the Piece's location, updates the "One Hive" rule, and disconnects from any previously connected spaces.
+        at this Piece's location, updates the "One Hive" rule, and disconnects from any previously connected spaces.
         """
         # Update pieces that are no longer prevented from sliding
         all_spaces = board.HiveGameBoard().get_all_spaces()
@@ -600,7 +601,7 @@ class Piece(HexSpace):
 
     def set_location_to(self, new_location):
         """
-        This function sets the location of a Piece to the specified location.
+        This function sets the location of this Piece to the specified location.
 
         :param new_location: (x, y)
             Location where the piece will be placed.
@@ -786,7 +787,7 @@ class Piece(HexSpace):
     def calc_possible_moves(self):
         """
         This is an abstract method that is meant to be implemented in the Piece subclasses. This method calculates
-        all possible moves for a given piece based on the current board state.
+        all possible moves for a given Piece based on the current board state.
         """
         pass
 
