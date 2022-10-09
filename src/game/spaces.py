@@ -32,7 +32,6 @@ class HexSpace:
         """
         board.HiveGameBoard().spaces_requiring_updates.add(self.location)
 
-    # TODO: Documentation
     def update(self):
         """
         Updates information stored for this HexSpace.
@@ -373,7 +372,7 @@ class EmptySpace(HexSpace):
 
     def remove(self):
         """
-        Removes this empty space from the game board. This also removes this spot from each player's list of locations
+        Removes this EmptySpace from the game board. This also removes this spot from each player's list of locations
         to place pieces, disconnects any previously connected spaces, and updates pathing for Ants, Grasshoppers, and
         Spiders.
         """
@@ -397,7 +396,10 @@ class EmptySpace(HexSpace):
                 grasshopper = board.HiveGameBoard().pieces[grasshopper_location]
                 grasshopper.remove_grasshopper_path(self.location)
 
-        # TODO: [Efficiency] This may not need to be called *every* time an Empty Space is placed
+        # Update ant movement
+        ant_mvt_prevention_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(self.location)
+        if ant_mvt_prevention_index > -1:
+            board.HiveGameBoard().ant_mvt_prevention_sets[ant_mvt_prevention_index].remove(self.location)
         for ant_location in board.HiveGameBoard().ant_locations:
             board.HiveGameBoard().pieces[ant_location].prepare_for_update()
 
@@ -516,24 +518,33 @@ class Piece(HexSpace):
         self.can_move = True
         self.preventing_sliding_for = {}
 
-        # TODO: [Organization] This assumes that this color piece can be placed here without issue
-        if self.location in board.HiveGameBoard().empty_spaces:
-            self.set_location_to(self.location)
-        else:
-            raise RuntimeError('No empty space at {} to place a new {}'.format(self.location, self.name))
+        self.set_location_to(self.location)
 
-    # TODO: Documentation
     def update(self):
+        """
+        Updates information stored for this Piece.
+        This involves:
+        - Updating self.cannot_move_to
+        - Calculating/Updating possible moves for this Piece
+        """
         super().update()
         self.calc_possible_moves()
 
-    # TODO: Documentation
     def move_to(self, new_location):
+        """
+        Moves this Piece from its current location to a new location.
+
+        :param new_location: (x, y)
+            The new location for this Piece.
+        """
         self.remove()
         self.set_location_to(new_location)
 
-    # TODO: Documentation
     def remove(self):
+        """
+        Removes this Piece from the game board. This also updates any relevant sliding rules, creates a new EmptySpace
+        at the Piece's location, updates the "One Hive" rule, and disconnects from any previously connected spaces.
+        """
         # Update pieces that are no longer prevented from sliding
         all_spaces = board.HiveGameBoard().get_all_spaces()
         for limited_space_loc, locations in self.preventing_sliding_for.items():
@@ -587,16 +598,19 @@ class Piece(HexSpace):
 
         board.HiveGameBoard().pieces.pop(self.location)
 
-    # TODO: Documentation
     # TODO: [Formatting] Reformat this function for added readability
     def set_location_to(self, new_location):
         """
-        Moves this piece to a new location. This also updates any previous/new connections to other pieces. No movement
-        will happen if the move is invalid.
+        This function sets the location of a Piece to the specified location.
 
-        :param new_location: tuple
-            (x, y) location where the piece will be placed
+        :param new_location: (x, y)
+            Location where the piece will be placed.
+        :raises RuntimeError:
+            A RuntimeError will be raised if the Piece is set to a location that does not contain an EmptySpace.
         """
+        if new_location not in board.HiveGameBoard().empty_spaces:
+            raise RuntimeError('No empty space at {} to place a new {}'.format(self.location, self.name))
+
         # Move this piece in the board dictionary
         self.location = new_location
         self.x = new_location[0]
@@ -624,10 +638,10 @@ class Piece(HexSpace):
 
         self.update_one_hive_rule(self_is_placing=True)
 
-    # TODO: Documentation
     def _create_surrounding_emt_spcs(self):
-        # Helper function for move_to(location)
-        # Add new empty spaces
+        """
+        This is a helper function used to create new EmptySpaces in unfilled locations surrounding this Piece.
+        """
         all_connected_spaces = self.connected_empty_spaces.union(self.connected_pieces)
         surrounding_locations = {(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x - 1, self.y),
                                  (self.x + 1, self.y),
@@ -637,8 +651,10 @@ class Piece(HexSpace):
         for point in locations_for_new_empty_spaces:
             EmptySpace(point[0], point[1])
 
-    # TODO: Documentation
     def _update_sliding(self):
+        """
+        This is a helper function used to update sliding rules for any relevant Pieces.
+        """
         # Helper function for move_to(location)
         x = self.x
         y = self.y
@@ -649,51 +665,70 @@ class Piece(HexSpace):
         self._check_if_preventing_sliding((x + 1, y - 1), (x + 1, y), (x, y - 1))
         self._check_if_preventing_sliding((x - 1, y - 2), (x, y - 1), (x - 1, y - 1))
 
-    # TODO: Documentation
     def _check_if_preventing_sliding(self, other_piece_loc, space1_loc, space2_loc):
-        # Helper function
-        # Spaces at (location1) and (location2) cannot slide to each other
+        """
+        This is a helper function used to check if a sliding prevention exists based on the locations of this Piece
+        and a second, related Piece.
+
+        :param other_piece_loc: (x, y)
+            Location of the related Piece. If this Piece exists, sliding rules for space1 and space2 will be updated.
+        :param space1_loc: (x, y)
+            Location of a HexSpace that may have sliding rules limited by this Piece.
+        :param space2_loc: (x, y)
+            Location of a HexSpace that may have sliding rules limited by this Piece.
+        """
+
+        # Check if the other Piece exists. If not, no sliding rules need to be updated.
         game_board = board.HiveGameBoard()
-        if other_piece_loc in board.HiveGameBoard().pieces:
-            all_spaces = game_board.get_all_spaces()
+        if other_piece_loc not in board.HiveGameBoard().pieces:
+            return
 
-            other_piece = game_board.pieces[other_piece_loc]
-            space1 = all_spaces[space1_loc]
-            space2 = all_spaces[space2_loc]
+        all_spaces = game_board.get_all_spaces()
+        other_piece = game_board.pieces[other_piece_loc]
+        space1 = all_spaces[space1_loc]
+        space2 = all_spaces[space2_loc]
 
-            self._helper_add_to_dict_set(self.preventing_sliding_for, space1_loc, space2_loc)
-            self._helper_add_to_dict_set(other_piece.preventing_sliding_for, space1_loc, space2_loc)
+        # Mark that this Piece and the related Piece are preventing sliding for the specified spaces
+        self._helper_add_to_dict_set(self.preventing_sliding_for, space1_loc, space2_loc)
+        self._helper_add_to_dict_set(self.preventing_sliding_for, space2_loc, space1_loc)
+        self._helper_add_to_dict_set(other_piece.preventing_sliding_for, space1_loc, space2_loc)
+        self._helper_add_to_dict_set(other_piece.preventing_sliding_for, space2_loc, space1_loc)
 
-            self._helper_add_to_dict_set(self.preventing_sliding_for, space2_loc, space1_loc)
-            self._helper_add_to_dict_set(other_piece.preventing_sliding_for, space2_loc, space1_loc)
+        # Spaces add the new sliding limitations
+        space1.add_sliding_prevention(space2_loc, self.location)
+        space1.add_sliding_prevention(space2_loc, other_piece_loc)
+        space2.add_sliding_prevention(space1_loc, self.location)
+        space2.add_sliding_prevention(space1_loc, other_piece_loc)
 
-            space1.add_sliding_prevention(space2_loc, self.location)
-            space1.add_sliding_prevention(space2_loc, other_piece_loc)
-            space2.add_sliding_prevention(space1_loc, self.location)
-            space2.add_sliding_prevention(space1_loc, other_piece_loc)
+        # Update Ant movement prevention sets
+        if space1_loc in board.HiveGameBoard().empty_spaces and space2_loc in board.HiveGameBoard().empty_spaces:
 
-            # Update Ant movement prevention sets
-            if space1_loc in board.HiveGameBoard().empty_spaces and space2_loc in board.HiveGameBoard().empty_spaces:
-                space1_prevention_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(space1_loc)
-                space2_prevention_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(space2_loc)
+            # Check if either space is in an Ant movement prevention set, and get the index in which that set is stored
+            space1_prevention_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(space1_loc)
+            space2_prevention_index = board.HiveGameBoard().empty_space_in_ant_movement_prevention_set(space2_loc)
 
-                # Both empty spaces are free spaces
-                if space1_prevention_index == -1 and space2_prevention_index == -1:
-                    # Determine which space (if any) if on the outside of the board
-                    space1_on_outside = space1.get_total_num_connections() < 6
-                    space2_on_outside = space2.get_total_num_connections() < 6
+            # Both empty spaces are free spaces
+            if space1_prevention_index == -1 and space2_prevention_index == -1:
+                # Determine which space (if any) if on the outside of the board
+                space1_on_outside = space1.get_total_num_connections() < 6
+                space2_on_outside = space2.get_total_num_connections() < 6
 
-                    if not space1_on_outside and not space2_on_outside:
-                        board.HiveGameBoard().ant_mvt_preventions_to_add.add(space1_loc)
-                        board.HiveGameBoard().ant_mvt_preventions_to_add.add(space2_loc)
-                    elif space1_on_outside:
-                        board.HiveGameBoard().ant_mvt_preventions_to_add.add(space2_loc)
-                    elif space2_on_outside:
-                        board.HiveGameBoard().ant_mvt_preventions_to_add.add(space1_loc)
-                    else:
-                        raise RuntimeError('Error! This line should never be executed!')
+                if not space1_on_outside and not space2_on_outside:
+                    board.HiveGameBoard().ant_mvt_preventions_to_add.add(space1_loc)
+                    board.HiveGameBoard().ant_mvt_preventions_to_add.add(space2_loc)
+                elif space1_on_outside:
+                    board.HiveGameBoard().ant_mvt_preventions_to_add.add(space2_loc)
+                elif space2_on_outside:
+                    board.HiveGameBoard().ant_mvt_preventions_to_add.add(space1_loc)
                 else:
                     raise RuntimeError('Error! This line should never be executed!')
+            # Both empty spaces are within the same ant movement prevention set
+            elif space1_prevention_index == space2_prevention_index:
+                # Split the prevention sets
+                board.HiveGameBoard().remove_from_ant_movement_prevention_set(space1_loc, space1_prevention_index)
+                board.HiveGameBoard().add_to_ant_movement_prevention_set(space1_loc)
+            else:
+                raise RuntimeError('Error! This line should never be executed!')
 
     # TODO: Documentation
     # TODO: [Formatting] Put this function into a utils class

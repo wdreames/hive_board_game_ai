@@ -236,6 +236,11 @@ class TestAntBoard2Move0(unittest.TestCase):
         ant_board2()
         board.HiveGameBoard().print_board()
 
+    def test_prevention_sets(self):
+        expected_prevention_sets = [{(-1, 0)}, {(-2, -1), (-2, -2), (-3, -2)}]
+        actual_prevention_sets = board.HiveGameBoard().ant_mvt_prevention_sets
+        self.assertEqual(expected_prevention_sets, actual_prevention_sets)
+
     def test_ant1(self):
         # Test ant movement at (0, 0)
         expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
@@ -280,6 +285,11 @@ class TestAntBoard2Move1(unittest.TestCase):
 
         board.HiveGameBoard().print_board()
 
+    def test_prevention_sets(self):
+        expected_prevention_sets = [{(-1, 0), (-1, -1), (-2, -1), (-2, -2), (-3, -2)}]
+        actual_prevention_sets = board.HiveGameBoard().ant_mvt_prevention_sets
+        self.assertEqual(expected_prevention_sets, actual_prevention_sets)
+
     def test_ant1(self):
         # Test ant movement at (0, 0)
         expected_possible_moves = {(-1, 0), (-2, -1), (-2, -2), (-3, -2), (-1, -1)}
@@ -306,6 +316,61 @@ class TestAntBoard2Move1(unittest.TestCase):
         # Test ant movement at (-3, -3)
         expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
             {(-4, -4)})
+        actual_possible_moves = board.HiveGameBoard().pieces[(-3, -3)].possible_moves
+
+        self.assertEqual(expected_possible_moves, actual_possible_moves)
+
+
+class TestAntBoard2Move2(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        ant_board2()
+        board.HiveGameBoard().place_piece(spaces.Piece.BEETLE, (0, 2))  # Black
+
+        # Combine prevention sets in the middle of the group
+        board.HiveGameBoard().move_piece((-1, -1), (1, 1))  # White
+
+        # Filler move for black
+        board.HiveGameBoard().move_piece((0, 2), (-1, 2))  # Black
+
+        # Separate prevention sets again
+        board.HiveGameBoard().move_piece((1, 1), (-1, -1))
+
+        board.HiveGameBoard().print_board()
+
+    def test_prevention_sets(self):
+        expected_prevention_sets = [{(-1, 0)}, {(-2, -1), (-2, -2), (-3, -2)}]
+        actual_prevention_sets = board.HiveGameBoard().ant_mvt_prevention_sets
+        self.assertEqual(expected_prevention_sets, actual_prevention_sets)
+
+    def test_ant1(self):
+        # Test ant movement at (0, 0)
+        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+            {(-1, 0), (-2, -1), (-2, -2), (-3, -2)})
+        actual_possible_moves = board.HiveGameBoard().pieces[(0, 0)].possible_moves
+
+        self.assertEqual(expected_possible_moves, actual_possible_moves)
+
+    def test_ant2(self):
+        # Test ant movement at (-2, 0)
+        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys())
+        actual_possible_moves = board.HiveGameBoard().pieces[(-2, 0)].possible_moves
+
+        self.assertEqual(expected_possible_moves, actual_possible_moves)
+
+    def test_ant3(self):
+        # Test ant movement at (-4, -2)
+        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+            {(-1, 0)}, {(-5, -2), (-5, -3)})
+        actual_possible_moves = board.HiveGameBoard().pieces[(-4, -2)].possible_moves
+
+        self.assertEqual(expected_possible_moves, actual_possible_moves)
+
+    def test_ant4(self):
+        # Test ant movement at (-3, -3)
+        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+            {(-1, 0)}, {(-4, -4)})
         actual_possible_moves = board.HiveGameBoard().pieces[(-3, -3)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
