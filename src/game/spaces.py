@@ -77,10 +77,10 @@ class HexSpace:
         This method is used to mark a location as unavailable, and allows the HexSpace to know that it cannot move
         into that space.
 
-        :param prevented_space_location:
-            Coordinate (x, y) that has beem blocked
-        :param piece_blocking_mvt_location:
-            Coordinate (x, y) of the Piece that is blocking movement.
+        :param prevented_space_location: (x, y)
+            Location that has beem blocked
+        :param piece_blocking_mvt_location: (x, y)
+            Location of the Piece that is blocking movement.
         """
         if prevented_space_location in self.sliding_prevented_to:
             self.sliding_prevented_to[prevented_space_location].add(piece_blocking_mvt_location)
@@ -97,10 +97,10 @@ class HexSpace:
         This method is used to mark a location as available again, and allows the HexSpace to know that it is no longer
         prevented from moving into that space.
 
-        :param prevented_space_location:
-            Coordinate (x, y) that is no longer blocked
-        :param piece_blocking_mvt_location:
-            Coordinate (x, y) of the Piece that is no longer blocking movement.
+        :param prevented_space_location: (x, y)
+            Location that is no longer blocked
+        :param piece_blocking_mvt_location: (x, y)
+            Location of the Piece that is no longer blocking movement.
         """
 
         # The limited space is no longer blocked by this piece
@@ -124,10 +124,8 @@ class HexSpace:
         by self.get_all_surrounding_locations().
         Example: is location a is at (0, 1) and location b is at (3, 4), then the direction will be (1, 1).
 
-        :param piece_a:
-            coordinate (x, y)
-        :param piece_b:
-            coordinate (x, y)
+        :param piece_a: (x, y)
+        :param piece_b: (x, y)
         :return:
             direction coordinate (delta x, delta y)
         """
@@ -145,10 +143,8 @@ class HexSpace:
         Returns the next space on the game board based on a starting location and a direction.
         Example: If the location is (2, 3) and the direction is (1, 0), then the returned location will be (3, 3).
 
-        :param start_location:
-            coordinate (x, y)
-        :param direction:
-            coordinate (delta x, delta y)
+        :param start_location: (x, y)
+        :param direction: (delta x, delta y)
         :raises ValueError:
             A ValueError will be raised if a direction of (0, 0) is inputted.
         :return:
@@ -205,8 +201,8 @@ class HexSpace:
         """
         Connects this HexSpace to a Piece at the specified location.
 
-        :param location:
-            Coordinate (x, y) of the Piece.
+        :param location: (x, y)
+            Location of the Piece.
         """
         self.connected_pieces.add(location)
         self.prepare_for_update()
@@ -215,8 +211,8 @@ class HexSpace:
         """
         This HexSpace removes a connection previously made to a Piece at the specified location.
 
-        :param location:
-            Coordinate (x, y) of the Piece.
+        :param location: (x, y)
+            Location of the Piece.
         """
         self.connected_pieces.remove(location)
         self.prepare_for_update()
@@ -225,18 +221,18 @@ class HexSpace:
         """
         Connects this HexSpace to an EmptySpace at the specified location.
 
-        :param location:
-            Coordinate (x, y) of the EmptySpace.
+        :param location: (x, y)
+            Location of the EmptySpace.
         """
         self.connected_empty_spaces.add(location)
         self.prepare_for_update()
 
     def remove_connection_to_empty_space(self, location):
         """
-        This HexSpace removes a connection previously made to a EmptySpace at the specified location.
+        This HexSpace removes a connection previously made to an EmptySpace at the specified location.
 
-        :param location:
-            Coordinate (x, y) of the EmptySpace.
+        :param location: (x, y)
+            Location of the EmptySpace.
         """
         self.connected_empty_spaces.remove(location)
         self.prepare_for_update()
@@ -252,7 +248,7 @@ class EmptySpace(HexSpace):
     def __init__(self, x=0, y=0, connected_pcs=None, connected_emt_spcs=None, sliding_prevented_to=None,
                  cannot_move_to=None):
         """
-        Create a new Empty Space at (x, y). This method also allows the Empty Space to connect to any other surrounding
+        Create a new Empty Space at (x, y). This method also connects the Empty Space to any other surrounding
         spaces on the board.
 
         :param x: int
@@ -262,8 +258,8 @@ class EmptySpace(HexSpace):
         :param connected_pcs: set
             Connected pieces to assign to this empty space. If this is None, connected pieces will be calculated
         :param connected_emt_spcs: set
-                Connected empty pieces to assign to this empty space. If this is None, connected empty spaces will be
-                calculated.
+            Connected empty pieces to assign to this empty space. If this is None, connected empty spaces will be
+            calculated.
         """
         super().__init__(x, y)
         self.pieces_that_can_move_here = set()
@@ -328,8 +324,15 @@ class EmptySpace(HexSpace):
 
             self.prepare_for_update()
 
-    # TODO: Documentation
     def update(self):
+        """
+        Updates information stored for this EmptySpace.
+        This involves:
+        - Removing this EmptySpace if it is no longer connected to a Piece
+        - Updating self.cannot_move_to
+        - Determine if white or black (or neither) can place pieces on this EmptySpace
+        - Update Spider paths
+        """
         if len(self.connected_pieces) == 0:
             self.remove()
             return
@@ -368,11 +371,11 @@ class EmptySpace(HexSpace):
             if self.location in board.HiveGameBoard().white_locations_to_place:
                 board.HiveGameBoard().white_locations_to_place.remove(self.location)
 
-    # TODO: Update Documentation
     def remove(self):
         """
         Removes this empty space from the game board. This also removes this spot from each player's list of locations
-        to place pieces, and disconnects any previously connected spaces.
+        to place pieces, disconnects any previously connected spaces, and updates pathing for Ants, Grasshoppers, and
+        Spiders.
         """
         if self.location in board.HiveGameBoard().white_locations_to_place:
             board.HiveGameBoard().white_locations_to_place.remove(self.location)
@@ -420,16 +423,26 @@ class EmptySpace(HexSpace):
         """
         return not self.num_white_connected
 
-    # TODO: Documentation
     def add_connection_to_piece(self, location):
+        """
+        Connects this EmptySpace to a Piece at the specified location.
+
+        :param location: (x, y)
+            Location of the Piece.
+        """
         super().add_connection_to_piece(location)
         if board.HiveGameBoard().pieces[location].is_white:
             self.num_white_connected += 1
         else:
             self.num_black_connected += 1
 
-    # TODO: Documentation
     def remove_connection_to_piece(self, location):
+        """
+        This EmptySpace removes a connection previously made to a Piece at the specified location.
+
+        :param location: (x, y)
+            Location of the Piece.
+        """
         super().remove_connection_to_piece(location)
 
         if board.HiveGameBoard().pieces[location].is_white:
@@ -439,13 +452,23 @@ class EmptySpace(HexSpace):
 
         self.prepare_for_update()
 
-    # TODO: Documentation
     def add_connection_to_empty_space(self, location):
+        """
+        Connects this EmptySpace to another EmptySpace at the specified location.
+
+        :param location: (x, y)
+            Location of the EmptySpace.
+        """
         super().add_connection_to_empty_space(location)
         board.HiveGameBoard().empty_spaces[location].connected_empty_spaces.add(self.location)
 
-    # TODO: Documentation
     def remove_connection_to_empty_space(self, location):
+        """
+        This HexSpace removes a connection previously made to an EmptySpace at the specified location.
+
+        :param location: (x, y)
+            Location of the EmptySpace.
+        """
         super().remove_connection_to_empty_space(location)
 
     def __str__(self):
