@@ -466,7 +466,7 @@ class EmptySpace(HexSpace):
 
     def remove_connection_to_empty_space(self, location):
         """
-        This HexSpace removes a connection previously made to an EmptySpace at the specified location.
+        This EmptySpace removes a connection previously made to an EmptySpace at the specified location.
 
         :param location: (x, y)
             Location of the EmptySpace.
@@ -598,7 +598,6 @@ class Piece(HexSpace):
 
         board.HiveGameBoard().pieces.pop(self.location)
 
-    # TODO: [Formatting] Reformat this function for added readability
     def set_location_to(self, new_location):
         """
         This function sets the location of a Piece to the specified location.
@@ -721,6 +720,7 @@ class Piece(HexSpace):
                 elif space2_on_outside:
                     board.HiveGameBoard().ant_mvt_preventions_to_add.add(space1_loc)
                 else:
+                    # TODO: Remove this line after testing
                     raise RuntimeError('Error! This line should never be executed!')
             # Both empty spaces are within the same ant movement prevention set
             elif space1_prevention_index == space2_prevention_index:
@@ -728,19 +728,32 @@ class Piece(HexSpace):
                 board.HiveGameBoard().remove_from_ant_movement_prevention_set(space1_loc, space1_prevention_index)
                 board.HiveGameBoard().add_to_ant_movement_prevention_set(space1_loc)
             else:
+                # TODO: Remove this line after testing
                 raise RuntimeError('Error! This line should never be executed!')
 
-    # TODO: Documentation
     # TODO: [Formatting] Put this function into a utils class
     @staticmethod
     def _helper_add_to_dict_set(dictionary, key, value):
+        """
+        This is a helper function used to add values to sets stored within a dictionary.
+
+        :param dictionary:
+        :param key:
+        :param value:
+        """
         if key in dictionary:
             dictionary[key].add(value)
         else:
             dictionary[key] = {value}
 
-    # TODO: Documentation
     def update_one_hive_rule(self, self_is_placing=True):
+        """
+        Updates movement rules based on the "One Hive" rule.
+
+        :param self_is_placing: bool
+            True if this Piece is currently being placed. False if this Piece is currently being
+            removed.
+        """
         n = len(self.connected_pieces)
 
         if n == 1:
@@ -755,13 +768,17 @@ class Piece(HexSpace):
             board.HiveGameBoard().prepare_to_find_articulation_pts = True
             return
 
-    # TODO: Documentation
     def lock(self):
+        """
+        Locks this Piece so that it cannot move.
+        """
         self.can_move = False
         self.calc_possible_moves()
 
-    # TODO: Documentation
     def unlock(self):
+        """
+        Unlocks the Piece so that it can move.
+        """
         self.can_move = True
         self.calc_possible_moves()
 
@@ -773,37 +790,69 @@ class Piece(HexSpace):
         """
         pass
 
-    # TODO: Documentation
     def add_move(self, location):
+        """
+        Adds a possible move for this Piece.
+
+        :param location: (x, y)
+            Location to add to this Pieces set of possible moves.
+        """
         self.possible_moves.add(location)
 
-    # TODO: Documentation
     def remove_move(self, location):
+        """
+        Removes a possible move for this Piece.
+
+        :param location: (x, y)
+            Location to remove from this Pieces set of possible moves.
+        """
         if location in self.possible_moves:
             self.possible_moves.remove(location)
 
-    # TODO: Documentation
     def update_board_moves(self):
+        """
+        Updates the game board's set of possible moves for this Piece.
+        """
         if self.can_move:
             board.HiveGameBoard().add_possible_moves(self.location)
         else:
             board.HiveGameBoard().remove_possible_moves(self.location)
 
-    # TODO: Documentation
     def add_connection_to_piece(self, location):
+        """
+        Connects this Piece to another Piece at the specified location.
+
+        :param location: (x, y)
+            Location of the Piece.
+        """
         super().add_connection_to_piece(location)
 
-    # TODO: Documentation
     def remove_connection_to_piece(self, location):
+        """
+        This Piece removes a connection previously made to a Piece at the specified location.
+
+        :param location: (x, y)
+            Location of the Piece.
+        """
         super().remove_connection_to_piece(location)
 
-    # TODO: Documentation
     def add_connection_to_empty_space(self, location):
+        """
+        Connects this Piece to an EmptySpace at the specified location.
+
+        :param location: (x, y)
+            Location of the EmptySpace.
+        """
         super().add_connection_to_empty_space(location)
         board.HiveGameBoard().empty_spaces[location].add_connection_to_piece(self.location)
 
-    # TODO: Documentation
     def remove_connection_to_empty_space(self, location):
+        """
+        This Piece removes a connection previously made to an EmptySpace at the specified location.
+
+        :param location: (x, y)
+            Location of the EmptySpace.
+        """
         super().remove_connection_to_empty_space(location)
 
     def __str__(self):
