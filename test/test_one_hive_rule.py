@@ -74,9 +74,9 @@ class TestOneHiveBoard2Move1(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         one_hive_board2()
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.PLACE_PIECE, (-3, 0), piece_type=spaces.Piece.ANT)
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.MOVE_PIECE, (2, 0), new_location=(1, 0))
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.MOVE_PIECE, (-3, 0), new_location=(-1, -3))
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.PLACE_PIECE, (-3, 0), piece_type=spaces.Piece.ANT)
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (2, 0), new_location=(1, 0))
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (-3, 0), new_location=(-1, -3))
         board.HiveGameBoard().print_board()
 
         cls.pieces_that_cannot_move = {(0, -2), (1, -2), (2, -2), (3, -1)}
@@ -103,10 +103,10 @@ class TestOneHiveBoard2Move2(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         one_hive_board2()
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.PLACE_PIECE, (-3, 0), piece_type=spaces.Piece.ANT)
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.MOVE_PIECE, (2, 0), new_location=(1, 0))
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.MOVE_PIECE, (-3, 0), new_location=(-1, -3))
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.PLACE_PIECE, (2, 0), piece_type=spaces.Piece.ANT)
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.PLACE_PIECE, (-3, 0), piece_type=spaces.Piece.ANT)
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (2, 0), new_location=(1, 0))
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (-3, 0), new_location=(-1, -3))
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.PLACE_PIECE, (2, 0), piece_type=spaces.Piece.ANT)
         board.HiveGameBoard().print_board()
 
     def test_all_pieces_can_move(self):
@@ -128,11 +128,11 @@ class TestOneHiveBoard2Move3(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         one_hive_board2()
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.PLACE_PIECE, (-3, 0), piece_type=spaces.Piece.ANT)
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.MOVE_PIECE, (2, 0), new_location=(1, 0))
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.MOVE_PIECE, (-3, 0), new_location=(-1, -3))
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.PLACE_PIECE, (2, 0), piece_type=spaces.Piece.ANT)
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.MOVE_PIECE, (-1, -3), new_location=(4, 1))
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.PLACE_PIECE, (-3, 0), piece_type=spaces.Piece.ANT)
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (2, 0), new_location=(1, 0))
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (-3, 0), new_location=(-1, -3))
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.PLACE_PIECE, (2, 0), piece_type=spaces.Piece.ANT)
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (-1, -3), new_location=(4, 1))
         board.HiveGameBoard().print_board()
 
         cls.pieces_that_cannot_move = {(3, 0), (0, 0), (-1, 0), (-2, 0), (-3, -1), (-3, -2), (-3, -3)}
@@ -159,13 +159,13 @@ class TestOneHiveBoard2Move4(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         one_hive_board2()
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.PLACE_PIECE, (-3, 0), piece_type=spaces.Piece.ANT)
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.MOVE_PIECE, (2, 0), new_location=(1, 0))
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.MOVE_PIECE, (-3, 0), new_location=(-1, -3))
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.PLACE_PIECE, (2, 0), piece_type=spaces.Piece.ANT)
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.MOVE_PIECE, (-1, -3), new_location=(4, 1))
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.PLACE_PIECE, (-3, 0), piece_type=spaces.Piece.ANT)
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (2, 0), new_location=(1, 0))
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (-3, 0), new_location=(-1, -3))
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.PLACE_PIECE, (2, 0), piece_type=spaces.Piece.ANT)
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (-1, -3), new_location=(4, 1))
         board.HiveGameBoard().print_board()
-        board.HiveGameBoard().perform_action(board.HiveGameBoard.MOVE_PIECE, (3, -1), new_location=(3, 1))
+        board.HiveGameBoard().perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (3, -1), new_location=(3, 1))
         board.HiveGameBoard().print_board()
 
         cls.pieces_that_cannot_move = {(0, 0), (-1, 0), (-2, 0), (-3, -1), (-3, -2), (-3, -3), (-2, -1),

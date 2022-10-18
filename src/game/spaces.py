@@ -117,19 +117,19 @@ class HexSpace:
         self.prepare_for_update()
 
     @staticmethod
-    def direction_from_a_to_b(piece_a, piece_b):
+    def direction_from_a_to_b(location_a, location_b):
         """
         Returns the direction from location a to location b. The values returned will always be within the set returned
         by self.get_all_surrounding_locations().
         Example: is location a is at (0, 1) and location b is at (3, 4), then the direction will be (1, 1).
 
-        :param piece_a: (x, y)
-        :param piece_b: (x, y)
+        :param location_a: (x, y)
+        :param location_b: (x, y)
         :return:
             direction coordinate (delta x, delta y)
         """
-        x_diff = piece_b[0] - piece_a[0]
-        y_diff = piece_b[1] - piece_a[1]
+        x_diff = location_b[0] - location_a[0]
+        y_diff = location_b[1] - location_a[1]
         divisor = max(abs(x_diff), abs(y_diff))
         if divisor == 0:
             return 0, 0

@@ -9,9 +9,9 @@ class TestGrasshopper(unittest.TestCase):
     def setUpClass(cls):
         cls.board = game_board.HiveGameBoard(new_board=True)
 
-        cls.board.perform_action(cls.board.PLACE_PIECE, (0, 0), piece_type=spcs.Piece.GRASSHOPPER)
-        cls.board.perform_action(cls.board.PLACE_PIECE, (1, 0), piece_type=spcs.Piece.GRASSHOPPER)
-        cls.board.perform_action(cls.board.PLACE_PIECE, (-1, 0), piece_type=spcs.Piece.QUEEN_BEE)
+        cls.board.perform_action_helper(cls.board.PLACE_PIECE, (0, 0), piece_type=spcs.Piece.GRASSHOPPER)
+        cls.board.perform_action_helper(cls.board.PLACE_PIECE, (1, 0), piece_type=spcs.Piece.GRASSHOPPER)
+        cls.board.perform_action_helper(cls.board.PLACE_PIECE, (-1, 0), piece_type=spcs.Piece.QUEEN_BEE)
 
         cls.board.print_board()
 
@@ -33,7 +33,7 @@ class TestGrasshopper(unittest.TestCase):
         self.board.move_piece((2, 1), (1, 1))
         self.board.move_piece((-1, -1), (-1, 0))
 
-        self.board.perform_action(self.board.MOVE_PIECE, (1, 0), new_location=(-2, 0))
+        self.board.perform_action_helper(self.board.MOVE_PIECE, (1, 0), new_location=(-2, 0))
 
         self.board.print_board()
 

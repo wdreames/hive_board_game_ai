@@ -8,7 +8,7 @@ from src.game.pieces import Spider
 
 
 # TODO: Update Documentation
-class HiveGameBoard(object):
+class HiveGameBoard:
     """
     This class is used to store the board state of the game. A singleton design pattern is used for this class so there
     can only ever be one instance of the game board. This can be accessed across all files.
@@ -87,7 +87,19 @@ class HiveGameBoard(object):
 
         return cls.instance
 
-    def perform_action(self, action_type, piece_location, new_location=None, piece_type=None):
+    def perform_action(self, action):
+        action_type = action[0]
+        piece_location = action[1]
+        action_variable = action[2]
+
+        print(action)
+
+        if action_type == HiveGameBoard.PLACE_PIECE:
+            self.perform_action_helper(action_type, piece_location, piece_type=action_variable)
+        else:
+            self.perform_action_helper(action_type, piece_location, new_location=action_variable)
+
+    def perform_action_helper(self, action_type, piece_location, new_location=None, piece_type=None):
         """
         Performs an action on the game board. Possible actions are HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE
 
@@ -112,6 +124,31 @@ class HiveGameBoard(object):
             self.place_piece(piece_type, piece_location)
         else:
             raise ValueError('Action type can only be HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE.')
+
+    def get_action_list(self):
+        pieces_to_play, locations_to_place, possible_moves_dict = self.get_all_possible_actions()
+
+        all_actions = []
+        # Place actions
+        for piece_type, amount_of_type in pieces_to_play.items():
+            if amount_of_type:
+                for possible_location in locations_to_place:
+                    all_actions.append((
+                        HiveGameBoard.PLACE_PIECE,
+                        possible_location,
+                        piece_type
+                    ))
+
+        # Move actions
+        for piece_location, move_locations in possible_moves_dict.items():
+            for new_location in move_locations:
+                all_actions.append([
+                    HiveGameBoard.MOVE_PIECE,
+                    piece_location,
+                    new_location
+                ])
+
+        return all_actions
 
     def get_all_possible_actions(self):
         """
