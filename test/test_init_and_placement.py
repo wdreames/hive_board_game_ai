@@ -1,10 +1,7 @@
 import unittest
 
-import src.game_board.board as board
-import src.game_board.pieces.ant as ant
-import src.game_board.pieces.queen_bee as qb
-import src.game_board.pieces.grasshopper as gh
-import src.game_board.empty_space as emt_spc
+import src.game.board as board
+import src.game.pieces as pcs
 
 
 class TestInitializationAndPlacements(unittest.TestCase):
@@ -23,6 +20,7 @@ class TestInitializationAndPlacements(unittest.TestCase):
         expected_white_queen_loc = None
         expected_black_queen_loc = None
         expected_is_white_turn = True
+        expected_winner = None
 
         self.assertEqual(expected_pieces.keys(), board.HiveGameBoard().pieces.keys())
         self.assertEqual(expected_empty_spaces.keys(), board.HiveGameBoard().empty_spaces.keys())
@@ -31,12 +29,13 @@ class TestInitializationAndPlacements(unittest.TestCase):
         self.assertEqual(expected_white_queen_loc, board.HiveGameBoard().white_queen_location)
         self.assertEqual(expected_black_queen_loc, board.HiveGameBoard().black_queen_location)
         self.assertEqual(expected_is_white_turn, board.HiveGameBoard().is_white_turn())
+        self.assertEqual(expected_winner, board.HiveGameBoard().determine_winner())
 
     def test_create_ant(self):
         # Resets the board
         board.HiveGameBoard(new_board=True)
 
-        ant.Ant(0, 0)
+        pcs.Ant(0, 0)
 
         self._test_new_piece_at_0_0()
 
@@ -49,7 +48,7 @@ class TestInitializationAndPlacements(unittest.TestCase):
         # Resets the board
         board.HiveGameBoard(new_board=True)
 
-        gh.Grasshopper(0, 0)
+        pcs.Grasshopper(0, 0)
 
         self._test_new_piece_at_0_0()
 
@@ -57,40 +56,6 @@ class TestInitializationAndPlacements(unittest.TestCase):
         new_piece = board.HiveGameBoard().pieces[(0, 0)]
         type_of_piece = str(type(new_piece)).split('.')[-1][:-2]
         self.assertEqual('Grasshopper', type_of_piece)
-
-    def test_create_white_queen_bee(self):
-        # Resets the board
-        board.HiveGameBoard(new_board=True)
-
-        qb.QueenBee(0, 0)
-
-        expected_stored_qb_loc = (0, 0)
-        actual_stored_qb_loc = board.HiveGameBoard().white_queen_location
-        self.assertEqual(expected_stored_qb_loc, actual_stored_qb_loc)
-
-        self._test_new_piece_at_0_0()
-
-        # piece is of type Ant
-        new_piece = board.HiveGameBoard().pieces[(0, 0)]
-        type_of_piece = str(type(new_piece)).split('.')[-1][:-2]
-        self.assertEqual('QueenBee', type_of_piece)
-
-    def test_create_black_queen_bee(self):
-        # Resets the board
-        board.HiveGameBoard(new_board=True)
-
-        qb.QueenBee(0, 0, is_white=False)
-
-        expected_stored_qb_loc = (0, 0)
-        actual_stored_qb_loc = board.HiveGameBoard().black_queen_location
-        self.assertEqual(expected_stored_qb_loc, actual_stored_qb_loc)
-
-        self._test_new_piece_at_0_0(expected_num_white_connected=0, expected_num_black_connected=1)
-
-        # piece is of type Ant
-        new_piece = board.HiveGameBoard().pieces[(0, 0)]
-        type_of_piece = str(type(new_piece)).split('.')[-1][:-2]
-        self.assertEqual('QueenBee', type_of_piece)
 
     def _test_new_piece_at_0_0(self, expected_num_white_connected=1, expected_num_black_connected=0):
         # Empty space at (0, 0) was removed

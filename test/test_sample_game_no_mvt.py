@@ -1,5 +1,5 @@
 import unittest
-import src.game_board.board as board
+import src.game.board as board
 
 
 class TestSampleGameWithNoMovement(unittest.TestCase):
@@ -122,11 +122,7 @@ class TestSampleGameWithNoMovement(unittest.TestCase):
 
     def test_i_end_game_correct_num_turns(self):
         # Continue making moves
-        # TODO: [Errors] Maybe make these raise errors and test for those here
-        board.HiveGameBoard().place_piece('Ant', (-2, -2))  # Black; Meant to fail & be skipped
-        board.HiveGameBoard().place_piece('Queen Bee', (-1, 0))  # Black; Meant to fail & be skipped
         board.HiveGameBoard().place_piece('Queen Bee', (-2, -2))  # Black
-        board.HiveGameBoard().place_piece('Queen Bee', (1, 1))  # White; Meant to fail & be skipped
         board.HiveGameBoard().place_piece('Ant', (1, 1))  # White
         board.HiveGameBoard().place_piece('Grasshopper', (-3, -3))  # Black
         board.HiveGameBoard().place_piece('Grasshopper', (2, 1))  # White
@@ -159,7 +155,7 @@ class TestSampleGameWithNoMovement(unittest.TestCase):
 
     def test_l_has_winner(self):
         # Check for a winner
-        expected_winner = 'white'
+        expected_winner = board.HiveGameBoard.WHITE_WINNER
         actual_winner = board.HiveGameBoard().determine_winner()
         self.assertEqual(expected_winner, actual_winner)
 
