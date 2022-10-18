@@ -6,8 +6,8 @@ AI for the Hive Board Game
 """
 # TODO: [Formatting] Add comments for all classes and methods
 import traceback
-import src.game.board as brd
-import src.game.spaces as spcs
+import src.game.board as board
+import src.game.spaces as spaces
 
 import src.game.board_manager as manager
 
@@ -33,21 +33,21 @@ def play_game_with_manager():
 
 def play_game():
     # Initialize the game board
-    board = brd.HiveGameBoard()
+    game_board = board.HiveGameBoard()
 
-    while board.determine_winner() is None:
+    while game_board.determine_winner() is None:
         print('-' * 50)
-        print(board)
-        board.print_board()
+        print(game_board)
+        game_board.print_board()
 
-        if board.is_white_turn():
+        if game_board.is_white_turn():
             current_player = 'white'
         else:
             current_player = 'black'
-        print('Game turn: {}\nPlayer to Move: {}\nPlayer Turn: {}\n'.format(board.turn_number, current_player,
-                                                                            (board.turn_number + 1) // 2))
+        print('Game turn: {}\nPlayer to Move: {}\nPlayer Turn: {}\n'.format(game_board.turn_number, current_player,
+                                                                            (game_board.turn_number + 1) // 2))
 
-        pieces_to_play, locations_to_place, possible_moves = board.get_all_possible_actions()
+        pieces_to_play, locations_to_place, possible_moves = game_board.get_all_possible_actions()
 
         print('{} has the following pieces to play: {}'.format(current_player, pieces_to_play))
         print('{} has the following locations to place a piece: {}'.format(current_player, locations_to_place))
@@ -65,7 +65,7 @@ def play_game():
 
                 if (x_val, y_val) in locations_to_place:
                     print('placing {} at ({}, {})'.format(piece_input, x_val, y_val))
-                    board.place_piece(piece_input, (x_val, y_val))
+                    game_board.place_piece(piece_input, (x_val, y_val))
                 else:
                     print('Invalid location. Please select from the list of available locations to place a piece')
             else:
@@ -81,7 +81,7 @@ def play_game():
                     x_val2 = int(move_location_input[0][1:])
                     y_val2 = int(move_location_input[1][:-1])
 
-                    board.move_piece((x_val, y_val), (x_val2, y_val2))
+                    game_board.move_piece((x_val, y_val), (x_val2, y_val2))
                 else:
                     print('Invalid selection. Please select from the list of available pieces to move')
 
@@ -90,152 +90,152 @@ def play_game():
         except ValueError:
             print('Invalid input: ', traceback.format_exc())
 
-    print('Winner: {}'.format(board.determine_winner()))
+    print('Winner: {}'.format(game_board.determine_winner()))
 
 
 def test_game1():
-    board = brd.HiveGameBoard(new_board=True)
-    # board.place_piece(spcs.Piece.ANT, (0, 0))
-    # board.print_board()
-    # board.place_piece(spcs.Piece.QUEEN_BEE, (-1, 0))
-    # board.print_board()
-    # board.place_piece(spcs.Piece.ANT, (1, 1))
-    # board.print_board()
-    # print(board)
-    # print(board.pieces[(-1, 0)])
-    # print(board.pieces[(0, 0)])
-    # board.move_piece((-1, 0), (0, 1))
-    # board.print_board()
-    # print(board)
+    game_board = board.HiveGameBoard(new_board=True)
+    # game_board.place_piece(spcs.Piece.ANT, (0, 0))
+    # game_board.print_board()
+    # game_board.place_piece(spcs.Piece.QUEEN_BEE, (-1, 0))
+    # game_board.print_board()
+    # game_board.place_piece(spcs.Piece.ANT, (1, 1))
+    # game_board.print_board()
+    # print(game_board)
+    # print(game_board.pieces[(-1, 0)])
+    # print(game_board.pieces[(0, 0)])
+    # game_board.move_piece((-1, 0), (0, 1))
+    # game_board.print_board()
+    # print(game_board)
     #
     # print('-' * 50)
-    # print(board.pieces[(0, 1)])
+    # print(game_board.pieces[(0, 1)])
 
-    PLACE = brd.HiveGameBoard.PLACE_PIECE
-    MOVE = brd.HiveGameBoard.MOVE_PIECE
+    PLACE = board.HiveGameBoard.PLACE_PIECE
+    MOVE = board.HiveGameBoard.MOVE_PIECE
 
-    board.perform_action_helper(PLACE, (0, 0), piece_type=spcs.Piece.BEETLE)
-    print(board)
-    board.print_board()
+    game_board.perform_action_helper(PLACE, (0, 0), piece_type=spaces.Piece.BEETLE)
+    print(game_board)
+    game_board.print_board()
 
-    board.perform_action_helper(PLACE, (-1, -1), piece_type=spcs.Piece.ANT)
-    print(board)
-    board.print_board()
+    game_board.perform_action_helper(PLACE, (-1, -1), piece_type=spaces.Piece.ANT)
+    print(game_board)
+    game_board.print_board()
 
-    board.perform_action_helper(MOVE, (0, 0), new_location=(-1, -1))
+    game_board.perform_action_helper(MOVE, (0, 0), new_location=(-1, -1))
 
-    print(board)
-    board.print_board()
-    print(brd.HiveGameBoard().empty_spaces[(0, 0)])
-    print(brd.HiveGameBoard().empty_spaces[(-1, 0)])
+    print(game_board)
+    game_board.print_board()
+    print(board.HiveGameBoard().empty_spaces[(0, 0)])
+    print(board.HiveGameBoard().empty_spaces[(-1, 0)])
 
 
 def test_game2():
-    board = brd.HiveGameBoard(new_board=True)
-    PLACE = brd.HiveGameBoard.PLACE_PIECE
-    MOVE = brd.HiveGameBoard.MOVE_PIECE
+    game_board = board.HiveGameBoard(new_board=True)
+    PLACE = board.HiveGameBoard.PLACE_PIECE
+    MOVE = board.HiveGameBoard.MOVE_PIECE
 
-    board.perform_action_helper(PLACE, (0, 0), piece_type=spcs.Piece.ANT)
-    board.print_board()
-    board.perform_action_helper(PLACE, (0, 1), piece_type=spcs.Piece.BEETLE)
-    board.print_board()
-    board.perform_action_helper(PLACE, (0, -1), piece_type=spcs.Piece.QUEEN_BEE)
-    board.print_board()
-    board.perform_action_helper(MOVE, (0, 1), new_location=(0, 0))
-    board.print_board()
-    board.perform_action_helper(MOVE, (0, -1), new_location=(-1, -1))
-    board.print_board()
-    board.perform_action_helper(MOVE, (0, 0), new_location=(-1, -1))
-    board.print_board()
-    board.perform_action_helper(PLACE, (0, 1), piece_type=spcs.Piece.ANT)
-    board.print_board()
-    board.perform_action_helper(PLACE, (-2, -2), piece_type=spcs.Piece.QUEEN_BEE)
-    board.print_board()
-    board.perform_action_helper(PLACE, (0, 2), piece_type=spcs.Piece.GRASSHOPPER)
-    board.print_board()
-    board.perform_action_helper(PLACE, (-1, -2), piece_type=spcs.Piece.ANT)
-    board.print_board()
-    board.perform_action_helper(PLACE, (0, 3), piece_type=spcs.Piece.GRASSHOPPER)
-    board.print_board()
-    board.perform_action_helper(PLACE, (-2, -1), piece_type=spcs.Piece.BEETLE)
-    board.print_board()
-    board.perform_action_helper(PLACE, (0, 4), piece_type=spcs.Piece.ANT)
-    board.print_board()
-    board.perform_action_helper(MOVE, (-2, -1), new_location=(-1, -1))
-    board.print_board()
-    board.perform_action_helper(MOVE, (0, 2), new_location=(0, -1))
-    board.print_board()
+    game_board.perform_action_helper(PLACE, (0, 0), piece_type=spaces.Piece.ANT)
+    game_board.print_board()
+    game_board.perform_action_helper(PLACE, (0, 1), piece_type=spaces.Piece.BEETLE)
+    game_board.print_board()
+    game_board.perform_action_helper(PLACE, (0, -1), piece_type=spaces.Piece.QUEEN_BEE)
+    game_board.print_board()
+    game_board.perform_action_helper(MOVE, (0, 1), new_location=(0, 0))
+    game_board.print_board()
+    game_board.perform_action_helper(MOVE, (0, -1), new_location=(-1, -1))
+    game_board.print_board()
+    game_board.perform_action_helper(MOVE, (0, 0), new_location=(-1, -1))
+    game_board.print_board()
+    game_board.perform_action_helper(PLACE, (0, 1), piece_type=spaces.Piece.ANT)
+    game_board.print_board()
+    game_board.perform_action_helper(PLACE, (-2, -2), piece_type=spaces.Piece.QUEEN_BEE)
+    game_board.print_board()
+    game_board.perform_action_helper(PLACE, (0, 2), piece_type=spaces.Piece.GRASSHOPPER)
+    game_board.print_board()
+    game_board.perform_action_helper(PLACE, (-1, -2), piece_type=spaces.Piece.ANT)
+    game_board.print_board()
+    game_board.perform_action_helper(PLACE, (0, 3), piece_type=spaces.Piece.GRASSHOPPER)
+    game_board.print_board()
+    game_board.perform_action_helper(PLACE, (-2, -1), piece_type=spaces.Piece.BEETLE)
+    game_board.print_board()
+    game_board.perform_action_helper(PLACE, (0, 4), piece_type=spaces.Piece.ANT)
+    game_board.print_board()
+    game_board.perform_action_helper(MOVE, (-2, -1), new_location=(-1, -1))
+    game_board.print_board()
+    game_board.perform_action_helper(MOVE, (0, 2), new_location=(0, -1))
+    game_board.print_board()
 
-    print(board)
-    print(board.pieces[(0, -1)])
-    print(board.pieces[(0, 3)])
+    print(game_board)
+    print(game_board.pieces[(0, -1)])
+    print(game_board.pieces[(0, 3)])
 
 
 def test_game3():
-    board = brd.HiveGameBoard(new_board=True)
-    PLACE = brd.HiveGameBoard.PLACE_PIECE
-    MOVE = brd.HiveGameBoard.MOVE_PIECE
+    game_board = board.HiveGameBoard(new_board=True)
+    PLACE = board.HiveGameBoard.PLACE_PIECE
+    MOVE = board.HiveGameBoard.MOVE_PIECE
 
-    board.perform_action_helper(PLACE, (0, 0), piece_type=spcs.Piece.GRASSHOPPER)
-    board.print_board()
+    game_board.perform_action_helper(PLACE, (0, 0), piece_type=spaces.Piece.GRASSHOPPER)
+    game_board.print_board()
     print('-' * 10)
-    board.perform_action_helper(PLACE, (1, 0), piece_type=spcs.Piece.GRASSHOPPER)
-    board.print_board()
+    game_board.perform_action_helper(PLACE, (1, 0), piece_type=spaces.Piece.GRASSHOPPER)
+    game_board.print_board()
     print('-' * 10)
-    board.perform_action_helper(PLACE, (-1, 0), piece_type=spcs.Piece.ANT)
-    board.print_board()
+    game_board.perform_action_helper(PLACE, (-1, 0), piece_type=spaces.Piece.ANT)
+    game_board.print_board()
     print('-' * 10)
-    board.perform_action_helper(MOVE, (1, 0), new_location=(-2, 0))
-    board.print_board()
+    game_board.perform_action_helper(MOVE, (1, 0), new_location=(-2, 0))
+    game_board.print_board()
     print('-' * 10)
 
-    print(board)
-    # print(board.pieces[(0, 0)])
-    # print(board.pieces[(1, 0)])
-    # print(board.pieces[(-1, 0)])
+    print(game_board)
+    # print(game_board.pieces[(0, 0)])
+    # print(game_board.pieces[(1, 0)])
+    # print(game_board.pieces[(-1, 0)])
 
 
 def test_game4():
-    board = brd.HiveGameBoard(new_board=True)
-    PLACE = brd.HiveGameBoard.PLACE_PIECE
-    MOVE = brd.HiveGameBoard.MOVE_PIECE
+    game_board = board.HiveGameBoard(new_board=True)
+    PLACE = board.HiveGameBoard.PLACE_PIECE
+    MOVE = board.HiveGameBoard.MOVE_PIECE
 
-    board.perform_action_helper(PLACE, (0, 0), piece_type=spcs.Piece.BEETLE)
-    board.print_board()
+    game_board.perform_action_helper(PLACE, (0, 0), piece_type=spaces.Piece.BEETLE)
+    game_board.print_board()
     print('-' * 10)
-    board.perform_action_helper(PLACE, (1, 0), piece_type=spcs.Piece.GRASSHOPPER)
-    board.print_board()
+    game_board.perform_action_helper(PLACE, (1, 0), piece_type=spaces.Piece.GRASSHOPPER)
+    game_board.print_board()
     print('-' * 10)
-    board.perform_action_helper(PLACE, (-1, -1), piece_type=spcs.Piece.SPIDER)
-    board.print_board()
+    game_board.perform_action_helper(PLACE, (-1, -1), piece_type=spaces.Piece.SPIDER)
+    game_board.print_board()
     print('-' * 10)
-    print(board)
-    board.perform_action_helper(PLACE, (2, 0), piece_type=spcs.Piece.SPIDER)
-    board.print_board()
+    print(game_board)
+    game_board.perform_action_helper(PLACE, (2, 0), piece_type=spaces.Piece.SPIDER)
+    game_board.print_board()
     print('-' * 10)
-    print(board)
-    board.perform_action_helper(MOVE, (-1, -1), new_location=(2, -1))
-    print(board)
-    board.print_board()
+    print(game_board)
+    game_board.perform_action_helper(MOVE, (-1, -1), new_location=(2, -1))
+    print(game_board)
+    game_board.print_board()
     print('-' * 10)
-    board.perform_action_helper(PLACE, (3, 1), piece_type=spcs.Piece.GRASSHOPPER)
-    print(board)
-    board.print_board()
+    game_board.perform_action_helper(PLACE, (3, 1), piece_type=spaces.Piece.GRASSHOPPER)
+    print(game_board)
+    game_board.print_board()
     print('-' * 10)
-    board.perform_action_helper(PLACE, (-1, 0), piece_type=spcs.Piece.QUEEN_BEE)
-    print(board)
-    board.print_board()
+    game_board.perform_action_helper(PLACE, (-1, 0), piece_type=spaces.Piece.QUEEN_BEE)
+    print(game_board)
+    game_board.print_board()
     print('-' * 10)
-    board.perform_action_helper(MOVE, (3, 1), new_location=(1, -1))
-    print(board)
-    board.print_board()
+    game_board.perform_action_helper(MOVE, (3, 1), new_location=(1, -1))
+    print(game_board)
+    game_board.print_board()
     print('-' * 10)
 
 
 def test_sliding_rules():
     # This is copied from test/test_sliding_rules_no_mvt.py
 
-    game_board = brd.HiveGameBoard(new_board=True)
+    game_board = board.HiveGameBoard(new_board=True)
 
     # Making sure there are enough pieces to be placed for my test cases
     game_board.white_pieces_to_place = {
@@ -271,12 +271,12 @@ def test_sliding_rules():
     print(f'Number of Empty Spaces on the board: {len(game_board.empty_spaces)}')
 
     for piece in game_board.pieces.values():
-        if piece.name == spcs.Piece.ANT:
+        if piece.name == spaces.Piece.ANT:
             print(f'Number of Empty Spaces Ant at {piece.location} can reach: {len(piece.possible_moves)}')
 
     print(f'Number of prevention sets: {len(game_board.ant_mvt_prevention_sets)}')
 
-    game_board.perform_action_helper(brd.HiveGameBoard.PLACE_PIECE, (2, 0), piece_type=spcs.Piece.ANT)
+    game_board.perform_action_helper(board.HiveGameBoard.PLACE_PIECE, (2, 0), piece_type=spaces.Piece.ANT)
 
     print('-' * 50)
     game_board.print_board()
@@ -285,7 +285,7 @@ def test_sliding_rules():
     print(f'Number of Empty Spaces on the board: {len(game_board.empty_spaces)}')
 
     for piece in game_board.pieces.values():
-        if piece.name == spcs.Piece.ANT:
+        if piece.name == spaces.Piece.ANT:
             print(f'Number of Empty Spaces Ant at {piece.location} can reach: {len(piece.possible_moves)}')
 
     print(f'Number of prevention sets: {len(game_board.ant_mvt_prevention_sets)}')
@@ -302,34 +302,34 @@ def test_sliding_rules():
 
 def test_game5():
     test_sliding_rules()
-    game_board = brd.HiveGameBoard()
-    game_board.perform_action_helper(brd.HiveGameBoard.PLACE_PIECE, (-3, 0), piece_type=spcs.Piece.ANT)
+    game_board = board.HiveGameBoard()
+    game_board.perform_action_helper(board.HiveGameBoard.PLACE_PIECE, (-3, 0), piece_type=spaces.Piece.ANT)
     print(game_board)
     game_board.print_board()
     print('-' * 10)
-    game_board.perform_action_helper(brd.HiveGameBoard.MOVE_PIECE, (2, 0), new_location=(1, 0))
+    game_board.perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (2, 0), new_location=(1, 0))
     print(game_board)
     game_board.print_board()
     print('-' * 10)
-    game_board.perform_action_helper(brd.HiveGameBoard.MOVE_PIECE, (-3, 0), new_location=(-1, -3))
+    game_board.perform_action_helper(board.HiveGameBoard.MOVE_PIECE, (-3, 0), new_location=(-1, -3))
     print(game_board)
     game_board.print_board()
     print('-' * 10)
-    game_board.perform_action_helper(brd.HiveGameBoard.PLACE_PIECE, (2, 0), piece_type=spcs.Piece.ANT)
+    game_board.perform_action_helper(board.HiveGameBoard.PLACE_PIECE, (2, 0), piece_type=spaces.Piece.ANT)
     print(game_board)
     game_board.print_board()
     print('-' * 10)
 
 
 def demo_game():
-    move = brd.HiveGameBoard.MOVE_PIECE
-    place = brd.HiveGameBoard.PLACE_PIECE
+    move = board.HiveGameBoard.MOVE_PIECE
+    place = board.HiveGameBoard.PLACE_PIECE
 
-    ant = spcs.Piece.ANT
-    beetle = spcs.Piece.BEETLE
-    grasshopper = spcs.Piece.GRASSHOPPER
-    queen_bee = spcs.Piece.QUEEN_BEE
-    spider = spcs.Piece.SPIDER
+    ant = spaces.Piece.ANT
+    beetle = spaces.Piece.BEETLE
+    grasshopper = spaces.Piece.GRASSHOPPER
+    queen_bee = spaces.Piece.QUEEN_BEE
+    spider = spaces.Piece.SPIDER
 
     actions = [
         (place, (0, 0), grasshopper),
@@ -339,7 +339,6 @@ def demo_game():
         (place, (1, 0), ant),
         (place, (0, 3), grasshopper),
         (place, (1, -1), queen_bee),
-
         (move, (0, 3), (0, -2)),
         (move, (1, 0), (0, 3)),
         (move, (0, -2), (2, 0)),
@@ -362,17 +361,16 @@ def demo_game():
         (move, (-1, 3), (-1, 1))
     ]
 
-    board = brd.HiveGameBoard(new_board=True)
+    game_board = board.HiveGameBoard(new_board=True)
     for action in actions:
-        if board.determine_winner() is not None:
+        if game_board.determine_winner() is not None:
             break
-        # print('\n'*100)
-        board.perform_action(action)
-        board.print_board()
-        # time.sleep(2)
-        # input()
+        # print(game_board.get_action_list())
 
-    print(f'The winner is: {board.determine_winner()}')
+        game_board.perform_action(action)
+        game_board.print_board()
+
+    print(f'The winner is: {game_board.determine_winner()}')
 
 
 if __name__ == '__main__':
