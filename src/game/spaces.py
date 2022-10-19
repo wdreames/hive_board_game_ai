@@ -304,7 +304,7 @@ class EmptySpace(HexSpace):
                     # If a prevention set has already been found, union them
                     if prevention_set_index > -1:
                         prevention_set_index = self.board.union_ant_movement_prevention_sets(current_index,
-                                                                                                        prevention_set_index)
+                                                                                             prevention_set_index)
                     # Otherwise, store the current index
                     else:
                         prevention_set_index = current_index
@@ -315,11 +315,12 @@ class EmptySpace(HexSpace):
             # If 1+ connected free spaces, clear connected prevention sets
             if found_free_space and prevention_set_index > -1:
                 self.board.clear_ant_movement_prevention_set(prevention_set_index)
-            # If only 1 connected prevention set, join it
-            elif prevention_set_index > -1:
+            # If connected to a prevention set, join it
+            else:
                 self.board.ant_mvt_prevention_sets[prevention_set_index].add(self.location)
-            elif not found_free_space:
-                raise RuntimeError('Error! This line should never be called!')
+            # # If 2 connected prevention sets, join one and union them both
+            # elif not found_free_space:
+            #     raise RuntimeError('Error! This line should never be called!')
 
             self.prepare_for_update()
 
@@ -565,7 +566,7 @@ class Piece(HexSpace):
                     if space1_prevention_index > -1 and space2_prevention_index > -1:
                         if space1_prevention_index != space2_prevention_index:
                             self.board.union_ant_movement_prevention_sets(space1_prevention_index,
-                                                                                     space2_prevention_index)
+                                                                          space2_prevention_index)
                     # Only one is an empty space
                     elif space1_prevention_index > -1:
                         self.board.clear_ant_movement_prevention_set(space1_prevention_index)
@@ -573,7 +574,8 @@ class Piece(HexSpace):
                         self.board.clear_ant_movement_prevention_set(space2_prevention_index)
 
         # Create a new empty space here
-        EmptySpace(self.board, self.x, self.y, self.connected_pieces, self.connected_empty_spaces, self.sliding_prevented_to,
+        EmptySpace(self.board, self.x, self.y, self.connected_pieces, self.connected_empty_spaces,
+                   self.sliding_prevented_to,
                    self.cannot_move_to)
 
         self.update_one_hive_rule(self_is_placing=False)
@@ -727,9 +729,9 @@ class Piece(HexSpace):
                 # Split the prevention sets
                 self.board.remove_from_ant_movement_prevention_set(space1_loc, space1_prevention_index)
                 self.board.add_to_ant_movement_prevention_set(space1_loc)
-            else:
-                # TODO: Remove this line after testing
-                raise RuntimeError('Error! This line should never be executed!')
+            # else:
+            #     # TODO: Remove this line after testing
+            #     raise RuntimeError('Error! This line should never be executed!')
 
     # TODO: [Formatting] Put this function into a utils class
     @staticmethod
