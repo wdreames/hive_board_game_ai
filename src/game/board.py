@@ -112,6 +112,22 @@ class HiveGameBoard:
         self.white_queen_location = None
         self.black_queen_location = None
 
+        # Used for evaluating state
+        self.num_white_free_pieces = {
+            Piece.ANT: 0,
+            Piece.BEETLE: 0,
+            Piece.GRASSHOPPER: 0,
+            Piece.QUEEN_BEE: 0,
+            Piece.SPIDER: 0
+        }
+        self.num_black_free_pieces = {
+            Piece.ANT: 0,
+            Piece.BEETLE: 0,
+            Piece.GRASSHOPPER: 0,
+            Piece.QUEEN_BEE: 0,
+            Piece.SPIDER: 0
+        }
+
         self.spaces_requiring_updates = set()
         self.empty_spaces_requiring_deletion = set()
 
@@ -128,8 +144,6 @@ class HiveGameBoard:
         # Create board with one empty square
         EmptySpace(self, 0, 0)
         self.white_locations_to_place = {(0, 0)}
-
-        # return cls.instance
 
     def perform_action(self, action):
         action_type = action[0]
@@ -645,6 +659,66 @@ class HiveGameBoard:
         else:
             return None
 
+    # TODO: Documentation
+    def evaluate_state(self):
+        # Utitlity function:
+        # 6 around enemy QB: +10000
+        # 5 around enemy QB: +10
+        # enemy QB can move: -10
+        # Free Ant: +3
+        # Free Beetle: +2
+        # Free Grasshopper: +2
+        # Free Spider: +2
+        # Enemy Free Ant: -3
+        # Enemy Free Beetle: -2
+        # Enemy Free Spider: -2
+        # Enemy Free Spider: -2
+
+        if self.is_white_turn():
+            num_around_enemy_qb = len(self.pieces[self.black_queen_location].connected_pieces)
+            enemy_qb_can_move = 1 if self.black_queen_location in self.black_possible_moves else 0
+
+            player_free_pieces = self.num_white_free_pieces
+            enemy_free_pieces = self.num_black_free_pieces
+        else:
+            num_around_enemy_qb = len(self.pieces[self.white_queen_location].connected_pieces)
+            enemy_qb_can_move = 1 if self.white_queen_location in self.black_possible_moves else 0
+
+            player_free_pieces = self.num_black_free_pieces
+            enemy_free_pieces = self.num_white_free_pieces
+
+        utilities = [
+            1 if num_around_enemy_qb == 6 else 0,
+            1 if num_around_enemy_qb == 5 else 0,
+            enemy_qb_can_move,
+
+            player_free_pieces[Piece.ANT],
+            player_free_pieces[Piece.BEETLE],
+            player_free_pieces[Piece.GRASSHOPPER],
+            player_free_pieces[Piece.SPIDER],
+
+            enemy_free_pieces[Piece.ANT],
+            enemy_free_pieces[Piece.BEETLE],
+            enemy_free_pieces[Piece.GRASSHOPPER],
+            enemy_free_pieces[Piece.SPIDER],
+        ]
+        values = [
+            10000,
+            10,
+            -10,
+            3,
+            2,
+            2,
+            2,
+            -3,
+            -2,
+            -2,
+            -2
+        ]
+
+        evaluation = sum([utility * value for utility, value in zip(utilities, values)])
+        return evaluation
+
     # TODO: [UI] This is a temporary solution. Do not use this in the final product...
     def print_board(self):
         if not self.pieces:
@@ -689,6 +763,8 @@ class HiveGameBoard:
         return_str += 'black_locations_to_place: {}\n'.format(self.black_locations_to_place)
         return_str += 'white_possible_moves: {}\n'.format(self.white_possible_moves)
         return_str += 'black_possible_moves: {}\n'.format(self.black_possible_moves)
+        return_str += f'num_white_free_pieces: {self.num_white_free_pieces}\n'
+        return_str += f'num_black_free_pieces: {self.num_black_free_pieces}\n'
         return_str += 'white_queen_location: {}\n'.format(self.white_queen_location)
         return_str += 'black_queen_location: {}\n'.format(self.black_queen_location)
         return_str += 'pieces: {}\n'.format(

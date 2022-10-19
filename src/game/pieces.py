@@ -7,6 +7,11 @@ class Ant(Piece):
         super().__init__(board_instance, x, y, is_white)
         self.name = Piece.ANT
 
+        if self.is_white:
+            self.board.num_white_free_pieces[self.name] += 1
+        else:
+            self.board.num_black_free_pieces[self.name] += 1
+
     def remove(self):
         super().remove()
         self.board.ant_locations.remove(self.location)
@@ -57,6 +62,11 @@ class Beetle(Piece):
 
         super().__init__(board_instance, x, y, is_white)
         self.name = Piece.BEETLE
+
+        if self.is_white:
+            self.board.num_white_free_pieces[self.name] += 1
+        else:
+            self.board.num_black_free_pieces[self.name] += 1
 
     def calc_possible_moves(self):
         # Can move to any space that is possible to move to (including on top of pieces)
@@ -210,6 +220,11 @@ class Grasshopper(Piece):
         super().__init__(board_instance, x, y, is_white)
         self.name = Piece.GRASSHOPPER
 
+        if self.is_white:
+            self.board.num_white_free_pieces[self.name] += 1
+        else:
+            self.board.num_black_free_pieces[self.name] += 1
+
     def update(self):
         # Add any relevant paths
         if self.initialize_paths:
@@ -336,6 +351,11 @@ class QueenBee(Piece):
         super().__init__(board_instance, x, y, is_white)
         self.name = Piece.QUEEN_BEE
 
+        if self.is_white:
+            self.board.num_white_free_pieces[self.name] += 1
+        else:
+            self.board.num_black_free_pieces[self.name] += 1
+
     def update(self):
         super().update()
         self.update_board_location()
@@ -382,6 +402,11 @@ class Spider(Piece):
 
         super().__init__(board_instance, x, y, is_white)
         self.name = Piece.SPIDER
+
+        if self.is_white:
+            self.board.num_white_free_pieces[self.name] += 1
+        else:
+            self.board.num_black_free_pieces[self.name] += 1
 
     def get_new_path_id(self):
         """

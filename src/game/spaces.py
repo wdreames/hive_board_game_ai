@@ -772,14 +772,26 @@ class Piece(HexSpace):
         """
         Locks this Piece so that it cannot move.
         """
-        self.can_move = False
+        if self.can_move:
+            self.can_move = False
+
+            if self.is_white:
+                self.board.num_white_free_pieces[self.name] -= 1
+            else:
+                self.board.num_black_free_pieces[self.name] -= 1
         self.calc_possible_moves()
 
     def unlock(self):
         """
         Unlocks the Piece so that it can move.
         """
-        self.can_move = True
+        if not self.can_move:
+            self.can_move = True
+
+            if self.is_white:
+                self.board.num_white_free_pieces[self.name] += 1
+            else:
+                self.board.num_black_free_pieces[self.name] += 1
         self.calc_possible_moves()
 
     @abstractmethod

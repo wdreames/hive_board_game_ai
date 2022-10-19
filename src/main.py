@@ -94,9 +94,13 @@ def test_successive_states():
     current_state.print_board()
     for action in current_state.get_action_list():
         successive_state = board_manager.get_successor(current_state, action)
+        print(successive_state)
         successive_state.print_board()
         for successive_action in successive_state.get_action_list():
-            board_manager.get_successor(successive_state, successive_action).print_board()
+            successive_state2 = board_manager.get_successor(successive_state, successive_action)
+            print(successive_state2)
+            successive_state2.print_board()
+        break
     current_state.print_board()
 
 
@@ -306,10 +310,11 @@ def test_sliding_rules():
 
     print(f'Possible moves for Ant at (-2, 0): {game_board.pieces[(-2, 0)].possible_moves}')
 
+    return game_board
+
 
 def test_game5():
-    test_sliding_rules()
-    game_board = board.HiveGameBoard()
+    game_board = test_sliding_rules()
     game_board.perform_action_helper(board.HiveGameBoard.PLACE_PIECE, (-3, 0), piece_type=spaces.Piece.ANT)
     print(game_board)
     game_board.print_board()
@@ -384,4 +389,5 @@ if __name__ == '__main__':
     # test_sliding_rules()
     # demo_game()
     # play_game_with_manager()
-    test_successive_states()
+    # test_successive_states()
+    test_game5()
