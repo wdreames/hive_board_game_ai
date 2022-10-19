@@ -7,7 +7,7 @@ class TestGrasshopper(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.board = game_board.HiveGameBoard(new_board=True)
+        cls.board = game_board.HiveGameBoard()
 
         cls.board.perform_action_helper(cls.board.PLACE_PIECE, (0, 0), piece_type=spcs.Piece.GRASSHOPPER)
         cls.board.perform_action_helper(cls.board.PLACE_PIECE, (1, 0), piece_type=spcs.Piece.GRASSHOPPER)
