@@ -6,7 +6,7 @@ import src.game.spaces as spaces
 class TestWhitePlacementErrors(unittest.TestCase):
 
     def test_no_queen_turn_4(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.ANT)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.ANT)
@@ -24,7 +24,7 @@ class TestWhitePlacementErrors(unittest.TestCase):
 
     def test_invalid_piece_type(self):
         bad_piece_type = 'BadPiece'
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         self.assertRaisesRegex(
             RuntimeError,
             f'Illegal action. {bad_piece_type} is not a valid type of piece.',
@@ -35,7 +35,7 @@ class TestWhitePlacementErrors(unittest.TestCase):
         )
 
     def test_piece_not_available(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.BEETLE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.BEETLE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.BEETLE)
@@ -50,7 +50,7 @@ class TestWhitePlacementErrors(unittest.TestCase):
         )
 
     def test_invalid_location(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.BEETLE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.BEETLE)
 
@@ -69,7 +69,7 @@ class TestWhitePlacementErrors(unittest.TestCase):
 class TestWhiteMoveErrors(unittest.TestCase):
 
     def test_cannot_move_without_queen(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.SPIDER)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.ANT)
         self.assertRaisesRegex(
@@ -82,7 +82,7 @@ class TestWhiteMoveErrors(unittest.TestCase):
         )
 
     def test_attempt_black_move_as_white(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.QUEEN_BEE)
         self.assertRaisesRegex(
@@ -95,7 +95,7 @@ class TestWhiteMoveErrors(unittest.TestCase):
         )
 
     def test_one_hive_rule(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.ANT)
@@ -110,7 +110,7 @@ class TestWhiteMoveErrors(unittest.TestCase):
         )
 
     def test_invalid_move(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.QUEEN_BEE)
         self.assertRaisesRegex(
@@ -126,7 +126,7 @@ class TestWhiteMoveErrors(unittest.TestCase):
 class TestBlackPlacementErrors(unittest.TestCase):
 
     def test_no_queen_turn_4(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.ANT)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.ANT)
@@ -145,7 +145,7 @@ class TestBlackPlacementErrors(unittest.TestCase):
 
     def test_invalid_piece_type(self):
         bad_piece_type = 'BadPiece'
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.QUEEN_BEE)
         self.assertRaisesRegex(
             RuntimeError,
@@ -157,7 +157,7 @@ class TestBlackPlacementErrors(unittest.TestCase):
         )
 
     def test_piece_not_available(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.BEETLE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.BEETLE)
@@ -171,7 +171,7 @@ class TestBlackPlacementErrors(unittest.TestCase):
         )
 
     def test_invalid_location(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.BEETLE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.BEETLE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.BEETLE)
@@ -191,7 +191,7 @@ class TestBlackPlacementErrors(unittest.TestCase):
 class TestBlackMoveErrors(unittest.TestCase):
 
     def test_cannot_move_without_queen(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.SPIDER)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.ANT)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.SPIDER)
@@ -205,7 +205,7 @@ class TestBlackMoveErrors(unittest.TestCase):
         )
 
     def test_attempt_white_move_as_black(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.ANT)
@@ -219,7 +219,7 @@ class TestBlackMoveErrors(unittest.TestCase):
         )
 
     def test_one_hive_rule(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.ANT)
@@ -235,7 +235,7 @@ class TestBlackMoveErrors(unittest.TestCase):
         )
 
     def test_invalid_move(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 0), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.QUEEN_BEE)
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.ANT)
@@ -252,7 +252,7 @@ class TestBlackMoveErrors(unittest.TestCase):
 class TestPerformBadAction(unittest.TestCase):
 
     def test_perform_bad_action(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
 
         self.assertRaisesRegex(
             ValueError,
