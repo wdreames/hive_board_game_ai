@@ -8,6 +8,7 @@ from src.game.pieces import Grasshopper
 from src.game.pieces import QueenBee
 from src.game.pieces import Spider
 
+
 class BoardManager:
 
     def __new__(cls, new_manager=False):
@@ -38,7 +39,6 @@ class BoardManager:
             board_instance = self.get_board()
         successor_board = copy.deepcopy(board_instance)
         successor_board.perform_action(action)
-        self.set_board(successor_board)
         return successor_board
 
     def get_action_list(self):

@@ -90,15 +90,14 @@ def play_game_with_manager():
 def test_successive_states():
     board_manager = board.BoardManager()
 
-    action = (board.HiveGameBoard.PLACE_PIECE, (0, 0), spaces.Piece.ANT)
-    next_state = board_manager.get_successor(action=action)
-    next_state.print_board()
-
-    action = (board.HiveGameBoard.PLACE_PIECE, (0, 1), spaces.Piece.BEETLE)
-    next_state2 = board_manager.get_successor(board_instance=next_state, action=action)
-    next_state2.print_board()
-
-    next_state.print_board()
+    current_state = board_manager.get_board()
+    current_state.print_board()
+    for action in current_state.get_action_list():
+        successive_state = board_manager.get_successor(current_state, action)
+        successive_state.print_board()
+        for successive_action in successive_state.get_action_list():
+            board_manager.get_successor(successive_state, successive_action).print_board()
+    current_state.print_board()
 
 
 def test_game1():
