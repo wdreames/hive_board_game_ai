@@ -10,21 +10,6 @@ import src.game.board as board
 import src.game.spaces as spaces
 
 
-def play_game_with_manager():
-    board_manager = board.BoardManager()
-
-    while board_manager.get_board().determine_winner() is None:
-        board_manager.get_board().print_board()
-        actions = board_manager.get_action_list()
-        randIndex = random.randint(0, len(actions) - 1)
-        board_manager.perform_action(actions[randIndex])
-
-    board_manager.get_board().print_board()
-    print(board_manager.get_action_list())
-
-    print(f'Total number of actions: {board_manager.get_board().turn_number}')
-
-
 def play_game():
     # Initialize the game board
     game_board = board.HiveGameBoard()
@@ -87,8 +72,37 @@ def play_game():
     print('Winner: {}'.format(game_board.determine_winner()))
 
 
+def play_game_with_manager():
+    board_manager = board.BoardManager()
+
+    while board_manager.get_board().determine_winner() is None:
+        board_manager.get_board().print_board()
+        actions = board_manager.get_action_list()
+        randIndex = random.randint(0, len(actions) - 1)
+        board_manager.perform_action(actions[randIndex])
+
+    board_manager.get_board().print_board()
+    print(board_manager.get_action_list())
+
+    print(f'Total number of actions: {board_manager.get_board().turn_number}')
+
+
+def test_successive_states():
+    board_manager = board.BoardManager()
+
+    action = (board.HiveGameBoard.PLACE_PIECE, (0, 0), spaces.Piece.ANT)
+    next_state = board_manager.get_successor(action=action)
+    next_state.print_board()
+
+    action = (board.HiveGameBoard.PLACE_PIECE, (0, 1), spaces.Piece.BEETLE)
+    next_state2 = board_manager.get_successor(board_instance=next_state, action=action)
+    next_state2.print_board()
+
+    next_state.print_board()
+
+
 def test_game1():
-    game_board = board.HiveGameBoard(new_board=True)
+    game_board = board.HiveGameBoard()
     # game_board.place_piece(spcs.Piece.ANT, (0, 0))
     # game_board.print_board()
     # game_board.place_piece(spcs.Piece.QUEEN_BEE, (-1, 0))
@@ -125,7 +139,7 @@ def test_game1():
 
 
 def test_game2():
-    game_board = board.HiveGameBoard(new_board=True)
+    game_board = board.HiveGameBoard()
     PLACE = board.HiveGameBoard.PLACE_PIECE
     MOVE = board.HiveGameBoard.MOVE_PIECE
 
@@ -166,7 +180,7 @@ def test_game2():
 
 
 def test_game3():
-    game_board = board.HiveGameBoard(new_board=True)
+    game_board = board.HiveGameBoard()
     PLACE = board.HiveGameBoard.PLACE_PIECE
     MOVE = board.HiveGameBoard.MOVE_PIECE
 
@@ -190,7 +204,7 @@ def test_game3():
 
 
 def test_game4():
-    game_board = board.HiveGameBoard(new_board=True)
+    game_board = board.HiveGameBoard()
     PLACE = board.HiveGameBoard.PLACE_PIECE
     MOVE = board.HiveGameBoard.MOVE_PIECE
 
@@ -229,7 +243,7 @@ def test_game4():
 def test_sliding_rules():
     # This is copied from test/test_sliding_rules_no_mvt.py
 
-    game_board = board.HiveGameBoard(new_board=True)
+    game_board = board.HiveGameBoard()
 
     # Making sure there are enough pieces to be placed for my test cases
     game_board.white_pieces_to_place = {
@@ -355,7 +369,7 @@ def demo_game():
         (move, (-1, 3), (-1, 1))
     ]
 
-    game_board = board.HiveGameBoard(new_board=True)
+    game_board = board.HiveGameBoard()
     for action in actions:
         if game_board.determine_winner() is not None:
             break
@@ -368,5 +382,7 @@ def demo_game():
 
 
 if __name__ == '__main__':
+    # test_sliding_rules()
     # demo_game()
-    play_game_with_manager()
+    # play_game_with_manager()
+    test_successive_states()

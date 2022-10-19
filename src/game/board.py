@@ -1,3 +1,5 @@
+import copy
+
 from src.game.spaces import EmptySpace
 from src.game.spaces import Piece
 from src.game.pieces import Ant
@@ -5,7 +7,6 @@ from src.game.pieces import Beetle
 from src.game.pieces import Grasshopper
 from src.game.pieces import QueenBee
 from src.game.pieces import Spider
-
 
 class BoardManager:
 
@@ -30,10 +31,15 @@ class BoardManager:
     def get_board(self):
         return self.current_board
 
-    def get_successor(self, board_instance, action):
-        successor_board = board_instance.copy()
+    def get_successor(self, board_instance=None, action=None):
+        if action is None:
+            return self.get_board()
+        if board_instance is None:
+            board_instance = self.get_board()
+        successor_board = copy.deepcopy(board_instance)
         successor_board.perform_action(action)
         self.set_board(successor_board)
+        return successor_board
 
     def get_action_list(self):
         return self.root_board.get_action_list()
@@ -65,7 +71,7 @@ class HiveGameBoard:
     #       - Maybe have an instance=board_instance parameter?
     #       - Or I could have a separate BoardManager class that uses Singleton, but can control which board instance
     #       to return when requested.
-    def __new__(cls, new_board=False):
+    def __init__(self):
         """
         Method used to get an instance of the game board. A singleton design pattern is used here so the class is
         only initialized the first time it is called.
@@ -78,52 +84,52 @@ class HiveGameBoard:
         # TODO: [NOTE] I'll probably need to trash the singleton design pattern when I start simulating moves...
         # TODO: [NOTE] Although I could create a main class as a singleton and have the same effect
         # Singleton design pattern
-        if not hasattr(cls, 'instance') or new_board:
-            cls.instance = super(HiveGameBoard, cls).__new__(cls)
+        # if not hasattr(cls, 'instance') or new_board:
+        #     cls.instance = super(HiveGameBoard, cls).__new__(cls)
 
-            cls.pieces = dict()
-            cls.empty_spaces = dict()
-            cls.white_pieces_to_place = {
-                Piece.ANT: 3,
-                Piece.BEETLE: 2,
-                Piece.GRASSHOPPER: 3,
-                Piece.QUEEN_BEE: 1,
-                Piece.SPIDER: 2
-            }
-            cls.black_pieces_to_place = {
-                Piece.ANT: 3,
-                Piece.BEETLE: 2,
-                Piece.GRASSHOPPER: 3,
-                Piece.QUEEN_BEE: 1,
-                Piece.SPIDER: 2
-            }
+        self.pieces = dict()
+        self.empty_spaces = dict()
+        self.white_pieces_to_place = {
+            Piece.ANT: 3,
+            Piece.BEETLE: 2,
+            Piece.GRASSHOPPER: 3,
+            Piece.QUEEN_BEE: 1,
+            Piece.SPIDER: 2
+        }
+        self.black_pieces_to_place = {
+            Piece.ANT: 3,
+            Piece.BEETLE: 2,
+            Piece.GRASSHOPPER: 3,
+            Piece.QUEEN_BEE: 1,
+            Piece.SPIDER: 2
+        }
 
-            cls.turn_number = 1
-            cls.white_locations_to_place = set()
-            cls.black_locations_to_place = set()
-            cls.white_possible_moves = dict()
-            cls.black_possible_moves = dict()
-            cls.white_queen_location = None
-            cls.black_queen_location = None
+        self.turn_number = 1
+        self.white_locations_to_place = set()
+        self.black_locations_to_place = set()
+        self.white_possible_moves = dict()
+        self.black_possible_moves = dict()
+        self.white_queen_location = None
+        self.black_queen_location = None
 
-            cls.spaces_requiring_updates = set()
-            cls.empty_spaces_requiring_deletion = set()
+        self.spaces_requiring_updates = set()
+        self.empty_spaces_requiring_deletion = set()
 
-            # Variables for keeping track of Ant movement
-            cls.ant_mvt_prevention_sets = []
-            cls.ant_mvt_preventions_to_add = set()
-            cls.ant_locations = set()
+        # Variables for keeping track of Ant movement
+        self.ant_mvt_prevention_sets = []
+        self.ant_mvt_preventions_to_add = set()
+        self.ant_locations = set()
 
-            # Variables for determining which pieces can move if a loop was formed
-            # cls.loop_was_formed = False
-            cls.tarjan_discovery_time = 0
-            cls.prepare_to_find_articulation_pts = False
+        # Variables for determining which pieces can move if a loop was formed
+        # self.loop_was_formed = False
+        self.tarjan_discovery_time = 0
+        self.prepare_to_find_articulation_pts = False
 
-            # Create board with one empty square
-            EmptySpace(cls.instance, 0, 0)
-            cls.white_locations_to_place = {(0, 0)}
+        # Create board with one empty square
+        EmptySpace(self, 0, 0)
+        self.white_locations_to_place = {(0, 0)}
 
-        return cls.instance
+        # return cls.instance
 
     def perform_action(self, action):
         action_type = action[0]
@@ -313,15 +319,15 @@ class HiveGameBoard:
 
         # Place the piece
         if piece_type == Piece.ANT:
-            Ant(self.instance, location[0], location[1], is_white=self.is_white_turn())
+            Ant(self, location[0], location[1], is_white=self.is_white_turn())
         elif piece_type == Piece.BEETLE:
-            Beetle(self.instance, location[0], location[1], is_white=self.is_white_turn())
+            Beetle(self, location[0], location[1], is_white=self.is_white_turn())
         elif piece_type == Piece.GRASSHOPPER:
-            Grasshopper(self.instance, location[0], location[1], is_white=self.is_white_turn())
+            Grasshopper(self, location[0], location[1], is_white=self.is_white_turn())
         elif piece_type == Piece.QUEEN_BEE:
-            QueenBee(self.instance, location[0], location[1], is_white=self.is_white_turn())
+            QueenBee(self, location[0], location[1], is_white=self.is_white_turn())
         elif piece_type == Piece.SPIDER:
-            Spider(self.instance, location[0], location[1], is_white=self.is_white_turn())
+            Spider(self, location[0], location[1], is_white=self.is_white_turn())
 
         # Reduce piece counts
         if self.is_white_turn():
