@@ -6,7 +6,7 @@ import src.game.spaces as spaces
 class TestSampleGameDraw(unittest.TestCase):
 
     def test_sample_game_draw(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         ant = spaces.Piece.ANT
         beetle = spaces.Piece.BEETLE
         grasshopper = spaces.Piece.GRASSHOPPER
@@ -31,19 +31,19 @@ class TestSampleGameDraw(unittest.TestCase):
         game_board.print_board()
 
         expected_winner = None
-        actual_winner = board.HiveGameBoard().determine_winner()
+        actual_winner = game_board.determine_winner()
         self.assertEqual(expected_winner, actual_winner)
 
         game_board.move_piece((0, 0), (0, -1))
         game_board.print_board()
 
         expected_winner = None
-        actual_winner = board.HiveGameBoard().determine_winner()
+        actual_winner = game_board.determine_winner()
         self.assertEqual(expected_winner, actual_winner)
 
         game_board.move_piece((1, 0), (1, 1))
         game_board.print_board()
 
         expected_winner = board.HiveGameBoard.DRAW
-        actual_winner = board.HiveGameBoard().determine_winner()
+        actual_winner = game_board.determine_winner()
         self.assertEqual(expected_winner, actual_winner)
