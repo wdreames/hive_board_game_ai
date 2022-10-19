@@ -7,16 +7,19 @@ from src.game.pieces import QueenBee
 from src.game.pieces import Spider
 
 
-class HiveGameBoardManager:
+class BoardManager:
 
     def __new__(cls, new_manager=False):
         if not hasattr(cls, 'instance') or new_manager:
-            cls.instance = super(HiveGameBoardManager, cls).__new__(cls)
+            cls.instance = super(BoardManager, cls).__new__(cls)
+            board = HiveGameBoard()
+            cls.root_board = board
+            cls.current_board = board
         return cls.instance
 
-    def __init__(self):
-        self.root_board = HiveGameBoard()
-        self.current_board = self.root_board
+    # def __init__(self):
+    #     self.root_board = HiveGameBoard()
+    #     self.current_board = self.root_board
 
     def reset_board(self):
         self.set_board(self.root_board)
@@ -117,7 +120,7 @@ class HiveGameBoard:
             cls.prepare_to_find_articulation_pts = False
 
             # Create board with one empty square
-            EmptySpace(0, 0)
+            EmptySpace(cls.instance, 0, 0)
             cls.white_locations_to_place = {(0, 0)}
 
         return cls.instance
@@ -310,15 +313,15 @@ class HiveGameBoard:
 
         # Place the piece
         if piece_type == Piece.ANT:
-            Ant(location[0], location[1], is_white=self.is_white_turn())
+            Ant(self.instance, location[0], location[1], is_white=self.is_white_turn())
         elif piece_type == Piece.BEETLE:
-            Beetle(location[0], location[1], is_white=self.is_white_turn())
+            Beetle(self.instance, location[0], location[1], is_white=self.is_white_turn())
         elif piece_type == Piece.GRASSHOPPER:
-            Grasshopper(location[0], location[1], is_white=self.is_white_turn())
+            Grasshopper(self.instance, location[0], location[1], is_white=self.is_white_turn())
         elif piece_type == Piece.QUEEN_BEE:
-            QueenBee(location[0], location[1], is_white=self.is_white_turn())
+            QueenBee(self.instance, location[0], location[1], is_white=self.is_white_turn())
         elif piece_type == Piece.SPIDER:
-            Spider(location[0], location[1], is_white=self.is_white_turn())
+            Spider(self.instance, location[0], location[1], is_white=self.is_white_turn())
 
         # Reduce piece counts
         if self.is_white_turn():

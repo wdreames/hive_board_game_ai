@@ -33,9 +33,9 @@ class TestInitializationAndPlacements(unittest.TestCase):
 
     def test_create_ant(self):
         # Resets the board
-        board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard(new_board=True)
 
-        pcs.Ant(0, 0)
+        pcs.Ant(game_board, 0, 0)
 
         self._test_new_piece_at_0_0()
 
@@ -46,9 +46,9 @@ class TestInitializationAndPlacements(unittest.TestCase):
 
     def test_create_grasshopper(self):
         # Resets the board
-        board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard(new_board=True)
 
-        pcs.Grasshopper(0, 0)
+        pcs.Grasshopper(game_board, 0, 0)
 
         self._test_new_piece_at_0_0()
 

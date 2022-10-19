@@ -11,7 +11,7 @@ import src.game.spaces as spaces
 
 
 def play_game_with_manager():
-    board_manager = board.HiveGameBoardManager()
+    board_manager = board.BoardManager()
 
     while board_manager.get_board().determine_winner() is None:
         board_manager.get_board().print_board()

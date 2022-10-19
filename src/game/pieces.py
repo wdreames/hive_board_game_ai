@@ -1,20 +1,19 @@
 from src.game.spaces import Piece
-import src.game.board as board
 
 
 class Ant(Piece):
 
-    def __init__(self, x=0, y=0, is_white=True):
-        super().__init__(x, y, is_white)
+    def __init__(self, board_instance, x=0, y=0, is_white=True):
+        super().__init__(board_instance, x, y, is_white)
         self.name = Piece.ANT
 
     def remove(self):
         super().remove()
-        board.HiveGameBoard().ant_locations.remove(self.location)
+        self.board.ant_locations.remove(self.location)
 
     def set_location_to(self, new_location):
         super().set_location_to(new_location)
-        board.HiveGameBoard().ant_locations.add(new_location)
+        self.board.ant_locations.add(new_location)
 
     def calc_possible_moves(self):
         # Can move to any open space that it can slide to
@@ -24,8 +23,8 @@ class Ant(Piece):
         if not can_slide_into:
             self.possible_moves = set()
         else:
-            moveset = set(board.HiveGameBoard().empty_spaces.keys())
-            for prevention_set in board.HiveGameBoard().ant_mvt_prevention_sets:
+            moveset = set(self.board.empty_spaces.keys())
+            for prevention_set in self.board.ant_mvt_prevention_sets:
                 # If the Ant cannot slide into a given prevention set,
                 # those potential moves are removed from the moveset
                 overlap_with_prevention_set = can_slide_into.intersection(prevention_set)
@@ -42,7 +41,7 @@ class Ant(Piece):
 
             # Check if any surrounding Empty Spaces are only connected to this Piece. If so, that is not a possible move
             for space_location in can_slide_into.intersection(self.cannot_move_to):
-                empty_space = board.HiveGameBoard().empty_spaces[space_location]
+                empty_space = self.board.empty_spaces[space_location]
                 if len(empty_space.connected_pieces) == 1 and self.location in empty_space.connected_pieces:
                     moveset.remove(space_location)
 
@@ -53,10 +52,10 @@ class Ant(Piece):
 
 class Beetle(Piece):
 
-    def __init__(self, x=0, y=0, is_white=True):
+    def __init__(self, board_instance, x=0, y=0, is_white=True):
         self.stacked_piece_obj = None
 
-        super().__init__(x, y, is_white)
+        super().__init__(board_instance, x, y, is_white)
         self.name = Piece.BEETLE
 
     def calc_possible_moves(self):
@@ -86,7 +85,7 @@ class Beetle(Piece):
             # Need to update num white/black connected in nearby empty spaces
             if self.is_white != self.stacked_piece_obj.is_white:
                 for connected_emt_spc_loc in self.connected_empty_spaces:
-                    connected_emt_spc = board.HiveGameBoard().empty_spaces[connected_emt_spc_loc]
+                    connected_emt_spc = self.board.empty_spaces[connected_emt_spc_loc]
                     if self.is_white:
                         connected_emt_spc.num_white_connected -= 1
                         connected_emt_spc.num_black_connected += 1
@@ -98,9 +97,9 @@ class Beetle(Piece):
             self.preventing_sliding_for.clear()
 
             # Remove this piece from the board dictionaries
-            board.HiveGameBoard().remove_possible_moves(self.location)
+            self.board.remove_possible_moves(self.location)
 
-            board.HiveGameBoard().pieces[self.location] = self.stacked_piece_obj
+            self.board.pieces[self.location] = self.stacked_piece_obj
             self.stacked_piece_obj.prepare_for_update()
             self.stacked_piece_obj.unlock()
             self.stacked_piece_obj = None
@@ -108,15 +107,15 @@ class Beetle(Piece):
             super().remove()
 
     def set_location_to(self, new_location):
-        moving_onto_piece = new_location in board.HiveGameBoard().pieces
+        moving_onto_piece = new_location in self.board.pieces
 
         if moving_onto_piece:
             # Move this piece in the board dictionary
             self.location = new_location
             self.x = new_location[0]
             self.y = new_location[1]
-            self.stacked_piece_obj = board.HiveGameBoard().pieces[new_location]
-            board.HiveGameBoard().pieces[new_location] = self
+            self.stacked_piece_obj = self.board.pieces[new_location]
+            self.board.pieces[new_location] = self
 
             # Copy the connections from the piece at the new lo
             self.connected_pieces = self.stacked_piece_obj.connected_pieces
@@ -129,7 +128,7 @@ class Beetle(Piece):
             # Need to update num white/black connected in nearby empty spaces
             if self.is_white != self.stacked_piece_obj.is_white:
                 for connected_emt_spc_loc in self.connected_empty_spaces:
-                    connected_emt_spc = board.HiveGameBoard().empty_spaces[connected_emt_spc_loc]
+                    connected_emt_spc = self.board.empty_spaces[connected_emt_spc_loc]
                     if self.is_white:
                         connected_emt_spc.num_white_connected += 1
                         connected_emt_spc.num_black_connected -= 1
@@ -203,12 +202,12 @@ class Grasshopper(Piece):
             self.next_location = next_location
             self.direction = direction
 
-    def __init__(self, x=0, y=0, is_white=True):
+    def __init__(self, board_instance, x=0, y=0, is_white=True):
         self.paths = dict()
         self.paths_to_add = set()
         self.initialize_paths = True
 
-        super().__init__(x, y, is_white)
+        super().__init__(board_instance, x, y, is_white)
         self.name = Piece.GRASSHOPPER
 
     def update(self):
@@ -267,17 +266,17 @@ class Grasshopper(Piece):
         if direction is None:
             direction = self.direction_from_a_to_b(previous_location, location)
 
-        space_is_empty_space = location not in board.HiveGameBoard().pieces
+        space_is_empty_space = location not in self.board.pieces
 
         # Determine the next location
         if space_is_empty_space:
             # If the space is an EmptySpace, add a possible move
             if location not in self.get_all_surrounding_locations():
                 self.add_move(location)
-            board.HiveGameBoard().empty_spaces[location].linked_grasshoppers.add(self.location)
+            self.board.empty_spaces[location].linked_grasshoppers.add(self.location)
             next_location = None
         else:
-            board.HiveGameBoard().pieces[location].linked_grasshoppers.add(self.location)
+            self.board.pieces[location].linked_grasshoppers.add(self.location)
             next_location = self.get_next_space_in_direction(location, direction)
 
         # Log the data
@@ -311,9 +310,9 @@ class Grasshopper(Piece):
         # Get the path data at this location
         path_data = self.paths.pop(location)
         if path_data.is_empty_space:
-            board.HiveGameBoard().empty_spaces[path_data.location].linked_grasshoppers.remove(self.location)
+            self.board.empty_spaces[path_data.location].linked_grasshoppers.remove(self.location)
         else:
-            board.HiveGameBoard().pieces[path_data.location].linked_grasshoppers.remove(self.location)
+            self.board.pieces[path_data.location].linked_grasshoppers.remove(self.location)
 
         # If the location is an EmptySpace, remove the possible move
         if path_data.is_empty_space:
@@ -333,8 +332,8 @@ class Grasshopper(Piece):
 
 class QueenBee(Piece):
 
-    def __init__(self, x=0, y=0, is_white=True):
-        super().__init__(x, y, is_white)
+    def __init__(self, board_instance, x=0, y=0, is_white=True):
+        super().__init__(board_instance, x, y, is_white)
         self.name = Piece.QUEEN_BEE
 
     def update(self):
@@ -346,9 +345,9 @@ class QueenBee(Piece):
         Updates the game board to have the current location of this Queen Bee.
         """
         if self.is_white:
-            board.HiveGameBoard().white_queen_location = self.location
+            self.board.white_queen_location = self.location
         else:
-            board.HiveGameBoard().black_queen_location = self.location
+            self.board.black_queen_location = self.location
 
     def calc_possible_moves(self):
         # Can move to any open space that it can slide to
@@ -372,7 +371,7 @@ class Spider(Piece):
             self.depth = depth
             self.visited = visited
 
-    def __init__(self, x=0, y=0, is_white=True):
+    def __init__(self, board_instance, x=0, y=0, is_white=True):
         self.previous_path_starts = set()
         self.current_path_id = 0
         self.paths = dict()
@@ -381,7 +380,7 @@ class Spider(Piece):
         self.paths_to_add = set()
         self.initialize_paths = True
 
-        super().__init__(x, y, is_white)
+        super().__init__(board_instance, x, y, is_white)
         self.name = Piece.SPIDER
 
     def get_new_path_id(self):
@@ -483,7 +482,7 @@ class Spider(Piece):
             Set of all visited locations
         """
         # Ensure that this Empty Space is connected to pieces other than this Spider
-        empty_space = board.HiveGameBoard().empty_spaces.get(empty_space_location)
+        empty_space = self.board.empty_spaces.get(empty_space_location)
         if empty_space is None or len(empty_space.connected_pieces) == 1 and self.location in empty_space.connected_pieces:
             return
         if previous_location is None:
@@ -557,7 +556,7 @@ class Spider(Piece):
 
         # Get the path data at this location
         location_data = self.paths.pop(empty_space_location)
-        board.HiveGameBoard().empty_spaces[empty_space_location].linked_spiders.remove(self.location)
+        self.board.empty_spaces[empty_space_location].linked_spiders.remove(self.location)
 
         # Check each path stored at this location
         if path_id is not None:
@@ -606,7 +605,7 @@ class Spider(Piece):
             Set of all locations this SpiderPath node can path towards
         """
         unavailable_moves = self.get_cannot_path_to(empty_space_location).union(visited)
-        empty_space = board.HiveGameBoard().empty_spaces[empty_space_location]
+        empty_space = self.board.empty_spaces[empty_space_location]
         for prevented_location, piece_locations_preventing_mvt in empty_space.sliding_prevented_to.items():
             if self.location not in piece_locations_preventing_mvt:
                 unavailable_moves.add(prevented_location)
@@ -649,7 +648,7 @@ class Spider(Piece):
          :return: (x, y) or None
             Location to add to the set of locations this Spider cannot path to.
          """
-        pieces_minus_spider = board.HiveGameBoard().pieces.copy()
+        pieces_minus_spider = self.board.pieces.copy()
         pieces_minus_spider.pop(self.location)
         if {location_check1, location_check2}.isdisjoint(pieces_minus_spider):
             return location
