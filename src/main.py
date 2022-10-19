@@ -4,20 +4,14 @@ CNU Computer Science Capstone
 AI for the Hive Board Game
 2022
 """
-# TODO: [Formatting] Add comments for all classes and methods
+import random
 import traceback
 import src.game.board as board
 import src.game.spaces as spaces
 
-import src.game.board_manager as manager
-
-import random
-import time
-
 
 def play_game_with_manager():
-    board_manager = manager.HiveGameBoardManager()
-    # print(board_manager)
+    board_manager = board.HiveGameBoardManager()
 
     while board_manager.get_board().determine_winner() is None:
         board_manager.get_board().print_board()
@@ -365,7 +359,7 @@ def demo_game():
     for action in actions:
         if game_board.determine_winner() is not None:
             break
-        # print(game_board.get_action_list())
+        print(game_board.get_action_list())
 
         game_board.perform_action(action)
         game_board.print_board()
@@ -374,4 +368,5 @@ def demo_game():
 
 
 if __name__ == '__main__':
-    demo_game()
+    # demo_game()
+    play_game_with_manager()

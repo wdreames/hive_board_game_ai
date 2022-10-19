@@ -7,6 +7,41 @@ from src.game.pieces import QueenBee
 from src.game.pieces import Spider
 
 
+class HiveGameBoardManager:
+
+    def __new__(cls, new_manager=False):
+        if not hasattr(cls, 'instance') or new_manager:
+            cls.instance = super(HiveGameBoardManager, cls).__new__(cls)
+        return cls.instance
+
+    def __init__(self):
+        self.root_board = HiveGameBoard()
+        self.current_board = self.root_board
+
+    def reset_board(self):
+        self.set_board(self.root_board)
+
+    def set_board(self, new_board):
+        self.current_board = new_board
+
+    def get_board(self):
+        return self.current_board
+
+    def get_successor(self, board_instance, action):
+        successor_board = board_instance.copy()
+        successor_board.perform_action(action)
+        self.set_board(successor_board)
+
+    def get_action_list(self):
+        return self.root_board.get_action_list()
+
+    def perform_action(self, action):
+        self.root_board.perform_action(action)
+
+    def __str__(self):
+        return str(self.current_board)
+
+
 # TODO: Update Documentation
 class HiveGameBoard:
     """
@@ -342,7 +377,6 @@ class HiveGameBoard:
         self.update_spaces()
         self.turn_number += 1
 
-    # TODO: Documentation
     def update_spaces(self):
         """
         Updates all spaces on the game board requiring an update. This should only be called at the end of a turn.
