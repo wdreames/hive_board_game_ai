@@ -10,7 +10,7 @@ class TestToStrings(unittest.TestCase):
     """
 
     def test_str(self):
-        game_board = board.HiveGameBoard(new_board=True)
+        game_board = board.HiveGameBoard()
         game_board.place_piece(spaces.Piece.ANT, (0, 0))
 
         self.assertTrue(game_board.__str__())
