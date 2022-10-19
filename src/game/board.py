@@ -664,7 +664,6 @@ class HiveGameBoard:
         # Utitlity function:
         # 6 around enemy QB: +10000
         # 5 around enemy QB: +10
-        # enemy QB can move: -10
         # Free Ant: +3
         # Free Beetle: +2
         # Free Grasshopper: +2
@@ -675,14 +674,18 @@ class HiveGameBoard:
         # Enemy Free Spider: -2
 
         if self.is_white_turn():
-            num_around_enemy_qb = len(self.pieces[self.black_queen_location].connected_pieces)
-            enemy_qb_can_move = 1 if self.black_queen_location in self.black_possible_moves else 0
+            if self.black_queen_location is None:
+                num_around_enemy_qb = 0
+            else:
+                num_around_enemy_qb = len(self.pieces[self.black_queen_location].connected_pieces)
 
             player_free_pieces = self.num_white_free_pieces
             enemy_free_pieces = self.num_black_free_pieces
         else:
-            num_around_enemy_qb = len(self.pieces[self.white_queen_location].connected_pieces)
-            enemy_qb_can_move = 1 if self.white_queen_location in self.black_possible_moves else 0
+            if self.white_queen_location is None:
+                num_around_enemy_qb = 0
+            else:
+                num_around_enemy_qb = len(self.pieces[self.white_queen_location].connected_pieces)
 
             player_free_pieces = self.num_black_free_pieces
             enemy_free_pieces = self.num_white_free_pieces
@@ -690,27 +693,29 @@ class HiveGameBoard:
         utilities = [
             1 if num_around_enemy_qb == 6 else 0,
             1 if num_around_enemy_qb == 5 else 0,
-            enemy_qb_can_move,
 
             player_free_pieces[Piece.ANT],
             player_free_pieces[Piece.BEETLE],
             player_free_pieces[Piece.GRASSHOPPER],
+            player_free_pieces[Piece.QUEEN_BEE],
             player_free_pieces[Piece.SPIDER],
 
             enemy_free_pieces[Piece.ANT],
             enemy_free_pieces[Piece.BEETLE],
             enemy_free_pieces[Piece.GRASSHOPPER],
+            enemy_free_pieces[Piece.QUEEN_BEE],
             enemy_free_pieces[Piece.SPIDER],
         ]
         values = [
             10000,
             10,
-            -10,
             3,
             2,
             2,
             2,
+            2,
             -3,
+            -2,
             -2,
             -2,
             -2

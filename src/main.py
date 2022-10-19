@@ -76,7 +76,11 @@ def play_game_with_manager():
     board_manager = board.BoardManager()
 
     while board_manager.get_board().determine_winner() is None:
-        board_manager.get_board().print_board()
+        current_board = board_manager.get_board()
+        current_board.print_board()
+        print(f'Current player: {"White" if current_board.is_white_turn() else "Black"}')
+        print(f'Evaluation: {current_board.evaluate_state()}')
+        print('-' * 25)
         actions = board_manager.get_action_list()
         randIndex = random.randint(0, len(actions) - 1)
         board_manager.perform_action(actions[randIndex])
@@ -388,6 +392,6 @@ def demo_game():
 if __name__ == '__main__':
     # test_sliding_rules()
     # demo_game()
-    # play_game_with_manager()
+    play_game_with_manager()
     # test_successive_states()
-    test_game5()
+    # test_game5()
