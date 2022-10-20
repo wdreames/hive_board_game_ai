@@ -374,6 +374,45 @@ class TestAntBoard2Move2(unittest.TestCase):
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
 
+class TestAntBoard3(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        game_board = board.HiveGameBoard()
+        ant = spaces.Piece.ANT
+        beetle = spaces.Piece.BEETLE
+        grasshopper = spaces.Piece.GRASSHOPPER
+        queen_bee = spaces.Piece.QUEEN_BEE
+        spider = spaces.Piece.SPIDER
+
+        game_board.place_piece(beetle, (0, 0))
+        game_board.place_piece(queen_bee, (0, 1))
+        game_board.place_piece(queen_bee, (0, -1))
+        game_board.place_piece(spider, (0, 2))
+        game_board.place_piece(beetle, (-1, -1))
+        game_board.move_piece((0, 2), (1, 0))
+        game_board.move_piece((-1, -1), (-1, 0))
+        game_board.place_piece(ant, (1, 2))
+        game_board.place_piece(ant, (-1, -1))
+        game_board.place_piece(ant, (2, 2))
+        game_board.move_piece((0, 0), (0, 1))
+
+        game_board.print_board()
+
+        cls.game_board = game_board
+
+    def test_ant(self):
+        # Test ant movement at (-1, -1)
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference({
+            (0, 0),  # New prevention set made by beetle moving out of the middle of a group of pieces
+            (1, 1),  # Blocked by sliding rules
+            (-2, -2)  # Only connected to Ant
+        })
+        actual_possible_moves = self.game_board.pieces[(-1, -1)].possible_moves
+
+        self.assertEqual(expected_possible_moves, actual_possible_moves)
+
+
 def ant_board1():
     game_board = board.HiveGameBoard()
 

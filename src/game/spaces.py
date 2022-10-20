@@ -319,8 +319,10 @@ class EmptySpace(HexSpace):
                 # Join the prevention set if there are no connected free spaces
                 else:
                     self.board.ant_mvt_prevention_sets[prevention_set_index].add(self.location)
-            # elif not found_free_space:
-            #     raise RuntimeError('Error! This line should never be called!')
+            # Could not find a free space or a prevention set. Create a new prevention set at this location
+            elif not found_free_space:
+                self.board.ant_mvt_preventions_to_add.add(self.location)
+                # raise RuntimeError('Error! This line should never be called!')
 
             self.prepare_for_update()
 
