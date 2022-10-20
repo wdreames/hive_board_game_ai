@@ -151,8 +151,6 @@ class HiveGameBoard:
         piece_location = action[1]
         action_variable = action[2]
 
-        print(action)
-
         if action_type == HiveGameBoard.PLACE_PIECE:
             self.perform_action_helper(action_type, piece_location, piece_type=action_variable)
         else:
@@ -177,7 +175,6 @@ class HiveGameBoard:
             are used.
         """
         if action_type == HiveGameBoard.SKIP_TURN:
-            print('Skipping turn...')
             self.turn_number += 1
         elif action_type == HiveGameBoard.MOVE_PIECE:
             self.move_piece(piece_location, new_location)
