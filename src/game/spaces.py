@@ -764,7 +764,9 @@ class Piece(HexSpace):
             if self_is_placing:
                 self.board.pieces[list(self.connected_pieces)[0]].lock()
             else:
-                self.board.pieces[list(self.connected_pieces)[0]].unlock()
+                # self.board.pieces[list(self.connected_pieces)[0]].unlock()
+                self.board.prepare_to_find_articulation_pts = True
+                return
             return
         elif n == 6:
             return

@@ -79,6 +79,8 @@ def play_game_with_manager():
         current_board = board_manager.get_board()
         current_board.print_board()
         print(f'Current player: {"White" if current_board.is_white_turn() else "Black"}')
+        print(f'White Pieces that can move: {set(current_board.white_possible_moves.keys())}')
+        print(f'Black Pieces that can move: {set(current_board.black_possible_moves.keys())}')
         print(f'Evaluation: {current_board.evaluate_state()}')
         print('-' * 25)
         actions = board_manager.get_action_list()

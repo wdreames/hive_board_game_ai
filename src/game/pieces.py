@@ -325,8 +325,10 @@ class Grasshopper(Piece):
         # Get the path data at this location
         path_data = self.paths.pop(location)
         if path_data.is_empty_space:
+            print(f'{self.location} - {self.name}: Removing link for EmptySpace at {path_data.location}')
             self.board.empty_spaces[path_data.location].linked_grasshoppers.remove(self.location)
         else:
+            print(f'{self.location} - {self.name}: Removing link for Piece at {path_data.location}')
             self.board.pieces[path_data.location].linked_grasshoppers.remove(self.location)
 
         # If the location is an EmptySpace, remove the possible move
@@ -398,6 +400,7 @@ class Spider(Piece):
         self.path_roots = dict()
 
         self.paths_to_add = set()
+        self.popped_path_locations = set()
         self.initialize_paths = True
 
         super().__init__(board_instance, x, y, is_white)
@@ -453,6 +456,7 @@ class Spider(Piece):
                 self.add_spider_path(path_start)
 
         self.paths_to_add.clear()
+        self.popped_path_locations.clear()
         self.previous_path_starts = starts_to_paths
 
     def calc_possible_moves(self):
@@ -483,12 +487,13 @@ class Spider(Piece):
         """
         if empty_space_location in self.paths:
             for path_id, _ in self.paths[empty_space_location].items():
-                path_root = self.path_roots[path_id]
-                # Need to clear the root of this path and start it fresh.
+                if path_id in self.path_roots:
+                    path_root = self.path_roots[path_id]
+                    # Need to clear the root of this path and start it fresh.
 
-                self.remove_spider_path(path_root.location, path_id=path_id)
-                self.paths_to_add.add(path_root)
-                self.prepare_for_update()
+                    self.remove_spider_path(path_root.location, path_id=path_id)
+                    self.paths_to_add.add(path_root)
+                    self.prepare_for_update()
 
     def add_spider_path(self, empty_space_location, previous_location=None, depth=1, path_id=None, visited=None):
         """
@@ -563,8 +568,8 @@ class Spider(Piece):
 
     def remove_spider_path(self, empty_space_location, initial_call=True, path_id=None):
         """
-        Adds a previously made path of movement for this Spider. If the depth of the current node in the path is 3, a
-        possible move is removed from this Spider.
+        Removes a previously made path of movement for this Spider. If the depth of the current node in the path is 3,
+        anpossible move is removed from this Spider.
 
         :param empty_space_location: (x, y)
             Location on the path
@@ -581,6 +586,7 @@ class Spider(Piece):
 
         # Get the path data at this location
         location_data = self.paths.pop(empty_space_location)
+        self.popped_path_locations.add(empty_space_location)
         self.board.empty_spaces[empty_space_location].linked_spiders.remove(self.location)
 
         # Check each path stored at this location
@@ -607,9 +613,15 @@ class Spider(Piece):
                 # Prepare the previous location to add to its path
                 previous_location = spider_path.previous_location
                 if previous_location != self.location:
-                    previous_path_node = self.paths[previous_location][spider_path.path_id]
-                    self.paths_to_add.add(previous_path_node)
-                    self.prepare_for_update()
+                    print(
+                        f'{self.location} - {self.name}:\n'
+                        f'\tCurrent location on path:  {spider_path.location}\n'
+                        f'\tPrevious location on path: {previous_location}\n'
+                    )
+                    if previous_location not in self.popped_path_locations:
+                        previous_path_node = self.paths[previous_location][spider_path.path_id]
+                        self.paths_to_add.add(previous_path_node)
+                        self.prepare_for_update()
                 else:
                     self.initialize_paths = True
                     self.prepare_for_update()
