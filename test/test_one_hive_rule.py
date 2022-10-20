@@ -115,6 +115,7 @@ class TestOneHiveBoard2Move2(unittest.TestCase):
 
     def test_all_pieces_in_possible_moves(self):
         expected_movable_pieces = set(self.game_board.pieces.keys())
+        expected_movable_pieces.remove((0, -2))  # This Piece has no possible moves in this configuration
 
         white_movable_pieces = set(self.game_board.white_possible_moves.keys())
         black_movable_pieces = set(self.game_board.black_possible_moves.keys())

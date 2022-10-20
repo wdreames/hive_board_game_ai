@@ -569,7 +569,7 @@ class Piece(HexSpace):
                         if space1_prevention_index != space2_prevention_index:
                             self.board.union_ant_movement_prevention_sets(space1_prevention_index,
                                                                           space2_prevention_index)
-                    # Only one is an empty space
+                    # Only one is in a prevention set
                     elif space1_prevention_index > -1:
                         self.board.clear_ant_movement_prevention_set(space1_prevention_index)
                     elif space2_prevention_index > -1:
@@ -831,7 +831,7 @@ class Piece(HexSpace):
         """
         Updates the game board's set of possible moves for this Piece.
         """
-        if self.can_move:
+        if self.can_move and self.possible_moves:
             self.board.add_possible_moves(self.location)
         else:
             self.board.remove_possible_moves(self.location)

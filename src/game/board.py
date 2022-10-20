@@ -513,8 +513,14 @@ class HiveGameBoard:
             Set of spaces the algorithm has seen already.
             Default is an empty set.
         """
+
+        # Return codes
+        SUCCESS = 0
+        NO_EMPTY_SPACE = 0
+        CLEARED_SET = -1
+
         if current_space not in self.empty_spaces:
-            return
+            return NO_EMPTY_SPACE
         if visited_spaces is None:
             visited_spaces = set()
         if set_index is None:
@@ -523,14 +529,16 @@ class HiveGameBoard:
 
         # If the edge of the board is ever reached, this should no longer be a set
         if self.empty_spaces[current_space].get_total_num_connections() < 6:
-            self.ant_mvt_prevention_sets[set_index].clear()
-            return
+            self.clear_ant_movement_prevention_set(set_index)
+            return CLEARED_SET
 
         self.ant_mvt_prevention_sets[set_index].add(current_space)
         visited_spaces.add(current_space)
 
         for connected_space in self.empty_spaces[current_space].get_queen_bee_moves().difference(visited_spaces):
-            self.add_to_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
+            result = self.add_to_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
+            if result != SUCCESS:
+                return result
 
     # TODO: Documentation
     def remove_from_ant_movement_prevention_set(self, current_space, set_index, visited_spaces=None):
@@ -591,7 +599,8 @@ class HiveGameBoard:
         :param set_index: int
             Index of the set to remove from the list
         """
-        del self.ant_mvt_prevention_sets[set_index]
+        if self.ant_mvt_prevention_sets:
+            self.ant_mvt_prevention_sets.pop(set_index)
 
     def empty_space_in_ant_movement_prevention_set(self, space_location):
         """
@@ -781,6 +790,7 @@ class HiveGameBoard:
         return_str += f'num_black_free_pieces: {self.num_black_free_pieces}\n'
         return_str += 'white_queen_location: {}\n'.format(self.white_queen_location)
         return_str += 'black_queen_location: {}\n'.format(self.black_queen_location)
+        return_str += f'ant_mvt_prevention_sets: {self.ant_mvt_prevention_sets}\n'
         return_str += 'pieces: {}\n'.format(
             [(location, self.pieces[location].name, 'White' if self.pieces[location].is_white else 'Black') for location
              in self.pieces])
