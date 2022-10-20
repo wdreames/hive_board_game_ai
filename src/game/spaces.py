@@ -312,13 +312,13 @@ class EmptySpace(HexSpace):
                 else:
                     found_free_space = True
 
-            # If 1+ connected free spaces, clear connected prevention sets
-            if found_free_space and prevention_set_index > -1:
-                self.board.clear_ant_movement_prevention_set(prevention_set_index)
-            # If connected to a prevention set, join it
-            else:
-                self.board.ant_mvt_prevention_sets[prevention_set_index].add(self.location)
-            # # If 2 connected prevention sets, join one and union them both
+            if prevention_set_index > -1:
+                # If 1+ connected free spaces, clear connected prevention sets
+                if found_free_space:
+                    self.board.clear_ant_movement_prevention_set(prevention_set_index)
+                # Join the prevention set if there are no connected free spaces
+                else:
+                    self.board.ant_mvt_prevention_sets[prevention_set_index].add(self.location)
             # elif not found_free_space:
             #     raise RuntimeError('Error! This line should never be called!')
 
