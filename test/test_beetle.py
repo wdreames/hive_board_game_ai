@@ -215,6 +215,8 @@ class TestBeetle(unittest.TestCase):
         actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves
         self.assertEqual(expected_beetle_moves, actual_beetle_moves)
 
+        game_board.print_board()
+
         game_board.move_piece((0, 0), (0, -1))
         expected_beetle_moves = {(-1, -1), (0, -1), (1, 0), (1, 1), (0, 1), (-1, 0)}
         actual_beetle_moves = game_board.pieces[(0, 0)].possible_moves

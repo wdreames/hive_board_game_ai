@@ -78,8 +78,8 @@ class Beetle(Piece):
         self.update_board_moves()
         return self.possible_moves
 
-    def lock(self):
-        if self.stacked_piece_obj is None:
+    def lock(self, force_lock=False):
+        if self.stacked_piece_obj is None or force_lock:
             super().lock()
 
     def remove(self):
@@ -91,6 +91,7 @@ class Beetle(Piece):
             self.stacked_piece_obj.sliding_prevented_to = self.sliding_prevented_to.copy()
             self.stacked_piece_obj.cannot_move_to = self.cannot_move_to.copy()
             self.stacked_piece_obj.preventing_sliding_for = self.preventing_sliding_for.copy()
+            self.stacked_piece_obj.linked_grasshoppers = self.linked_grasshoppers.copy()
 
             # Need to update num white/black connected in nearby empty spaces
             if self.is_white != self.stacked_piece_obj.is_white:
@@ -105,14 +106,18 @@ class Beetle(Piece):
                     connected_emt_spc.prepare_for_update()
 
             self.preventing_sliding_for.clear()
+            self.linked_grasshoppers.clear()
 
             # Remove this piece from the board dictionaries
             self.board.remove_possible_moves(self.location)
 
             self.board.pieces[self.location] = self.stacked_piece_obj
             self.stacked_piece_obj.prepare_for_update()
-            self.stacked_piece_obj.unlock()
+            if self.stacked_piece_obj.name == Piece.BEETLE:
+                self.stacked_piece_obj.unlock()
             self.stacked_piece_obj = None
+
+            self.board.prepare_to_find_articulation_pts = True
         else:
             super().remove()
 
@@ -148,7 +153,10 @@ class Beetle(Piece):
                     connected_emt_spc.prepare_for_update()
 
             # Remove piece from board movement dictionaries
-            self.stacked_piece_obj.lock()
+            if self.stacked_piece_obj.name == Piece.BEETLE:
+                self.stacked_piece_obj.lock(force_lock=True)
+            else:
+                self.stacked_piece_obj.lock()
 
             self.prepare_for_update()
         else:
@@ -215,6 +223,7 @@ class Grasshopper(Piece):
     def __init__(self, board_instance, x=0, y=0, is_white=True):
         self.paths = dict()
         self.paths_to_add = set()
+        self.popped_path_locations = set()
         self.initialize_paths = True
 
         super().__init__(board_instance, x, y, is_white)
@@ -237,6 +246,7 @@ class Grasshopper(Piece):
                 self.add_grasshopper_path(path_data.location, path_data.previous_location, path_data.direction)
 
         self.paths_to_add.clear()
+        self.popped_path_locations.clear()
 
         super().update()
 
@@ -324,11 +334,10 @@ class Grasshopper(Piece):
 
         # Get the path data at this location
         path_data = self.paths.pop(location)
+        self.popped_path_locations.add(location)
         if path_data.is_empty_space:
-            print(f'{self.location} - {self.name}: Removing link for EmptySpace at {path_data.location}')
             self.board.empty_spaces[path_data.location].linked_grasshoppers.remove(self.location)
         else:
-            print(f'{self.location} - {self.name}: Removing link for Piece at {path_data.location}')
             self.board.pieces[path_data.location].linked_grasshoppers.remove(self.location)
 
         # If the location is an EmptySpace, remove the possible move
@@ -338,7 +347,7 @@ class Grasshopper(Piece):
         if initial_call:
             if not path_data.is_empty_space and path_data.location not in self.get_all_surrounding_locations():
                 self.add_move(path_data.location)
-            if path_data.previous_location != self.location:
+            if path_data.previous_location != self.location and path_data.previous_location not in self.popped_path_locations:
                 previous_path_data = self.paths[path_data.previous_location]
                 self.paths_to_add.add(previous_path_data)
                 self.prepare_for_update()
@@ -488,9 +497,8 @@ class Spider(Piece):
         if empty_space_location in self.paths:
             for path_id, _ in self.paths[empty_space_location].items():
                 if path_id in self.path_roots:
-                    path_root = self.path_roots[path_id]
                     # Need to clear the root of this path and start it fresh.
-
+                    path_root = self.path_roots[path_id]
                     self.remove_spider_path(path_root.location, path_id=path_id)
                     self.paths_to_add.add(path_root)
                     self.prepare_for_update()
@@ -613,11 +621,6 @@ class Spider(Piece):
                 # Prepare the previous location to add to its path
                 previous_location = spider_path.previous_location
                 if previous_location != self.location:
-                    print(
-                        f'{self.location} - {self.name}:\n'
-                        f'\tCurrent location on path:  {spider_path.location}\n'
-                        f'\tPrevious location on path: {previous_location}\n'
-                    )
                     if previous_location not in self.popped_path_locations:
                         previous_path_node = self.paths[previous_location][spider_path.path_id]
                         self.paths_to_add.add(previous_path_node)

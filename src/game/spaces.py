@@ -612,7 +612,7 @@ class Piece(HexSpace):
             A RuntimeError will be raised if the Piece is set to a location that does not contain an EmptySpace.
         """
         if new_location not in self.board.empty_spaces:
-            raise RuntimeError('No empty space at {} to place a new {}'.format(self.location, self.name))
+            raise RuntimeError('No empty space at {} to place a new {}'.format(new_location, self.name))
 
         # Move this piece in the board dictionary
         self.location = new_location

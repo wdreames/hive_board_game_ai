@@ -58,8 +58,9 @@ class HiveGameBoard:
     can only ever be one instance of the game board. This can be accessed across all files.
     """
 
-    MOVE_PIECE = 'Move piece'
-    PLACE_PIECE = 'Place piece'
+    MOVE_PIECE = 'Move Piece'
+    PLACE_PIECE = 'Place Piece'
+    SKIP_TURN = 'Skip Action'
     WHITE_WINNER = 'White'
     BLACK_WINNER = 'Black'
     DRAW = 'Draw'
@@ -162,7 +163,7 @@ class HiveGameBoard:
         Performs an action on the game board. Possible actions are HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE
 
         :param action_type:
-            Must be HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE
+            Must be HiveGameBoard.MOVE_PIECE, HiveGameBoard.PLACE_PIECE, or HiveGameBoard.SKIP_TURN
         :param piece_location: (x, y)
             When placing a Piece, this is the location the Piece will be placed.
             When moving a Piece, this is the initial location of the Piece.
@@ -175,8 +176,10 @@ class HiveGameBoard:
             A ValueError will be raised if action_types other than HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE
             are used.
         """
-
-        if action_type == HiveGameBoard.MOVE_PIECE:
+        if action_type == HiveGameBoard.SKIP_TURN:
+            print('Skipping turn...')
+            self.turn_number += 1
+        elif action_type == HiveGameBoard.MOVE_PIECE:
             self.move_piece(piece_location, new_location)
         elif action_type == HiveGameBoard.PLACE_PIECE:
             self.place_piece(piece_type, piece_location)
@@ -205,6 +208,9 @@ class HiveGameBoard:
                     piece_location,
                     new_location
                 ])
+
+        if not all_actions:
+            return [(HiveGameBoard.SKIP_TURN, None, None)]
 
         return all_actions
 
@@ -712,12 +718,12 @@ class HiveGameBoard:
             3,
             2,
             2,
-            2,
+            5,
             2,
             -3,
             -2,
             -2,
-            -2,
+            -5,
             -2
         ]
 
@@ -743,7 +749,10 @@ class HiveGameBoard:
                 # Actual points are (x + min_x, y + min_y)
                 if (x + min_x, y + min_y) in self.pieces:
                     current_piece = self.pieces[(x + min_x, y + min_y)]
-                    piece_char = current_piece.name[:1]
+                    if current_piece.name == Piece.BEETLE and current_piece.stacked_piece_obj is not None:
+                        piece_char = 'b'
+                    else:
+                        piece_char = current_piece.name[:1]
                     if not current_piece.is_white:
                         piece_char = '(' + piece_char + ')'
                     else:

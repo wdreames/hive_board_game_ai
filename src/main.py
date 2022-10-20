@@ -75,6 +75,7 @@ def play_game():
 def play_game_with_manager():
     board_manager = board.BoardManager()
 
+    actions_performed = []
     while board_manager.get_board().determine_winner() is None:
         current_board = board_manager.get_board()
         current_board.print_board()
@@ -82,14 +83,15 @@ def play_game_with_manager():
         print(f'White Pieces that can move: {set(current_board.white_possible_moves.keys())}')
         print(f'Black Pieces that can move: {set(current_board.black_possible_moves.keys())}')
         print(f'Evaluation: {current_board.evaluate_state()}')
+        print(f'Turn Number: {current_board.turn_number}')
         print('-' * 25)
         actions = board_manager.get_action_list()
         randIndex = random.randint(0, len(actions) - 1)
+        actions_performed.append(actions[randIndex])
         board_manager.perform_action(actions[randIndex])
 
     board_manager.get_board().print_board()
-    print(board_manager.get_action_list())
-
+    print(actions_performed)
     print(f'Total number of actions: {board_manager.get_board().turn_number}')
 
 
