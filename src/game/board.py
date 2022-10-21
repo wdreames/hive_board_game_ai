@@ -513,8 +513,8 @@ class HiveGameBoard:
 
         # Return codes
         SUCCESS = 0
-        NO_EMPTY_SPACE = 0
-        CLEARED_SET = -1
+        NO_EMPTY_SPACE = -1
+        CLEARED_SET = -2
 
         if current_space not in self.empty_spaces:
             return NO_EMPTY_SPACE
@@ -534,7 +534,7 @@ class HiveGameBoard:
 
         for connected_space in self.empty_spaces[current_space].get_queen_bee_moves().difference(visited_spaces):
             result = self.add_to_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
-            if result != SUCCESS:
+            if result == CLEARED_SET:
                 return result
 
         return SUCCESS
@@ -556,22 +556,23 @@ class HiveGameBoard:
 
         # Return codes
         SUCCESS = 0
-        NO_EMPTY_SPACE = 0
-        CLEARED_SET = -1
+        NO_EMPTY_SPACE = -1
+        CLEARED_SET = -2
 
         if current_space not in self.empty_spaces or current_space not in self.ant_mvt_prevention_sets[set_index]:
             return NO_EMPTY_SPACE
         if visited_spaces is None:
             visited_spaces = set()
+        visited_spaces.add(current_space)
+
         self.ant_mvt_prevention_sets[set_index].remove(current_space)
         if not self.ant_mvt_prevention_sets[set_index]:
             self.clear_ant_movement_prevention_set(set_index)
             return CLEARED_SET
-        visited_spaces.add(current_space)
 
         for connected_space in self.empty_spaces[current_space].get_queen_bee_moves().difference(visited_spaces):
             result = self.remove_from_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
-            if result != SUCCESS:
+            if result == CLEARED_SET:
                 return result
         return SUCCESS
 
