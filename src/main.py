@@ -72,28 +72,32 @@ def play_game():
     print('Winner: {}'.format(game_board.determine_winner()))
 
 
-def play_game_with_manager():
+def play_game_with_manager(print_out=True):
     board_manager = board.BoardManager()
 
     actions_performed = []
     while board_manager.get_board().determine_winner() is None:
         current_board = board_manager.get_board()
-        current_board.print_board()
-        print(current_board)
-        print('-' * 25)
-        print(f'Current player: {"White" if current_board.is_white_turn() else "Black"}')
-        print(f'White Pieces that can move: {set(current_board.white_possible_moves.keys())}')
-        print(f'Black Pieces that can move: {set(current_board.black_possible_moves.keys())}')
-        print(f'Evaluation: {current_board.evaluate_state()}')
-        print(f'Turn Number: {current_board.turn_number}')
-        print('=' * 50)
+        if print_out:
+            current_board.print_board()
+            print(current_board)
+            print('-' * 25)
+            print(f'Current player: {"White" if current_board.is_white_turn() else "Black"}')
+            print(f'White Pieces that can move: {set(current_board.white_possible_moves.keys())}')
+            print(f'Black Pieces that can move: {set(current_board.black_possible_moves.keys())}')
+            print(f'Evaluation: {current_board.evaluate_state()}')
+            print(f'Turn Number: {current_board.turn_number}')
+            print('=' * 50)
         actions = board_manager.get_action_list()
-        randIndex = random.randint(0, len(actions) - 1)
-        actions_performed.append(actions[randIndex])
-        board_manager.perform_action(actions[randIndex])
+        rand_index = random.randint(0, len(actions) - 1)
+        actions_performed.append(actions[rand_index])
+        if print_out:
+            print(f'Performing action {actions[rand_index]}.')
+        board_manager.perform_action(actions[rand_index])
 
     board_manager.get_board().print_board()
-    print(actions_performed)
+    if print_out:
+        print(actions_performed)
     print(f'Total number of actions: {board_manager.get_board().turn_number}')
 
 
@@ -395,9 +399,37 @@ def demo_game():
     print(f'The winner is: {game_board.determine_winner()}')
 
 
+def check_for_errors(max_num_runs=100, word_to_find=None, words_to_avoid=None):
+    num_runs = 0
+    while num_runs < max_num_runs:
+        try:
+            board.BoardManager(new_manager=True)
+            play_game_with_manager(print_out=False)
+        except Exception:
+            err_output = traceback.format_exc()
+            if word_to_find is not None and word_to_find in err_output.lower():
+                print(board.BoardManager().get_board())
+                board.BoardManager().get_board().print_board()
+                print(err_output)
+                exit(1)
+            if words_to_avoid is not None:
+                found_word = False
+                for word in words_to_avoid:
+                    if word in err_output.lower():
+                        found_word = True
+                if not found_word:
+                    print(board.BoardManager().get_board())
+                    board.BoardManager().get_board().print_board()
+                    print(err_output)
+                    exit(1)
+
+        num_runs += 1
+
+
 if __name__ == '__main__':
     # test_sliding_rules()
     # demo_game()
-    play_game_with_manager()
+    # play_game_with_manager()
     # test_successive_states()
     # test_game5()
+    check_for_errors(word_to_find='spider')
