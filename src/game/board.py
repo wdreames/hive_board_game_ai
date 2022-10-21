@@ -537,6 +537,8 @@ class HiveGameBoard:
             if result != SUCCESS:
                 return result
 
+        return SUCCESS
+
     # TODO: Documentation
     def remove_from_ant_movement_prevention_set(self, current_space, set_index, visited_spaces=None):
         """
@@ -551,15 +553,27 @@ class HiveGameBoard:
             Set of spaces the algorithm has seen already.
             Default is an empty set.
         """
+
+        # Return codes
+        SUCCESS = 0
+        NO_EMPTY_SPACE = 0
+        CLEARED_SET = -1
+
         if current_space not in self.empty_spaces or current_space not in self.ant_mvt_prevention_sets[set_index]:
-            return
+            return NO_EMPTY_SPACE
         if visited_spaces is None:
             visited_spaces = set()
         self.ant_mvt_prevention_sets[set_index].remove(current_space)
+        if not self.ant_mvt_prevention_sets[set_index]:
+            self.clear_ant_movement_prevention_set(set_index)
+            return CLEARED_SET
         visited_spaces.add(current_space)
 
         for connected_space in self.empty_spaces[current_space].get_queen_bee_moves().difference(visited_spaces):
-            self.remove_from_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
+            result = self.remove_from_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
+            if result != SUCCESS:
+                return result
+        return SUCCESS
 
     def union_ant_movement_prevention_sets(self, set_index1, set_index2):
         """
