@@ -403,6 +403,8 @@ class EmptySpace(HexSpace):
         ant_mvt_prevention_index = self.board.empty_space_in_ant_movement_prevention_set(self.location)
         if ant_mvt_prevention_index > -1:
             self.board.ant_mvt_prevention_sets[ant_mvt_prevention_index].remove(self.location)
+            if not self.board.ant_mvt_prevention_sets[ant_mvt_prevention_index]:
+                self.board.clear_ant_movement_prevention_set(ant_mvt_prevention_index)
         for ant_location in self.board.ant_locations:
             self.board.pieces[ant_location].prepare_for_update()
 
