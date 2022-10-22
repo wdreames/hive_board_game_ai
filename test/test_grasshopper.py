@@ -13,26 +13,26 @@ class TestGrasshopper(unittest.TestCase):
         cls.board.perform_action_helper(cls.board.PLACE_PIECE, (1, 0), piece_type=spcs.Piece.GRASSHOPPER)
         cls.board.perform_action_helper(cls.board.PLACE_PIECE, (-1, 0), piece_type=spcs.Piece.QUEEN_BEE)
 
+        cls.board.place_piece(spcs.Piece.QUEEN_BEE, (2, 1))
+        cls.board.move_piece((-1, 0), (-1, -1))
+        cls.board.move_piece((2, 1), (1, 1))
+        cls.board.move_piece((-1, -1), (-1, 0))
+
         cls.board.print_board()
 
     def test_1_moveset_1(self):
         # Testing grasshopper as (0, 0)
-        expected_moves = {(-2, 0), (2, 0)}
+        expected_moves = {(-2, 0), (2, 0), (2, 2)}
         actual_moves = self.board.pieces[(0, 0)].possible_moves
         self.assertEqual(expected_moves, actual_moves)
 
     def test_1_moveset_2(self):
         # Testing grasshopper at (1, 0)
-        expected_moves = {(-2, 0)}
+        expected_moves = {(-2, 0), (1, 2)}
         actual_moves = self.board.pieces[(1, 0)].possible_moves
         self.assertEqual(expected_moves, actual_moves)
 
     def test_2_movement_and_movesets(self):
-        self.board.place_piece(spcs.Piece.QUEEN_BEE, (2, 1))
-        self.board.move_piece((-1, 0), (-1, -1))
-        self.board.move_piece((2, 1), (1, 1))
-        self.board.move_piece((-1, -1), (-1, 0))
-
         self.board.perform_action_helper(self.board.MOVE_PIECE, (1, 0), new_location=(-2, 0))
 
         self.board.print_board()

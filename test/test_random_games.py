@@ -1,6 +1,7 @@
 from timeit import default_timer as timer
 
 import src.game.board as board
+import src.game.spaces as spaces
 import random
 import traceback
 import unittest
@@ -23,21 +24,25 @@ class TestRandomGames(unittest.TestCase):
 
             start_of_run = timer()
             board_manager = board.BoardManager(new_manager=True)
+            board_manager.get_board().white_pieces_to_place[spaces.Piece.GRASSHOPPER] = 0
+            # board_manager.get_board().white_pieces_to_place[spaces.Piece.SPIDER] = 0
+            board_manager.get_board().black_pieces_to_place[spaces.Piece.GRASSHOPPER] = 0
+            # board_manager.get_board().black_pieces_to_place[spaces.Piece.SPIDER] = 0
             try:
                 while board_manager.get_board().determine_winner() is None and board_manager.get_board().turn_number < 5000:
                     actions = board_manager.get_action_list()
                     rand_index = random.randint(0, len(actions) - 1)
                     action_to_perform = actions[rand_index]
                     board_manager.perform_action(action_to_perform)
-            except Exception as err:
+            except Exception:
                 print('=' * 50)
                 print('An error has occurred!')
+                print(traceback.format_exc())
+                print()
                 print(f'Action performed: {action_to_perform}')
                 print('Board details:')
                 board_manager.get_board().print_board()
                 print(board_manager)
-                print()
-                print(traceback.format_exc())
                 print('=' * 50)
                 continue
 

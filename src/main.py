@@ -399,7 +399,7 @@ def demo_game():
     print(f'The winner is: {game_board.determine_winner()}')
 
 
-def check_for_errors(max_num_runs=100, word_to_find=None, words_to_avoid=None):
+def check_for_errors(word_to_find=None, words_to_ignore=None, max_num_runs=25):
     num_runs = 0
     while num_runs < max_num_runs:
         try:
@@ -412,9 +412,9 @@ def check_for_errors(max_num_runs=100, word_to_find=None, words_to_avoid=None):
                 board.BoardManager().get_board().print_board()
                 print(err_output)
                 exit(1)
-            if words_to_avoid is not None:
+            if words_to_ignore is not None:
                 found_word = False
-                for word in words_to_avoid:
+                for word in words_to_ignore:
                     if word in err_output.lower():
                         found_word = True
                 if not found_word:
@@ -432,4 +432,4 @@ if __name__ == '__main__':
     # play_game_with_manager()
     # test_successive_states()
     # test_game5()
-    check_for_errors(word_to_find='spider')
+    check_for_errors(word_to_find='spider', max_num_runs=100)
