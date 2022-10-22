@@ -10,7 +10,7 @@ import unittest
 class TestRandomGames(unittest.TestCase):
     """
     This test case runs a series of 10 games with randomly chosen moves, with a maximum of 5000 moves per game.
-    The test passes if no errors occurr during runtime.
+    The test passes if no errors occur during runtime.
     """
 
     def test_random_games(self):
@@ -24,10 +24,6 @@ class TestRandomGames(unittest.TestCase):
 
             start_of_run = timer()
             board_manager = board.BoardManager(new_manager=True)
-            board_manager.get_board().white_pieces_to_place[spaces.Piece.GRASSHOPPER] = 0
-            # board_manager.get_board().white_pieces_to_place[spaces.Piece.SPIDER] = 0
-            board_manager.get_board().black_pieces_to_place[spaces.Piece.GRASSHOPPER] = 0
-            # board_manager.get_board().black_pieces_to_place[spaces.Piece.SPIDER] = 0
             try:
                 while board_manager.get_board().determine_winner() is None and board_manager.get_board().turn_number < 5000:
                     actions = board_manager.get_action_list()

@@ -11,7 +11,7 @@ import src.game.spaces as spaces
 
 
 def play_game():
-    # Initialize the game board
+    # Initialize the game game_board
     game_board = board.HiveGameBoard()
 
     while game_board.determine_winner() is None:
@@ -91,8 +91,8 @@ def play_game_with_manager(print_out=True):
         actions = board_manager.get_action_list()
         rand_index = random.randint(0, len(actions) - 1)
         actions_performed.append(actions[rand_index])
-        if print_out:
-            print(f'Performing action {actions[rand_index]}.')
+        if print_out or True:
+            print(f'{actions[rand_index]},')
         board_manager.perform_action(actions[rand_index])
 
     board_manager.get_board().print_board()
@@ -293,7 +293,7 @@ def test_sliding_rules():
     game_board.print_board()
     print(game_board)
 
-    print(f'Number of Empty Spaces on the board: {len(game_board.empty_spaces)}')
+    print(f'Number of Empty Spaces on the game_board: {len(game_board.empty_spaces)}')
 
     for piece in game_board.pieces.values():
         if piece.name == spaces.Piece.ANT:
@@ -307,7 +307,7 @@ def test_sliding_rules():
     game_board.print_board()
     print('-' * 50)
 
-    print(f'Number of Empty Spaces on the board: {len(game_board.empty_spaces)}')
+    print(f'Number of Empty Spaces on the game_board: {len(game_board.empty_spaces)}')
 
     for piece in game_board.pieces.values():
         if piece.name == spaces.Piece.ANT:
@@ -429,7 +429,7 @@ def check_for_errors(word_to_find=None, words_to_ignore=None, max_num_runs=25):
 if __name__ == '__main__':
     # test_sliding_rules()
     # demo_game()
-    # play_game_with_manager()
+    play_game_with_manager()
     # test_successive_states()
     # test_game5()
-    check_for_errors(word_to_find='spider', max_num_runs=100)
+    # check_for_errors(word_to_find='grasshopper', max_num_runs=100)

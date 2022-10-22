@@ -200,11 +200,11 @@ class HiveGameBoard:
         # Move actions
         for piece_location, move_locations in possible_moves_dict.items():
             for new_location in move_locations:
-                all_actions.append([
+                all_actions.append((
                     HiveGameBoard.MOVE_PIECE,
                     piece_location,
                     new_location
-                ])
+                ))
 
         if not all_actions:
             return [(HiveGameBoard.SKIP_TURN, None, None)]

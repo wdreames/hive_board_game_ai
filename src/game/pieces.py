@@ -113,6 +113,8 @@ class Beetle(Piece):
 
             self.board.pieces[self.location] = self.stacked_piece_obj
             self.stacked_piece_obj.prepare_for_update()
+            if self.stacked_piece_obj.name == Piece.GRASSHOPPER:
+                self.stacked_piece_obj.initialize_paths = True
             if self.stacked_piece_obj.name == Piece.BEETLE:
                 self.stacked_piece_obj.unlock()
             self.stacked_piece_obj = None
