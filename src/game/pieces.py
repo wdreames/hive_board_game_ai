@@ -311,9 +311,10 @@ class Grasshopper(Piece):
 
         # Determine the next location
         if space_is_empty_space:
+            if location in self.get_all_surrounding_locations():
+                return
             # If the space is an EmptySpace, add a possible move
-            if location not in self.get_all_surrounding_locations():
-                self.add_move(location)
+            self.add_move(location)
             self.board.empty_spaces[location].linked_grasshoppers.add(self.location)
             next_location = None
         else:
@@ -356,9 +357,7 @@ class Grasshopper(Piece):
         else:
             self.board.pieces[path_data.location].linked_grasshoppers.remove(self.location)
 
-        if initial_call and path_data.previous_location != self.location:
-            if not path_data.is_empty_space:
-                self.add_move(path_data.location)
+        if initial_call and path_data.previous_location in self.paths:
             previous_path_data = self.paths[path_data.previous_location]
             self.paths_to_add.add(previous_path_data)
             self.prepare_for_update()
@@ -448,19 +447,19 @@ class Spider(Piece):
             # TODO: [Debugging] Clearing this does not remove linked EmptySpaces
 
             # Clear all previous paths
-            # for empty_space_location in self.paths:
-            #     if empty_space_location in self.board.empty_spaces:
-            #         empty_space = self.board.empty_spaces[empty_space_location]
-            #         if self.location in empty_space.linked_spiders:
-            #             empty_space.linked_spiders.remove(self.location)
+            for empty_space_location in self.paths:
+                if empty_space_location in self.board.empty_spaces:
+                    empty_space = self.board.empty_spaces[empty_space_location]
+                    if self.location in empty_space.linked_spiders:
+                        empty_space.linked_spiders.remove(self.location)
 
-            for path_id, path_root in self.path_roots.copy().items():
-                self.remove_spider_path(path_root.location, path_id=path_id)
-            if self.paths or self.path_roots:
-                raise RuntimeError(f'Paths should be empty before removing a Spider.\n'
-                                   f'Spider location: {self.location}\n'
-                                   f'Spider paths: {self.paths}\n'
-                                   f'Spider path roots: {self.path_roots}')
+            # for path_id, path_root in self.path_roots.copy().items():
+            #     self.remove_spider_path(path_root.location, path_id=path_id)
+            # if self.paths or self.path_roots:
+            #     raise RuntimeError(f'Paths should be empty before removing a Spider.\n'
+            #                        f'Spider location: {self.location}\n'
+            #                        f'Spider paths: {self.paths}\n'
+            #                        f'Spider path roots: {self.path_roots}')
             self.paths.clear()
             self.path_roots.clear()
             self.possible_moves.clear()
@@ -480,7 +479,7 @@ class Spider(Piece):
                     previous_location=spider_path.previous_location,
                     depth=spider_path.depth,
                     path_id=spider_path.path_id,
-                    visited=spider_path.visited
+                    visited=spider_path.visited.copy()
                 )
 
             # Compare current path starts to previous path starts
@@ -644,16 +643,6 @@ class Spider(Piece):
             spider_paths = [spider_path for spider_path in self.paths.pop(empty_space_location).values()]
 
         for spider_path in spider_paths:
-            # print(
-            #     f'Removing path for Spider at {self.location}:\n'
-            #     f'\tLocation:             {spider_path.location}\n'
-            #     f'\tPath ID:              {spider_path.path_id}\n'
-            #     f'\tPrevious Location:    {spider_path.previous_location}\n'
-            #     f'\tNext Locations:       {spider_path.next_locations}\n'
-            #     f'\tDepth:                {spider_path.depth}\n'
-            #     f'\tVisited:              {spider_path.visited}\n'
-            # )
-
             # If depth = 1, remove this from the dictionary of root nodes
             if spider_path.depth == 1:
                 self.path_roots.pop(spider_path.path_id)
