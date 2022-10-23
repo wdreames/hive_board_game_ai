@@ -4,72 +4,78 @@ CNU Computer Science Capstone
 AI for the Hive Board Game
 2022
 """
+import copy
+from timeit import default_timer as timer
+
 import random
 import traceback
 import src.game.board as board
 import src.game.spaces as spaces
+import src.agents as agents
+
+import matplotlib.pyplot as plt
 
 
-def play_game():
-    # Initialize the game game_board
-    game_board = board.HiveGameBoard()
-
-    while game_board.determine_winner() is None:
-        print('-' * 50)
-        print(game_board)
-        game_board.print_board()
-
-        if game_board.is_white_turn():
-            current_player = 'white'
-        else:
-            current_player = 'black'
-        print('Game turn: {}\nPlayer to Move: {}\nPlayer Turn: {}\n'.format(game_board.turn_number, current_player,
-                                                                            (game_board.turn_number + 1) // 2))
-
-        pieces_to_play, locations_to_place, possible_moves = game_board.get_all_possible_actions()
-
-        print('{} has the following pieces to play: {}'.format(current_player, pieces_to_play))
-        print('{} has the following locations to place a piece: {}'.format(current_player, locations_to_place))
-        print('{} has the following pieces to move: {}'.format(current_player, set(possible_moves.keys())))
-
-        try:
-            # TODO: [UI] Assuming properly formatted input for now
-            place_or_move = input('Do you want to place a piece (1) or move a piece (2)?')
-            if int(place_or_move) == 1:
-                piece_input = input('Which piece would you like to play?')
-                location_input = input('Where would you like to place the piece?')
-                location_input = location_input.split(',')
-                x_val = int(location_input[0][1:])
-                y_val = int(location_input[1][:-1])
-
-                if (x_val, y_val) in locations_to_place:
-                    print('placing {} at ({}, {})'.format(piece_input, x_val, y_val))
-                    game_board.place_piece(piece_input, (x_val, y_val))
-                else:
-                    print('Invalid location. Please select from the list of available locations to place a piece')
-            else:
-                piece_loc_input = input('Which piece would you like to move (enter location)?')
-                piece_loc_input = piece_loc_input.split(',')
-                x_val = int(piece_loc_input[0][1:])
-                y_val = int(piece_loc_input[1][:-1])
-                if (x_val, y_val) in possible_moves:
-                    print('{} has the following possible moves: {}'.format((x_val, y_val),
-                                                                           possible_moves[(x_val, y_val)]))
-                    move_location_input = input('Where would you like to move the piece?')
-                    move_location_input = move_location_input.split(',')
-                    x_val2 = int(move_location_input[0][1:])
-                    y_val2 = int(move_location_input[1][:-1])
-
-                    game_board.move_piece((x_val, y_val), (x_val2, y_val2))
-                else:
-                    print('Invalid selection. Please select from the list of available pieces to move')
-
-        # except KeyError:
-        #     print('Error in processing input: ', traceback.format_exc())
-        except ValueError:
-            print('Invalid input: ', traceback.format_exc())
-
-    print('Winner: {}'.format(game_board.determine_winner()))
+# def play_game():
+#     # Initialize the game game_board
+#     game_board = board.HiveGameBoard()
+#
+#     while game_board.determine_winner() is None:
+#         print('-' * 50)
+#         print(game_board)
+#         game_board.print_board()
+#
+#         if game_board.is_white_turn():
+#             current_player = 'white'
+#         else:
+#             current_player = 'black'
+#         print('Game turn: {}\nPlayer to Move: {}\nPlayer Turn: {}\n'.format(game_board.turn_number, current_player,
+#                                                                             (game_board.turn_number + 1) // 2))
+#
+#         pieces_to_play, locations_to_place, possible_moves = game_board.get_all_possible_actions()
+#
+#         print('{} has the following pieces to play: {}'.format(current_player, pieces_to_play))
+#         print('{} has the following locations to place a piece: {}'.format(current_player, locations_to_place))
+#         print('{} has the following pieces to move: {}'.format(current_player, set(possible_moves.keys())))
+#
+#         try:
+#             # TODO: [UI] Assuming properly formatted input for now
+#             place_or_move = input('Do you want to place a piece (1) or move a piece (2)?')
+#             if int(place_or_move) == 1:
+#                 piece_input = input('Which piece would you like to play?')
+#                 location_input = input('Where would you like to place the piece?')
+#                 location_input = location_input.split(',')
+#                 x_val = int(location_input[0][1:])
+#                 y_val = int(location_input[1][:-1])
+#
+#                 if (x_val, y_val) in locations_to_place:
+#                     print('placing {} at ({}, {})'.format(piece_input, x_val, y_val))
+#                     game_board.place_piece(piece_input, (x_val, y_val))
+#                 else:
+#                     print('Invalid location. Please select from the list of available locations to place a piece')
+#             else:
+#                 piece_loc_input = input('Which piece would you like to move (enter location)?')
+#                 piece_loc_input = piece_loc_input.split(',')
+#                 x_val = int(piece_loc_input[0][1:])
+#                 y_val = int(piece_loc_input[1][:-1])
+#                 if (x_val, y_val) in possible_moves:
+#                     print('{} has the following possible moves: {}'.format((x_val, y_val),
+#                                                                            possible_moves[(x_val, y_val)]))
+#                     move_location_input = input('Where would you like to move the piece?')
+#                     move_location_input = move_location_input.split(',')
+#                     x_val2 = int(move_location_input[0][1:])
+#                     y_val2 = int(move_location_input[1][:-1])
+#
+#                     game_board.move_piece((x_val, y_val), (x_val2, y_val2))
+#                 else:
+#                     print('Invalid selection. Please select from the list of available pieces to move')
+#
+#         # except KeyError:
+#         #     print('Error in processing input: ', traceback.format_exc())
+#         except ValueError:
+#             print('Invalid input: ', traceback.format_exc())
+#
+#     print('Winner: {}'.format(game_board.determine_winner()))
 
 
 def play_game_with_manager(print_out=True):
@@ -426,10 +432,87 @@ def check_for_errors(word_to_find=None, words_to_ignore=None, max_num_runs=25):
         num_runs += 1
 
 
+def graph_data(evaluations_during_game, times_taken, player1, player2):
+    plt.figure(figsize=(10, 5))
+    x_range = range(0, len(evaluations_during_game))
+    plt.plot(x_range, evaluations_during_game)
+    plt.xlabel('Turn Number')
+    plt.ylabel('Evaluation')
+    plt.title(f'Board Evaluation During a Hive Game\n'
+              f'{player1} vs {player2}\n'
+              f'Winner: {board.BoardManager().get_board().determine_winner()}')
+
+    fig2, ax1 = plt.subplots(figsize=(10, 5))
+
+    white_times_taken = times_taken[::2]
+    black_times_taken = times_taken[1::2]
+    ax1.plot(x_range[::2], white_times_taken, '#d2a200', alpha=0.75, label='White Time Taken')
+    ax1.plot(x_range[1::2], black_times_taken, 'black', alpha=0.75, label='Black Time Taken')
+    ax1.set_xlabel('Turn Number')
+    ax1.set_ylabel('Time Taken [Seconds]')
+    plt.title(f'Time Taken to Decide and Action During a Hive Game\n'
+              f'{player1} vs {player2}\n'
+              f'Winner: {board.BoardManager().get_board().determine_winner()}')
+    fig2.legend()
+    plt.show()
+
+
+def play_game(player1, player2):
+    board_manager = board.BoardManager(new_manager=True)
+
+    if player1 == player2:
+        player2 = copy.deepcopy(player1)
+
+    player1.is_white = True
+    player2.is_white = False
+
+    evaluations_during_game = []
+    times_taken = []
+    start_of_game = timer()
+    while board_manager.get_board().determine_winner() is None and board_manager.get_board().turn_number < 100:
+        board_manager.get_board().print_board()
+        print(f'Current player: {"White" if board_manager.get_board().is_white_turn() else "Black"}')
+        print(f'Evaluation: {board_manager.get_board().evaluate_state()}')
+        print(f'Turn Number: {board_manager.get_board().turn_number}')
+
+        start_of_action_decision = timer()
+        if board_manager.get_board().is_white_turn():
+            chosen_action = player1.get_action()
+        else:
+            chosen_action = player2.get_action()
+        end_of_action_decision = timer()
+        print(f'Took {end_of_action_decision - start_of_action_decision} seconds to decide which action to take.')
+        times_taken.append(end_of_action_decision - start_of_action_decision)
+
+        evaluations_during_game.append(board_manager.get_board().evaluate_state())
+
+        perform_action_str = f'Performing action: {chosen_action}'
+        print(perform_action_str)
+        print('=' * len(perform_action_str))
+        board_manager.perform_action(chosen_action)
+
+    end_of_game = timer()
+
+    board_manager.get_board().print_board()
+    print(f'Winner: {board_manager.get_board().determine_winner()}')
+    print(f'Total number of actions: {board_manager.get_board().turn_number}')
+    print(f'Total game time: {end_of_game - start_of_game}')
+    print(f'Average time per action: {(end_of_game - start_of_game) / board_manager.get_board().turn_number}')
+
+    graph_data(evaluations_during_game, times_taken, player1, player2)
+
+
 if __name__ == '__main__':
     # test_sliding_rules()
     # demo_game()
-    play_game_with_manager()
+    # play_game_with_manager()
     # test_successive_states()
     # test_game5()
     # check_for_errors(word_to_find='grasshopper', max_num_runs=100)
+    player = agents.Player()
+    random_ai = agents.RandomActionAI()
+    best_next_move_ai = agents.BestNextMoveAI()
+    minimax_ai1 = agents.MinimaxAI(max_depth=1)
+    minimax_ai2 = agents.MinimaxAI(max_depth=2)
+
+    play_game(minimax_ai1, random_ai)

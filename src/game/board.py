@@ -65,13 +65,6 @@ class HiveGameBoard:
     BLACK_WINNER = 'Black'
     DRAW = 'Draw'
 
-    # TODO: [AI] Would it be possible to have this return whatever the current instance of the board is?
-    #       - This way the AI could traverse down multiple layers, but the internal code would not need to change.
-    #       - Question: Would this also be able to manage Piece interactions?
-    #         - As long as all actions are called via the board, it should be okay
-    #       - Maybe have an instance=board_instance parameter?
-    #       - Or I could have a separate BoardManager class that uses Singleton, but can control which board instance
-    #       to return when requested.
     def __init__(self):
         """
         Method used to get an instance of the game board. A singleton design pattern is used here so the class is
@@ -700,52 +693,60 @@ class HiveGameBoard:
         # Enemy Free Spider: -2
         # Enemy Free Spider: -2
 
-        if self.is_white_turn():
-            if self.black_queen_location is None:
-                num_around_enemy_qb = 0
-            else:
-                num_around_enemy_qb = len(self.pieces[self.black_queen_location].connected_pieces)
-
-            player_free_pieces = self.num_white_free_pieces
-            enemy_free_pieces = self.num_black_free_pieces
+        if self.black_queen_location is None:
+            num_around_black_qb = 0
         else:
-            if self.white_queen_location is None:
-                num_around_enemy_qb = 0
-            else:
-                num_around_enemy_qb = len(self.pieces[self.white_queen_location].connected_pieces)
+            num_around_black_qb = len(self.pieces[self.black_queen_location].connected_pieces)
 
-            player_free_pieces = self.num_black_free_pieces
-            enemy_free_pieces = self.num_white_free_pieces
+        if self.white_queen_location is None:
+            num_around_white_qb = 0
+        else:
+            num_around_white_qb = len(self.pieces[self.white_queen_location].connected_pieces)
 
         utilities = [
-            1 if num_around_enemy_qb == 6 else 0,
-            1 if num_around_enemy_qb == 5 else 0,
+            # White utilities (positive)
+            1 if num_around_black_qb == 6 else 0,
+            1 if num_around_black_qb == 5 else 0,
+            1 if num_around_black_qb == 4 else 0,
+            1 if num_around_black_qb == 3 else 0,
 
-            player_free_pieces[Piece.ANT],
-            player_free_pieces[Piece.BEETLE],
-            player_free_pieces[Piece.GRASSHOPPER],
-            player_free_pieces[Piece.QUEEN_BEE],
-            player_free_pieces[Piece.SPIDER],
+            self.num_white_free_pieces[Piece.ANT],
+            self.num_white_free_pieces[Piece.BEETLE],
+            self.num_white_free_pieces[Piece.GRASSHOPPER],
+            1 if self.num_white_free_pieces[Piece.QUEEN_BEE] and (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.SPIDER],
 
-            enemy_free_pieces[Piece.ANT],
-            enemy_free_pieces[Piece.BEETLE],
-            enemy_free_pieces[Piece.GRASSHOPPER],
-            enemy_free_pieces[Piece.QUEEN_BEE],
-            enemy_free_pieces[Piece.SPIDER],
+            # Black utilities (negative)
+            1 if num_around_white_qb == 6 else 0,
+            1 if num_around_white_qb == 5 else 0,
+            1 if num_around_white_qb == 4 else 0,
+            1 if num_around_white_qb == 3 else 0,
+
+            self.num_black_free_pieces[Piece.ANT],
+            self.num_black_free_pieces[Piece.BEETLE],
+            self.num_black_free_pieces[Piece.GRASSHOPPER],
+            1 if self.num_black_free_pieces[Piece.QUEEN_BEE] and (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_black_free_pieces[Piece.SPIDER],
         ]
         values = [
-            10000,
-            10,
-            3,
-            2,
-            2,
-            5,
-            2,
-            -3,
-            -2,
-            -2,
-            -5,
-            -2
+            10000,  # 6 around black qb
+            15,  # 5 around black qb
+            10,  # 4 around black qb
+            1,  # 3 around black qb
+            1,  # Multiplied by number of free white ants
+            1,  # Multiplied by number of free white beetles
+            1,  # Multiplied by number of free white grasshoppers
+            5,  # Multiplied by number of free white queen bees (after turn 4)
+            1,  # Multiplied by number of free white spiders
+            -10000,  # 6 around white qb
+            -15,  # 5 around white qb
+            -10,  # 4 around white qb
+            -1,  # 3 around white qb
+            -1,  # Multiplied by number of free black ants
+            -1,  # Multiplied by number of free black beetles
+            -1,  # Multiplied by number of free black grasshoppers
+            -5,  # Multiplied by number of free black queen bees (after turn 4)
+            -1  # Multiplied by number of free black spiders
         ]
 
         evaluation = sum([utility * value for utility, value in zip(utilities, values)])

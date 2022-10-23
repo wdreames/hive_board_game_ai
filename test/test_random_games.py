@@ -1,7 +1,6 @@
 from timeit import default_timer as timer
 
 import src.game.board as board
-import src.game.spaces as spaces
 import random
 import traceback
 import unittest
