@@ -64,9 +64,10 @@ class RandomActionAI(Agent):
 
 class BestNextMoveAI(Agent):
 
-    def __init__(self, is_white=True, board_manager=None):
+    def __init__(self, is_white=True, board_manager=None, winning_value=50000):
         super().__init__(is_white, board_manager)
         self.name = 'Best Next Move AI'
+        self.winning_value = winning_value
 
     def get_action_selection(self):
         actions = self.board_manager.get_action_list()
@@ -78,10 +79,12 @@ class BestNextMoveAI(Agent):
         best_actions = []
         for i, action in enumerate(actions):
             evaluation = self.board_manager.get_successor(action=action).evaluate_state()
-            # print(f'{self} - Processing action: {str(action):40} Evaluation: {evaluation:2}; {(i+1)/(len(actions)+1)*100:.1f}% complete.')
-
             if not self.is_white:
                 evaluation *= -1
+            # print(f'{self} - Processing action: {str(action):40} Evaluation: {evaluation:2}; {(i+1)/(len(actions)+1)*100:.1f}% complete.')
+
+            if evaluation >= self.winning_value:
+                return action
             if evaluation > best_evaluation:
                 best_evaluation = evaluation
                 best_actions.clear()
@@ -97,14 +100,15 @@ class BestNextMoveAI(Agent):
 
 class MinimaxAI(Agent):
 
-    def __init__(self, is_white=True, board_manager=None, max_depth=4):
+    def __init__(self, is_white=True, board_manager=None, max_depth=4, winning_value=50000):
         super().__init__(is_white, board_manager)
         self.max_depth = max_depth
         self.name = f'Minimax AI with Depth {self.max_depth}'
+        self.winning_value = winning_value
 
     def get_action_selection(self):
-        alpha = -float("inf")
-        beta = float("inf")
+        alpha = -self.winning_value
+        beta = self.winning_value
 
         actions = self.board_manager.get_action_list()
         best_evaluation = -float("inf")
@@ -113,7 +117,10 @@ class MinimaxAI(Agent):
         for i, action in enumerate(actions):
             next_board_state = self.board_manager.get_successor(action=action)
             action_eval = self.min_value(next_board_state, alpha, beta)
-            # print(f'{self} - Processing action: {str(action):40} Evaluation: {action_eval:2}; {(i+1)/(len(actions)+1)*100:.1f}% complete.')
+            print(f'{self} - Processing action: {str(action):40} Evaluation: {action_eval:5.1f}; {(i+1)/(len(actions))*100:.1f}% complete.')
+
+            if action_eval >= beta:
+                return action
             if action_eval > best_evaluation:
                 best_evaluation = action_eval
                 best_actions.clear()
@@ -158,3 +165,28 @@ class MinimaxAI(Agent):
                 return value
             beta = min(value, beta)
         return value
+
+
+class ExpectimaxAI(MinimaxAI):
+
+    def __init__(self, is_white=True, board_manager=None, max_depth=4):
+        super().__init__(is_white, board_manager, max_depth)
+        self.name = f'Expectimax AI with Depth {self.max_depth}'
+
+    def min_value(self, board_state, alpha, beta, current_depth=1):
+        return self.expected_value(board_state, alpha, beta, current_depth)
+
+    def expected_value(self, board_state, alpha, beta, current_depth=1):
+        if current_depth >= self.max_depth or board_state.determine_winner() is not None:
+            if self.is_white:
+                return board_state.evaluate_state()
+            else:
+                return -board_state.evaluate_state()
+
+        sum_of_values = 0
+        actions = board_state.get_action_list()
+        for action in actions:
+            next_board_state = self.board_manager.get_successor(board_state, action)
+            sum_of_values += self.max_value(next_board_state, alpha, beta, current_depth + 1)
+
+        return sum_of_values / len(actions)

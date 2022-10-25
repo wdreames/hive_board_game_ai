@@ -180,6 +180,15 @@ class HiveGameBoard:
         pieces_to_play, locations_to_place, possible_moves_dict = self.get_all_possible_actions()
 
         all_actions = []
+        # Move actions
+        for piece_location, move_locations in possible_moves_dict.items():
+            for new_location in move_locations:
+                all_actions.append((
+                    HiveGameBoard.MOVE_PIECE,
+                    piece_location,
+                    new_location
+                ))
+
         # Place actions
         for piece_type, amount_of_type in pieces_to_play.items():
             if amount_of_type:
@@ -189,15 +198,6 @@ class HiveGameBoard:
                         possible_location,
                         piece_type
                     ))
-
-        # Move actions
-        for piece_location, move_locations in possible_moves_dict.items():
-            for new_location in move_locations:
-                all_actions.append((
-                    HiveGameBoard.MOVE_PIECE,
-                    piece_location,
-                    new_location
-                ))
 
         if not all_actions:
             return [(HiveGameBoard.SKIP_TURN, None, None)]
@@ -363,35 +363,33 @@ class HiveGameBoard:
             - The specified Piece cannot move based on the "One Hive" rule.
             - The new location is not within the Piece's list of possible moves.
         """
-        if piece_location == new_location:
-            return
+        if piece_location != new_location:
+            # Ensure the move is legal
+            NO_QUEEN_BEE_MOVE_ERR = 'Illegal action. You must place your Queen Bee before you can perform a move action.'
+            WHITE_MOVE_ERR = "Illegal action. It is white's turn, but a move for black was attempted."
+            BLACK_MOVE_ERR = "Illegal action. It is black's turn, but a move for white was attempted."
+            ONE_HIVE_ERR = 'Illegal action. This piece cannot move based on the "One Hive" rule.'
+            INVALID_MOVE_ERR = 'Illegal action. This piece cannot move to the specified location.'
+            if self.is_white_turn():
+                if self.white_queen_location is None:
+                    raise RuntimeError(NO_QUEEN_BEE_MOVE_ERR)
+                elif not self.pieces[piece_location].is_white:
+                    raise RuntimeError(WHITE_MOVE_ERR)
+                elif piece_location not in self.white_possible_moves:
+                    raise RuntimeError(ONE_HIVE_ERR)
+                elif new_location not in self.white_possible_moves[piece_location]:
+                    raise RuntimeError(INVALID_MOVE_ERR)
+            else:
+                if self.black_queen_location is None:
+                    raise RuntimeError(NO_QUEEN_BEE_MOVE_ERR)
+                elif self.pieces[piece_location].is_white:
+                    raise RuntimeError(BLACK_MOVE_ERR)
+                elif piece_location not in self.black_possible_moves:
+                    raise RuntimeError(ONE_HIVE_ERR)
+                elif new_location not in self.black_possible_moves[piece_location]:
+                    raise RuntimeError(INVALID_MOVE_ERR)
 
-        # Ensure the move is legal
-        NO_QUEEN_BEE_MOVE_ERR = 'Illegal action. You must place your Queen Bee before you can perform a move action.'
-        WHITE_MOVE_ERR = "Illegal action. It is white's turn, but a move for black was attempted."
-        BLACK_MOVE_ERR = "Illegal action. It is black's turn, but a move for white was attempted."
-        ONE_HIVE_ERR = 'Illegal action. This piece cannot move based on the "One Hive" rule.'
-        INVALID_MOVE_ERR = 'Illegal action. This piece cannot move to the specified location.'
-        if self.is_white_turn():
-            if self.white_queen_location is None:
-                raise RuntimeError(NO_QUEEN_BEE_MOVE_ERR)
-            elif not self.pieces[piece_location].is_white:
-                raise RuntimeError(WHITE_MOVE_ERR)
-            elif piece_location not in self.white_possible_moves:
-                raise RuntimeError(ONE_HIVE_ERR)
-            elif new_location not in self.white_possible_moves[piece_location]:
-                raise RuntimeError(INVALID_MOVE_ERR)
-        else:
-            if self.black_queen_location is None:
-                raise RuntimeError(NO_QUEEN_BEE_MOVE_ERR)
-            elif self.pieces[piece_location].is_white:
-                raise RuntimeError(BLACK_MOVE_ERR)
-            elif piece_location not in self.black_possible_moves:
-                raise RuntimeError(ONE_HIVE_ERR)
-            elif new_location not in self.black_possible_moves[piece_location]:
-                raise RuntimeError(INVALID_MOVE_ERR)
-
-        self.pieces[piece_location].move_to(new_location)
+            self.pieces[piece_location].move_to(new_location)
 
         self.update_spaces()
         self.turn_number += 1
@@ -729,19 +727,19 @@ class HiveGameBoard:
             self.num_black_free_pieces[Piece.SPIDER],
         ]
         values = [
-            10000,  # 6 around black qb
-            15,  # 5 around black qb
-            10,  # 4 around black qb
-            1,  # 3 around black qb
+            100000,  # 6 around black qb
+            20,  # 5 around black qb
+            15,  # 4 around black qb
+            10,  # 3 around black qb
             1,  # Multiplied by number of free white ants
             1,  # Multiplied by number of free white beetles
             1,  # Multiplied by number of free white grasshoppers
             5,  # Multiplied by number of free white queen bees (after turn 4)
             1,  # Multiplied by number of free white spiders
-            -10000,  # 6 around white qb
-            -15,  # 5 around white qb
-            -10,  # 4 around white qb
-            -1,  # 3 around white qb
+            -100000,  # 6 around white qb
+            -20,  # 5 around white qb
+            -15,  # 4 around white qb
+            -10,  # 3 around white qb
             -1,  # Multiplied by number of free black ants
             -1,  # Multiplied by number of free black beetles
             -1,  # Multiplied by number of free black grasshoppers

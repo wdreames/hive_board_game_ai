@@ -432,7 +432,8 @@ def check_for_errors(word_to_find=None, words_to_ignore=None, max_num_runs=25):
         num_runs += 1
 
 
-def graph_data(evaluations_during_game, times_taken, player1, player2):
+def graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2):
+    # Plot the evaluation
     plt.figure(figsize=(10, 5))
     x_range = range(0, len(evaluations_during_game))
     plt.plot(x_range, evaluations_during_game)
@@ -442,22 +443,40 @@ def graph_data(evaluations_during_game, times_taken, player1, player2):
               f'{player1} vs {player2}\n'
               f'Winner: {board.BoardManager().get_board().determine_winner()}')
 
+    # Plot white data
     fig2, ax1 = plt.subplots(figsize=(10, 5))
+    ax2 = ax1.twinx()
 
-    white_times_taken = times_taken[::2]
-    black_times_taken = times_taken[1::2]
-    ax1.plot(x_range[::2], white_times_taken, '#d2a200', alpha=0.75, label='White Time Taken')
-    ax1.plot(x_range[1::2], black_times_taken, 'black', alpha=0.75, label='Black Time Taken')
+    ax1.plot(x_range[::2], times_taken[::2], '#d2a200', alpha=0.75, label='White Time Taken')
+    ax2.plot(x_range[::2], num_actions_per_turn[::2], 'blue', alpha=0.75, label='White Number of Actions')
+
     ax1.set_xlabel('Turn Number')
     ax1.set_ylabel('Time Taken [Seconds]')
-    plt.title(f'Time Taken to Decide and Action During a Hive Game\n'
+    ax2.set_ylabel('Number of Actions')
+
+    plt.title(f'{player1} (White) Time Taken to Decide and Action During a Hive Game\n'
               f'{player1} vs {player2}\n'
               f'Winner: {board.BoardManager().get_board().determine_winner()}')
     fig2.legend()
+
+    # Plot black data
+    fig3, ax3 = plt.subplots(figsize=(10, 5))
+    ax4 = ax3.twinx()
+    ax3.plot(x_range[1::2], times_taken[1::2], 'black', alpha=0.75, label='Black Time Taken')
+    ax4.plot(x_range[1::2], num_actions_per_turn[1::2], 'red', alpha=0.75, label='Black Number of Actions')
+
+    ax3.set_xlabel('Turn Number')
+    ax3.set_ylabel('Time Taken [Seconds]')
+    ax4.set_ylabel('Number of Actions')
+
+    plt.title(f'{player2} (Black) Time Taken to Decide and Action During a Hive Game\n'
+              f'{player1} vs {player2}\n'
+              f'Winner: {board.BoardManager().get_board().determine_winner()}')
+
     plt.show()
 
 
-def play_game(player1, player2):
+def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
     board_manager = board.BoardManager(new_manager=True)
 
     if player1 == player2:
@@ -468,8 +487,13 @@ def play_game(player1, player2):
 
     evaluations_during_game = []
     times_taken = []
+    num_actions_per_turn = []
     start_of_game = timer()
-    while board_manager.get_board().determine_winner() is None and board_manager.get_board().turn_number < 100:
+    while board_manager.get_board().determine_winner() is None and board_manager.get_board().turn_number < max_turns:
+        time_check = timer()
+        if time_check - start_of_game > max_time:
+            break
+
         board_manager.get_board().print_board()
         print(f'Current player: {"White" if board_manager.get_board().is_white_turn() else "Black"}')
         print(f'Evaluation: {board_manager.get_board().evaluate_state()}')
@@ -483,6 +507,7 @@ def play_game(player1, player2):
         end_of_action_decision = timer()
         print(f'Took {end_of_action_decision - start_of_action_decision} seconds to decide which action to take.')
         times_taken.append(end_of_action_decision - start_of_action_decision)
+        num_actions_per_turn.append(len(board_manager.get_action_list()))
 
         evaluations_during_game.append(board_manager.get_board().evaluate_state())
 
@@ -497,9 +522,14 @@ def play_game(player1, player2):
     print(f'Winner: {board_manager.get_board().determine_winner()}')
     print(f'Total number of actions: {board_manager.get_board().turn_number}')
     print(f'Total game time: {end_of_game - start_of_game}')
-    print(f'Average time per action: {(end_of_game - start_of_game) / board_manager.get_board().turn_number}')
 
-    graph_data(evaluations_during_game, times_taken, player1, player2)
+    white_times_taken = times_taken[::2]
+    black_times_taken = times_taken[1::2]
+
+    print(f'Average Time Taken by White: {sum(white_times_taken) / len(white_times_taken)}')
+    print(f'Average Time Taken by Black: {sum(black_times_taken) / len(black_times_taken)}')
+
+    graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
 
 
 if __name__ == '__main__':
@@ -514,5 +544,9 @@ if __name__ == '__main__':
     best_next_move_ai = agents.BestNextMoveAI()
     minimax_ai1 = agents.MinimaxAI(max_depth=1)
     minimax_ai2 = agents.MinimaxAI(max_depth=2)
+    minimax_ai3 = agents.MinimaxAI(max_depth=3)
+    expectimax_ai1 = agents.ExpectimaxAI(max_depth=1)
+    expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
+    expectimax_ai3 = agents.ExpectimaxAI(max_depth=3)
 
-    play_game(minimax_ai1, random_ai)
+    play_game(random_ai, expectimax_ai3, max_turns=100)
