@@ -84,18 +84,18 @@ class HiveGameBoard:
         self.pieces = dict()
         self.empty_spaces = dict()
         self.white_pieces_to_place = {
-            Piece.ANT: 3,
             Piece.BEETLE: 2,
+            Piece.SPIDER: 2,
             Piece.GRASSHOPPER: 3,
+            Piece.ANT: 3,
             Piece.QUEEN_BEE: 1,
-            Piece.SPIDER: 2
         }
         self.black_pieces_to_place = {
-            Piece.ANT: 3,
             Piece.BEETLE: 2,
+            Piece.SPIDER: 2,
             Piece.GRASSHOPPER: 3,
+            Piece.ANT: 3,
             Piece.QUEEN_BEE: 1,
-            Piece.SPIDER: 2
         }
 
         self.turn_number = 1
@@ -708,11 +708,11 @@ class HiveGameBoard:
             1 if num_around_black_qb == 4 else 0,
             1 if num_around_black_qb == 3 else 0,
 
-            self.num_white_free_pieces[Piece.ANT],
-            self.num_white_free_pieces[Piece.BEETLE],
-            self.num_white_free_pieces[Piece.GRASSHOPPER],
+            self.num_white_free_pieces[Piece.ANT] if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.BEETLE] if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.GRASSHOPPER] if (self.turn_number + 1) // 2 >= 5 else 0,
             1 if self.num_white_free_pieces[Piece.QUEEN_BEE] and (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_white_free_pieces[Piece.SPIDER],
+            self.num_white_free_pieces[Piece.SPIDER] if (self.turn_number + 1) // 2 >= 5 else 0,
 
             # Black utilities (negative)
             1 if num_around_white_qb == 6 else 0,
@@ -720,31 +720,31 @@ class HiveGameBoard:
             1 if num_around_white_qb == 4 else 0,
             1 if num_around_white_qb == 3 else 0,
 
-            self.num_black_free_pieces[Piece.ANT],
-            self.num_black_free_pieces[Piece.BEETLE],
-            self.num_black_free_pieces[Piece.GRASSHOPPER],
+            self.num_black_free_pieces[Piece.ANT] if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_black_free_pieces[Piece.BEETLE] if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_black_free_pieces[Piece.GRASSHOPPER] if (self.turn_number + 1) // 2 >= 5 else 0,
             1 if self.num_black_free_pieces[Piece.QUEEN_BEE] and (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_black_free_pieces[Piece.SPIDER],
+            self.num_black_free_pieces[Piece.SPIDER] if (self.turn_number + 1) // 2 >= 5 else 0,
         ]
         values = [
             100000,  # 6 around black qb
-            20,  # 5 around black qb
-            15,  # 4 around black qb
-            10,  # 3 around black qb
-            1,  # Multiplied by number of free white ants
-            1,  # Multiplied by number of free white beetles
-            1,  # Multiplied by number of free white grasshoppers
-            5,  # Multiplied by number of free white queen bees (after turn 4)
-            1,  # Multiplied by number of free white spiders
+            30,  # 5 around black qb
+            25,  # 4 around black qb
+            15,  # 3 around black qb
+            0,  # Multiplied by number of free white ants
+            0,  # Multiplied by number of free white beetles
+            0,  # Multiplied by number of free white grasshoppers
+            10,  # Multiplied by number of free white queen bees (after turn 4)
+            0,  # Multiplied by number of free white spiders
             -100000,  # 6 around white qb
-            -20,  # 5 around white qb
-            -15,  # 4 around white qb
-            -10,  # 3 around white qb
-            -1,  # Multiplied by number of free black ants
-            -1,  # Multiplied by number of free black beetles
-            -1,  # Multiplied by number of free black grasshoppers
-            -5,  # Multiplied by number of free black queen bees (after turn 4)
-            -1  # Multiplied by number of free black spiders
+            -30,  # 5 around white qb
+            -25,  # 4 around white qb
+            -15,  # 3 around white qb
+            -0,  # Multiplied by number of free black ants
+            -0,  # Multiplied by number of free black beetles
+            -0,  # Multiplied by number of free black grasshoppers
+            -10,  # Multiplied by number of free black queen bees (after turn 4)
+            -0  # Multiplied by number of free black spiders
         ]
 
         evaluation = sum([utility * value for utility, value in zip(utilities, values)])

@@ -454,7 +454,7 @@ def graph_data(evaluations_during_game, times_taken, num_actions_per_turn, playe
     ax1.set_ylabel('Time Taken [Seconds]')
     ax2.set_ylabel('Number of Actions')
 
-    plt.title(f'{player1} (White) Time Taken to Decide and Action During a Hive Game\n'
+    plt.title(f'{player1} Time Taken to Decide and Action During a Hive Game\n'
               f'{player1} vs {player2}\n'
               f'Winner: {board.BoardManager().get_board().determine_winner()}')
     fig2.legend()
@@ -468,8 +468,9 @@ def graph_data(evaluations_during_game, times_taken, num_actions_per_turn, playe
     ax3.set_xlabel('Turn Number')
     ax3.set_ylabel('Time Taken [Seconds]')
     ax4.set_ylabel('Number of Actions')
+    fig3.legend()
 
-    plt.title(f'{player2} (Black) Time Taken to Decide and Action During a Hive Game\n'
+    plt.title(f'{player2} Time Taken to Decide and Action During a Hive Game\n'
               f'{player1} vs {player2}\n'
               f'Winner: {board.BoardManager().get_board().determine_winner()}')
 
@@ -489,32 +490,36 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
     times_taken = []
     num_actions_per_turn = []
     start_of_game = timer()
-    while board_manager.get_board().determine_winner() is None and board_manager.get_board().turn_number < max_turns:
-        time_check = timer()
-        if time_check - start_of_game > max_time:
-            break
 
-        board_manager.get_board().print_board()
-        print(f'Current player: {"White" if board_manager.get_board().is_white_turn() else "Black"}')
-        print(f'Evaluation: {board_manager.get_board().evaluate_state()}')
-        print(f'Turn Number: {board_manager.get_board().turn_number}')
+    try:
+        while board_manager.get_board().determine_winner() is None and board_manager.get_board().turn_number < max_turns:
+            time_check = timer()
+            if time_check - start_of_game > max_time:
+                break
 
-        start_of_action_decision = timer()
-        if board_manager.get_board().is_white_turn():
-            chosen_action = player1.get_action()
-        else:
-            chosen_action = player2.get_action()
-        end_of_action_decision = timer()
-        print(f'Took {end_of_action_decision - start_of_action_decision} seconds to decide which action to take.')
-        times_taken.append(end_of_action_decision - start_of_action_decision)
-        num_actions_per_turn.append(len(board_manager.get_action_list()))
+            board_manager.get_board().print_board()
+            print(f'Current player: {"White" if board_manager.get_board().is_white_turn() else "Black"}')
+            print(f'Evaluation: {board_manager.get_board().evaluate_state()}')
+            print(f'Turn Number: {board_manager.get_board().turn_number}')
 
-        evaluations_during_game.append(board_manager.get_board().evaluate_state())
+            start_of_action_decision = timer()
+            if board_manager.get_board().is_white_turn():
+                chosen_action = player1.get_action()
+            else:
+                chosen_action = player2.get_action()
+            end_of_action_decision = timer()
+            print(f'Took {end_of_action_decision - start_of_action_decision} seconds to decide which action to take.')
+            times_taken.append(end_of_action_decision - start_of_action_decision)
+            num_actions_per_turn.append(len(board_manager.get_action_list()))
 
-        perform_action_str = f'Performing action: {chosen_action}'
-        print(perform_action_str)
-        print('=' * len(perform_action_str))
-        board_manager.perform_action(chosen_action)
+            evaluations_during_game.append(board_manager.get_board().evaluate_state())
+
+            perform_action_str = f'Performing action: {chosen_action}'
+            print(perform_action_str)
+            print('=' * len(perform_action_str))
+            board_manager.perform_action(chosen_action)
+    except KeyboardInterrupt:
+        pass
 
     end_of_game = timer()
 
@@ -544,9 +549,9 @@ if __name__ == '__main__':
     best_next_move_ai = agents.BestNextMoveAI()
     minimax_ai1 = agents.MinimaxAI(max_depth=1)
     minimax_ai2 = agents.MinimaxAI(max_depth=2)
-    minimax_ai3 = agents.MinimaxAI(max_depth=3)
+    minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=10)
     expectimax_ai1 = agents.ExpectimaxAI(max_depth=1)
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
-    expectimax_ai3 = agents.ExpectimaxAI(max_depth=3)
+    expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
     play_game(random_ai, expectimax_ai3, max_turns=100)
