@@ -102,7 +102,7 @@ class TestWhiteMoveErrors(unittest.TestCase):
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 2), piece_type=spaces.Piece.ANT)
         self.assertRaisesRegex(
             RuntimeError,
-            'Illegal action. This piece cannot move based on the "One Hive" rule.',
+            '[Illegal action. Piece at (0, 0) cannot move based on the "One Hive" rule.]',
             game_board.perform_action_helper,
             game_board.MOVE_PIECE,
             (0, 0),
@@ -115,7 +115,7 @@ class TestWhiteMoveErrors(unittest.TestCase):
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, 1), piece_type=spaces.Piece.QUEEN_BEE)
         self.assertRaisesRegex(
             RuntimeError,
-            "Illegal action. This piece cannot move to the specified location.",
+            "[Illegal action. Piece at (0, 0) cannot move to (0, 2).]",
             game_board.perform_action_helper,
             game_board.MOVE_PIECE,
             (0, 0),
@@ -227,7 +227,7 @@ class TestBlackMoveErrors(unittest.TestCase):
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, -2), piece_type=spaces.Piece.ANT)
         self.assertRaisesRegex(
             RuntimeError,
-            'Illegal action. This piece cannot move based on the "One Hive" rule.',
+            '[Illegal action. Piece at (0, 1) cannot move based on the "One Hive" rule.]',
             game_board.perform_action_helper,
             game_board.MOVE_PIECE,
             (0, 1),
@@ -241,7 +241,7 @@ class TestBlackMoveErrors(unittest.TestCase):
         game_board.perform_action_helper(game_board.PLACE_PIECE, (0, -1), piece_type=spaces.Piece.ANT)
         self.assertRaisesRegex(
             RuntimeError,
-            "Illegal action. This piece cannot move to the specified location.",
+            "[Illegal action. Piece at (0, 1) cannot move to (0, -2).]",
             game_board.perform_action_helper,
             game_board.MOVE_PIECE,
             (0, 1),

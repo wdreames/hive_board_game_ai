@@ -978,7 +978,7 @@ class TestGrasshopperErrorsFromRandomBoards(unittest.TestCase):
         ]
         self.assertRaisesRegex(
             RuntimeError,
-            "Illegal action. This piece cannot move to the specified location.",
+            "[Illegal action. Piece at ] [cannot move to]",
             self._test_game_helper,
             actions
         )

@@ -564,7 +564,7 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
           f'{sum(board_manager.getting_actions_times)/len(board_manager.getting_actions_times)}')
     print(f'Total time taken to create an action list: {sum(board_manager.getting_actions_times)}')
 
-    # graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
+    graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
 
 
 def test_undo():
@@ -613,14 +613,11 @@ if __name__ == '__main__':
     best_next_move_ai = agents.BestNextMoveAI()
     minimax_ai1 = agents.MinimaxAI(max_depth=1)
     minimax_ai2 = agents.MinimaxAI(max_depth=2, max_time=10)
-    minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=10)
+    minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=30)
     minimax_ai4 = agents.MinimaxAI(max_depth=4, max_time=10)
     minimax_ai8 = agents.MinimaxAI(max_depth=8, max_time=10)
     expectimax_ai1 = agents.ExpectimaxAI(max_depth=1)
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    play_game(expectimax_ai2, random_ai, max_turns=50)
-
-    # TODO: When looking at the expected evaluations, it appears that minimax only cares about the next move and
-    #       doesn't actually account for its opponents moves
+    play_game(player, minimax_ai3, max_turns=50)
