@@ -499,6 +499,8 @@ class Spider(Piece):
         self.paths_to_add.clear()
         self.previous_path_starts = starts_to_paths
 
+        self.update_board_moves()
+
     def calc_possible_moves(self):
         # Moves calculated by adding/removing links with other spaces. This is done separately
         self.update_board_moves()
