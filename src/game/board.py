@@ -59,10 +59,10 @@ class BoardManager:
         return self.current_board
 
     def get_successor(self, action):
-        start_time = timer()
+        # start_time = timer()
         self.current_board.perform_action(action)
         self.successor_actions.append(action)
-        self.cloning_times.append(timer() - start_time)
+        # self.cloning_times.append(timer() - start_time)
         return self.current_board
 
     def _get_successor(self, board_instance=None, action=None):
@@ -78,9 +78,7 @@ class BoardManager:
         successor_board = board_instance.deepcopy()
         self.cloning_times.append(timer() - start_time)
 
-        start_time = timer()
         successor_board.perform_action(action)
-        self._log_time(successor_board, action, timer() - start_time)
         return successor_board
 
     def get_action_list(self):
@@ -88,16 +86,8 @@ class BoardManager:
         return self.get_board().get_action_list()
 
     def perform_action(self, action):
-        start_time = timer()
         self.reset_board()
         self.get_board().perform_action(action)
-        self._log_time(self.get_board(), action, timer() - start_time)
-
-    def _log_time(self, board_instance, action, time):
-        if action[0] == HiveGameBoard.PLACE_PIECE:
-            self.object_action_times[action[2]].append(time)
-        elif action[0] == HiveGameBoard.MOVE_PIECE:
-            self.object_action_times[board_instance.pieces[action[2]].name].append(time)
 
     def __str__(self):
         return str(self.current_board)
@@ -237,6 +227,7 @@ class HiveGameBoard:
             self.white_locations_to_place = {(0, 0)}
 
     def perform_action(self, action):
+        start_time = timer()
         action_type = action[0]
         piece_location = action[1]
         action_variable = action[2]
@@ -245,6 +236,14 @@ class HiveGameBoard:
             self.perform_action_helper(action_type, piece_location, piece_type=action_variable)
         else:
             self.perform_action_helper(action_type, piece_location, new_location=action_variable)
+
+        self._log_time(action, timer() - start_time)
+
+    def _log_time(self, action, time):
+        if action[0] == HiveGameBoard.PLACE_PIECE:
+            BoardManager().object_action_times[action[2]].append(time)
+        elif action[0] == HiveGameBoard.MOVE_PIECE:
+            BoardManager().object_action_times[self.pieces[action[2]].name].append(time)
 
     def perform_action_helper(self, action_type, piece_location, new_location=None, piece_type=None):
         """
@@ -851,32 +850,32 @@ class HiveGameBoard:
         ]
         values = [
             100000,  # 6 around black qb
-            50,  # 5 around black qb
-            40,  # 4 around black qb
-            30,  # 3 around black qb
+            100,  # 5 around black qb
+            80,  # 4 around black qb
+            60,  # 3 around black qb
 
-            1,  # Total manhattan distance between all white pieces from the black queen bee
+            10,  # Total manhattan distance between all white pieces from the black queen bee
             5,  # Number of white pieces
 
-            0,  # Multiplied by number of free white ants
-            0,  # Multiplied by number of free white beetles
-            0,  # Multiplied by number of free white grasshoppers
+            1,  # Multiplied by number of free white ants
+            1,  # Multiplied by number of free white beetles
+            1,  # Multiplied by number of free white grasshoppers
             10,  # Multiplied by number of free white queen bees (after turn 4)
-            0,  # Multiplied by number of free white spiders
+            1,  # Multiplied by number of free white spiders
 
             -100000,  # 6 around white qb
-            -50,  # 5 around white qb
-            -40,  # 4 around white qb
-            -30,  # 3 around white qb
+            -100,  # 5 around white qb
+            -80,  # 4 around white qb
+            -60,  # 3 around white qb
 
-            -1,  # Total manhattan distance between all black pieces from the white queen bee
+            -10,  # Total manhattan distance between all black pieces from the white queen bee
             -5,  # Number of black pieces
 
-            -0,  # Multiplied by number of free black ants
-            -0,  # Multiplied by number of free black beetles
-            -0,  # Multiplied by number of free black grasshoppers
+            -1,  # Multiplied by number of free black ants
+            -1,  # Multiplied by number of free black beetles
+            -1,  # Multiplied by number of free black grasshoppers
             -10,  # Multiplied by number of free black queen bees (after turn 4)
-            -0  # Multiplied by number of free black spiders
+            -1  # Multiplied by number of free black spiders
         ]
 
         evaluation = sum([utility * value for utility, value in zip(utilities, values)])

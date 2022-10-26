@@ -564,7 +564,7 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
           f'{sum(board_manager.getting_actions_times)/len(board_manager.getting_actions_times)}')
     print(f'Total time taken to create an action list: {sum(board_manager.getting_actions_times)}')
 
-    graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
+    # graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
 
 
 def test_undo():
@@ -612,11 +612,21 @@ if __name__ == '__main__':
     random_ai = agents.RandomActionAI()
     best_next_move_ai = agents.BestNextMoveAI()
     minimax_ai1 = agents.MinimaxAI(max_depth=1)
-    minimax_ai2 = agents.MinimaxAI(max_depth=2)
-    minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=5)
+    minimax_ai2 = agents.MinimaxAI(max_depth=2, max_time=10)
+    minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=10)
+    minimax_ai4 = agents.MinimaxAI(max_depth=4, max_time=10)
     minimax_ai8 = agents.MinimaxAI(max_depth=8, max_time=10)
     expectimax_ai1 = agents.ExpectimaxAI(max_depth=1)
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    play_game(best_next_move_ai, minimax_ai2, max_turns=100)
+    num_white_wins = 0
+    while board.BoardManager().get_board().determine_winner() != board.HiveGameBoard.BLACK_WINNER:
+        play_game(minimax_ai2, best_next_move_ai, max_turns=50)
+        num_white_wins += 1
+    num_white_wins -= 1
+
+    print(f'White won {num_white_wins} times before Black won')
+
+    # TODO: When looking at the expected evaluations, it appears that minimax only cares about the next move and
+    #       doesn't actually account for its opponents moves
