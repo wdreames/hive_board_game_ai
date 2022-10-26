@@ -467,8 +467,8 @@ class HiveGameBoard:
             NO_QUEEN_BEE_MOVE_ERR = 'Illegal action. You must place your Queen Bee before you can perform a move action.'
             WHITE_MOVE_ERR = "Illegal action. It is white's turn, but a move for black was attempted."
             BLACK_MOVE_ERR = "Illegal action. It is black's turn, but a move for white was attempted."
-            ONE_HIVE_ERR = 'Illegal action. This piece cannot move based on the "One Hive" rule.'
-            INVALID_MOVE_ERR = 'Illegal action. This piece cannot move to the specified location.'
+            ONE_HIVE_ERR = f'Illegal action. Piece at {piece_location} cannot move based on the "One Hive" rule.'
+            INVALID_MOVE_ERR = f'Illegal action. Piece at {piece_location} cannot move to {new_location}.'
             if self.is_white_turn():
                 if self.white_queen_location is None:
                     raise RuntimeError(NO_QUEEN_BEE_MOVE_ERR)
@@ -854,7 +854,7 @@ class HiveGameBoard:
             80,  # 4 around black qb
             60,  # 3 around black qb
 
-            10,  # Total manhattan distance between all white pieces from the black queen bee
+            2.5,  # Total manhattan distance between all white pieces from the black queen bee
             5,  # Number of white pieces
 
             1,  # Multiplied by number of free white ants
@@ -868,7 +868,7 @@ class HiveGameBoard:
             -80,  # 4 around white qb
             -60,  # 3 around white qb
 
-            -10,  # Total manhattan distance between all black pieces from the white queen bee
+            -2.5,  # Total manhattan distance between all black pieces from the white queen bee
             -5,  # Number of black pieces
 
             -1,  # Multiplied by number of free black ants

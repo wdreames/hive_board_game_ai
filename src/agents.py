@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from timeit import default_timer as timer
 import src.game.board as board
+import src.game.spaces as spaces
 import random
 
 
@@ -73,7 +74,6 @@ class BestNextMoveAI(Agent):
 
     def get_action_selection(self):
         actions = self.board_manager.get_action_list()
-        # print(self.board_manager.current_board)
 
         # For every action, get the board's successive state and its evaluation
         # Choose a random action out of those with the highest evaluation
@@ -81,16 +81,10 @@ class BestNextMoveAI(Agent):
         best_evaluation = -float("inf")
         best_actions = []
         for i, action in enumerate(actions):
-            # print(f'{self} - '
-            #       f'Turn Number: {self.board_manager.get_board().turn_number}; '
-            #       f'Processing action: {str(action):40}; '
-            #       f'{(i+1)/(len(actions)+1)*100:.1f}% complete.')
             evaluation = self.board_manager.get_successor(action).evaluate_state()
-            # print(f'{self} - Turn Number: {self.board_manager.get_board().turn_number}; Undo action')
-            self.board_manager.reset_board()
+            self.board_manager.get_predecessor()
             if not self.is_white:
                 evaluation *= -1
-            # print(f'{self} - Processing action: {str(action):40} Evaluation: {evaluation:2}; {(i+1)/(len(actions)+1)*100:.1f}% complete.')
 
             if evaluation >= self.winning_value:
                 return action
@@ -122,7 +116,14 @@ class MinimaxAI(Agent):
         if len(actions) == 1:
             return actions.pop()
 
-        # random.shuffle(actions)
+        # Don't think too much during the first few moves
+        if (self.board_manager.get_board().turn_number + 1) // 2 < 3:
+            random.shuffle(actions)
+            random_action = actions.pop()
+            while random_action[2] == spaces.Piece.QUEEN_BEE and actions:
+                random_action = actions.pop()
+
+            return random_action
 
         best_evaluation = -float("inf")
         best_actions = set()
@@ -132,17 +133,16 @@ class MinimaxAI(Agent):
         for d in range(self.max_depth):
             for i, action in enumerate(actions):
                 next_board_state = self.board_manager.get_successor(action)
-                action_eval = self.min_value(next_board_state, alpha, beta, (d * 2) + 1)
+                action_eval = self.min_value(next_board_state, alpha, beta, (d * 2) + 1, start_time)
                 self.board_manager.get_predecessor()
 
-                print(f'{self} - {str(action):45} {action_eval:.2f} \talpha: {alpha:.2f}')
+                print(f'{self} - {d + 1} - {str(action):45} {action_eval:.2f} \talpha: {alpha:.2f}')
 
                 if action_eval >= self.winning_value:
                     return action
                 else:
                     action_eval /= (self.max_depth - d)
 
-                # print(f'{self} - Depth: {d}, Processing action: {str(action):40} Evaluation: {action_eval:5.1f}; {((i+1)*(d+1))/(len(actions)*self.max_depth)*100:.1f}% complete.')
                 if action_eval > best_evaluation:
                     best_evaluation = action_eval
                     best_actions.clear()
@@ -158,7 +158,7 @@ class MinimaxAI(Agent):
         print(f'{self.name} - Depth reached: {self.max_depth}')
         return best_actions.pop()
 
-    def max_value(self, board_state, alpha, beta, depth):
+    def max_value(self, board_state, alpha, beta, depth, start_time):
         if depth <= 0 or board_state.determine_winner() is not None:
             if self.is_white:
                 return board_state.evaluate_state()
@@ -170,18 +170,16 @@ class MinimaxAI(Agent):
         # random.shuffle(actions)
         for action in actions:
             next_board_state = self.board_manager.get_successor(action)
-            value = max(value, self.min_value(next_board_state, alpha, beta, depth - 1))
+            value = max(value, self.min_value(next_board_state, alpha, beta, depth - 1, start_time))
             self.board_manager.get_predecessor()
 
-            # print(f'{self} - ' + '\t' * (self.max_depth - depth + 1)*2 + f'{str(action):45} {value:.2f} '
-            #                                                              f'\talpha: {alpha:.2f} \tbeta: {beta:.2f}')
-            if value >= beta:
+            if value >= beta or timer() - start_time >= self.max_time:
                 return value
             alpha = max(value, alpha)
 
         return value
 
-    def min_value(self, board_state, alpha, beta, depth):
+    def min_value(self, board_state, alpha, beta, depth, start_time):
         if depth <= 0 or board_state.determine_winner() is not None:
             if self.is_white:
                 return board_state.evaluate_state()
@@ -193,13 +191,10 @@ class MinimaxAI(Agent):
         # random.shuffle(actions)
         for action in actions:
             next_board_state = self.board_manager.get_successor(action)
-            value = min(value, self.max_value(next_board_state, alpha, beta, depth - 1))
+            value = min(value, self.max_value(next_board_state, alpha, beta, depth - 1, start_time))
             self.board_manager.get_predecessor()
 
-            # print(f'{self} - ' + '\t' * (self.max_depth - depth + 1)*2 + f'{str(action):45} {value:.2f} '
-            #                                                              f'\talpha: {alpha:.2f} \tbeta: {beta:.2f}')
-
-            if value <= alpha:
+            if value <= alpha or timer() - start_time >= self.max_time:
                 return value
             beta = min(value, beta)
 
@@ -212,10 +207,10 @@ class ExpectimaxAI(MinimaxAI):
         super().__init__(is_white, board_manager, max_depth, max_time)
         self.name = f'Expectimax AI with Depth {self.max_depth}'
 
-    def min_value(self, board_state, alpha, beta, current_depth):
-        return self.expected_value(board_state, alpha, beta, current_depth)
+    def min_value(self, board_state, alpha, beta, current_depth, start_time):
+        return self.expected_value(board_state, alpha, beta, current_depth, start_time)
 
-    def expected_value(self, board_state, alpha, beta, current_depth):
+    def expected_value(self, board_state, alpha, beta, current_depth, start_time):
         if current_depth <= 0 or board_state.determine_winner() is not None:
             if self.is_white:
                 return board_state.evaluate_state()
@@ -226,7 +221,10 @@ class ExpectimaxAI(MinimaxAI):
         actions = board_state.get_action_list()
         for action in actions:
             next_board_state = self.board_manager.get_successor(action)
-            sum_of_values += self.max_value(next_board_state, alpha, beta, current_depth - 1)
+            sum_of_values += self.max_value(next_board_state, alpha, beta, current_depth - 1, start_time)
             self.board_manager.get_predecessor()
+
+            if timer() - start_time >= self.max_time:
+                break
 
         return sum_of_values / len(actions)

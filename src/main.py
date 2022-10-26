@@ -620,13 +620,7 @@ if __name__ == '__main__':
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    num_white_wins = 0
-    while board.BoardManager().get_board().determine_winner() != board.HiveGameBoard.BLACK_WINNER:
-        play_game(minimax_ai2, best_next_move_ai, max_turns=50)
-        num_white_wins += 1
-    num_white_wins -= 1
-
-    print(f'White won {num_white_wins} times before Black won')
+    play_game(expectimax_ai2, random_ai, max_turns=50)
 
     # TODO: When looking at the expected evaluations, it appears that minimax only cares about the next move and
     #       doesn't actually account for its opponents moves
