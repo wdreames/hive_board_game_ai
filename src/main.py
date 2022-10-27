@@ -612,7 +612,7 @@ if __name__ == '__main__':
     random_ai = agents.RandomActionAI()
     best_next_move_ai = agents.BestNextMoveAI()
     minimax_ai1 = agents.MinimaxAI(max_depth=1)
-    minimax_ai2 = agents.MinimaxAI(max_depth=2, max_time=10)
+    minimax_ai2 = agents.MinimaxAI(max_depth=2, max_time=120)
     minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=120)
     minimax_ai4 = agents.MinimaxAI(max_depth=4, max_time=10)
     minimax_ai8 = agents.MinimaxAI(max_depth=8, max_time=10)
@@ -620,4 +620,4 @@ if __name__ == '__main__':
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    play_game(player, minimax_ai3, max_turns=50)
+    play_game(best_next_move_ai, minimax_ai2, max_turns=50)

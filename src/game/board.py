@@ -1,4 +1,4 @@
-import copy
+import random
 from timeit import default_timer as timer
 
 from src.game.spaces import EmptySpace
@@ -81,9 +81,9 @@ class BoardManager:
         successor_board.perform_action(action)
         return successor_board
 
-    def get_action_list(self):
+    def get_action_list(self, randomize_actions=False):
         self.reset_board()
-        return self.get_board().get_action_list()
+        return self.get_board().get_action_list(randomize_actions=randomize_actions)
 
     def perform_action(self, action):
         self.reset_board()
@@ -272,30 +272,37 @@ class HiveGameBoard:
         else:
             raise ValueError('Action type can only be HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE.')
 
-    def get_action_list(self):
+    def get_action_list(self, randomize_actions=False):
         start_time = timer()
 
         pieces_to_play, locations_to_place, possible_moves_dict = self.get_all_possible_actions()
 
-        all_actions = []
         # Move actions
+        move_actions = []
         for piece_location, move_locations in possible_moves_dict.items():
             for new_location in move_locations:
-                all_actions.append((
+                move_actions.append((
                     HiveGameBoard.MOVE_PIECE,
                     piece_location,
                     new_location
                 ))
 
         # Place actions
+        place_actions = []
         for piece_type, amount_of_type in pieces_to_play.items():
             if amount_of_type:
                 for possible_location in locations_to_place:
-                    all_actions.append((
+                    place_actions.append((
                         HiveGameBoard.PLACE_PIECE,
                         possible_location,
                         piece_type
                     ))
+
+        if randomize_actions:
+            random.shuffle(move_actions)
+            random.shuffle(place_actions)
+
+        all_actions = move_actions + place_actions
 
         if not all_actions:
             return [(HiveGameBoard.SKIP_TURN, None, None)]

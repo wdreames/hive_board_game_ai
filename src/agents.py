@@ -108,21 +108,18 @@ class MinimaxAI(Agent):
         self.winning_value = winning_value
 
     def get_action_selection(self):
-        actions = self.board_manager.get_action_list()
+        actions = self.board_manager.get_action_list(randomize_actions=True)
 
         if len(actions) == 1:
             return actions.pop()
 
         # Don't think too much during the first few moves
         if (self.board_manager.get_board().turn_number + 1) // 2 < 3:
-            random.shuffle(actions)
             random_action = actions.pop()
             while random_action[2] == spaces.Piece.QUEEN_BEE and actions:
                 random_action = actions.pop()
-
             return random_action
 
-        random.shuffle(actions)
         action_evaluations = dict()
 
         print(f'Number of actions to process: {len(actions)}')
@@ -156,7 +153,7 @@ class MinimaxAI(Agent):
 
         print(f'{self.name} - Depth reached: {self.max_depth}')
         # Return the best action that was found
-        return max(action_evaluations.items(), key=lambda x: x[1])
+        return max(action_evaluations.items(), key=lambda x: x[1])[0]
 
     def max_value(self, board_state, alpha, beta, depth, start_time):
         if depth <= 0 or board_state.determine_winner() is not None:
@@ -166,7 +163,7 @@ class MinimaxAI(Agent):
                 return -board_state.evaluate_state()
 
         value = -float("inf")
-        actions = board_state.get_action_list()
+        actions = board_state.get_action_list(randomize_actions=True)
         # random.shuffle(actions)
         for action in actions:
             next_board_state = self.board_manager.get_successor(action)
@@ -187,7 +184,7 @@ class MinimaxAI(Agent):
                 return -board_state.evaluate_state()
 
         value = float("inf")
-        actions = board_state.get_action_list()
+        actions = board_state.get_action_list(randomize_actions=True)
         # random.shuffle(actions)
         for action in actions:
             next_board_state = self.board_manager.get_successor(action)
