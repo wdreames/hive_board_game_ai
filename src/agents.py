@@ -108,9 +108,6 @@ class MinimaxAI(Agent):
         self.winning_value = winning_value
 
     def get_action_selection(self):
-        alpha = -self.winning_value
-        beta = self.winning_value
-
         actions = self.board_manager.get_action_list()
 
         if len(actions) == 1:
@@ -125,12 +122,15 @@ class MinimaxAI(Agent):
 
             return random_action
 
-        best_evaluation = -float("inf")
-        best_actions = set()
+        random.shuffle(actions)
+        action_evaluations = dict()
 
         print(f'Number of actions to process: {len(actions)}')
         start_time = timer()
         for d in range(self.max_depth):
+            alpha = -self.winning_value
+            beta = self.winning_value
+
             for i, action in enumerate(actions):
                 next_board_state = self.board_manager.get_successor(action)
                 action_eval = self.min_value(next_board_state, alpha, beta, (d * 2) + 1, start_time)
@@ -140,23 +140,23 @@ class MinimaxAI(Agent):
 
                 if action_eval >= self.winning_value:
                     return action
-                else:
-                    action_eval /= (self.max_depth - d)
 
-                if action_eval > best_evaluation:
-                    best_evaluation = action_eval
-                    best_actions.clear()
-                if action_eval >= best_evaluation:
-                    best_actions.add(action)
+                action_evaluations[action] = action_eval
+                alpha = max(alpha, action_eval)
 
-                alpha = max(alpha, best_evaluation)
-
-                if timer() - start_time >= self.max_time and best_actions:
+                if timer() - start_time >= self.max_time:
                     print(f'{self.name} - Depth reached: {d}')
-                    return best_actions.pop()
+                    # Return the best action that was found
+                    return max(action_evaluations.items(), key=lambda x: x[1])[0]
+
+            # If every action is a losing move, return a random action.
+            best_action_so_far = max(action_evaluations.items(), key=lambda x: x[1])[0]
+            if action_evaluations[best_action_so_far] <= -self.winning_value:
+                return best_action_so_far
 
         print(f'{self.name} - Depth reached: {self.max_depth}')
-        return best_actions.pop()
+        # Return the best action that was found
+        return max(action_evaluations.items(), key=lambda x: x[1])
 
     def max_value(self, board_state, alpha, beta, depth, start_time):
         if depth <= 0 or board_state.determine_winner() is not None:

@@ -613,7 +613,7 @@ if __name__ == '__main__':
     best_next_move_ai = agents.BestNextMoveAI()
     minimax_ai1 = agents.MinimaxAI(max_depth=1)
     minimax_ai2 = agents.MinimaxAI(max_depth=2, max_time=10)
-    minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=30)
+    minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=120)
     minimax_ai4 = agents.MinimaxAI(max_depth=4, max_time=10)
     minimax_ai8 = agents.MinimaxAI(max_depth=8, max_time=10)
     expectimax_ai1 = agents.ExpectimaxAI(max_depth=1)
