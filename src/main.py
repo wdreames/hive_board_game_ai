@@ -525,6 +525,8 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
             board_manager.perform_action(chosen_action)
     except KeyboardInterrupt:
         pass
+    except Exception:
+        traceback.format_exc()
 
     end_of_game = timer()
 
