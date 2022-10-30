@@ -610,7 +610,7 @@ if __name__ == '__main__':
     # play_game_with_manager()
     # test_successive_states()
     # test_game5()
-    check_for_errors(max_num_runs=250, max_actions=1000)
+    # check_for_errors(max_num_runs=250, max_actions=1000)
     # test_undo()
 
     player = agents.Player()
@@ -625,4 +625,4 @@ if __name__ == '__main__':
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    # play_game(best_next_move_ai, minimax_ai2, max_turns=50)
+    play_game(best_next_move_ai, minimax_ai2, max_turns=50)

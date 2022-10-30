@@ -100,7 +100,7 @@ class BestNextMoveAI(Agent):
 
 class MinimaxAI(Agent):
 
-    def __init__(self, is_white=True, board_manager=None, max_depth=4, max_time=5, winning_value=10000):
+    def __init__(self, is_white=True, board_manager=None, max_depth=4, max_time=float("inf"), winning_value=10000):
         super().__init__(is_white, board_manager)
         self.max_depth = max_depth if max_depth >= 1 else 1
         self.max_time = max_time if max_time > 0 else 1
@@ -185,7 +185,6 @@ class MinimaxAI(Agent):
 
         value = float("inf")
         actions = board_state.get_action_list(randomize_actions=True)
-        # random.shuffle(actions)
         for action in actions:
             next_board_state = self.board_manager.get_successor(action)
             value = min(value, self.max_value(next_board_state, alpha, beta, depth - 1, start_time))
