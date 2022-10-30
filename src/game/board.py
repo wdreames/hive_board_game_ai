@@ -522,7 +522,8 @@ class HiveGameBoard:
         updating movement rules for all Pieces based on the "One Hive" rule.
         """
         # Ant movement specific
-        for location in self.ant_mvt_preventions_to_add:
+        while self.ant_mvt_preventions_to_add:
+            location = self.ant_mvt_preventions_to_add.pop()
             self.add_to_ant_movement_prevention_set(location)
         self.ant_mvt_preventions_to_add.clear()
 
@@ -607,6 +608,9 @@ class HiveGameBoard:
             Set of spaces the algorithm has seen already.
             Default is an empty set.
         """
+
+        if current_space in self.ant_mvt_preventions_to_add:
+            self.ant_mvt_preventions_to_add.remove(current_space)
 
         # Return codes
         SUCCESS = 0

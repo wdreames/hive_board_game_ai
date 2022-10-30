@@ -78,11 +78,11 @@ import matplotlib.pyplot as plt
 #     print('Winner: {}'.format(game_board.determine_winner()))
 
 
-def play_game_with_manager(print_out=True):
+def play_game_with_manager(print_out=True, max_actions=5000):
     board_manager = board.BoardManager()
 
     actions_performed = []
-    while board_manager.get_board().determine_winner() is None:
+    while board_manager.get_board().determine_winner() is None and board_manager.get_board().turn_number < max_actions:
         current_board = board_manager.get_board()
         if print_out:
             current_board.print_board()
@@ -405,14 +405,19 @@ def demo_game():
     print(f'The winner is: {game_board.determine_winner()}')
 
 
-def check_for_errors(word_to_find=None, words_to_ignore=None, max_num_runs=25):
+def check_for_errors(word_to_find=None, words_to_ignore=None, max_num_runs=25, max_actions=5000):
     num_runs = 0
     while num_runs < max_num_runs:
         try:
             board.BoardManager(new_manager=True)
-            play_game_with_manager(print_out=False)
+            play_game_with_manager(print_out=False, max_actions=max_actions)
         except Exception:
             err_output = traceback.format_exc()
+            if word_to_find is None and words_to_ignore is None:
+                print(board.BoardManager().get_board())
+                board.BoardManager().get_board().print_board()
+                print(err_output)
+                exit(1)
             if word_to_find is not None and word_to_find in err_output.lower():
                 print(board.BoardManager().get_board())
                 board.BoardManager().get_board().print_board()
@@ -605,7 +610,7 @@ if __name__ == '__main__':
     # play_game_with_manager()
     # test_successive_states()
     # test_game5()
-    # check_for_errors(word_to_find='grasshopper', max_num_runs=100)
+    check_for_errors(max_num_runs=250, max_actions=1000)
     # test_undo()
 
     player = agents.Player()
@@ -620,4 +625,4 @@ if __name__ == '__main__':
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    play_game(best_next_move_ai, minimax_ai2, max_turns=50)
+    # play_game(best_next_move_ai, minimax_ai2, max_turns=50)
