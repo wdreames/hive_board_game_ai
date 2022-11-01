@@ -802,11 +802,20 @@ class HiveGameBoard:
             return 0
 
         # Otherwise, evaluate a utility function
+        # TODO: Clean this up. It looks pretty messy and is hard to follow
 
         num_around_white_qb = 0
         total_around_white_qb = 0
         num_around_black_qb = 0
         total_around_black_qb = 0
+
+        num_black_around_white_qb = 0
+        num_white_movable_around_white_qb = 0
+        num_white_immovable_around_white_qb = 0
+
+        num_white_around_black_qb = 0
+        num_black_movable_around_black_qb = 0
+        num_black_immovable_around_black_qb = 0
 
         total_white_dist_from_black_qb = 0
         total_black_dist_from_white_qb = 0
@@ -843,6 +852,13 @@ class HiveGameBoard:
 
                     if piece_location in pieces_around_black_qb:
                         num_around_black_qb += 1
+                        num_white_around_black_qb += 1
+
+                    if piece_location in pieces_around_white_qb:
+                        if piece_location in self.white_possible_moves:
+                            num_white_movable_around_white_qb += 1
+                        else:
+                            num_white_immovable_around_white_qb += 1
 
                     if piece.location not in black_queen_bee.get_all_surrounding_locations() \
                             and piece_location in self.white_possible_moves \
@@ -856,6 +872,13 @@ class HiveGameBoard:
 
                     if piece_location in pieces_around_white_qb:
                         num_around_white_qb += 1
+                        num_black_around_white_qb += 1
+
+                    if piece_location in pieces_around_black_qb:
+                        if piece_location in self.black_possible_moves:
+                            num_black_movable_around_black_qb += 1
+                        else:
+                            num_black_immovable_around_black_qb += 1
 
                     if piece.location not in white_queen_bee.get_all_surrounding_locations() \
                             and piece_location in self.black_possible_moves \
@@ -875,7 +898,8 @@ class HiveGameBoard:
         utilities = [
             # White utilities (positive)
             num_around_black_qb,
-            total_around_black_qb - num_around_black_qb,
+            num_black_immovable_around_black_qb,
+            num_black_movable_around_black_qb,
             num_white_can_move_to_black_qb,
 
             beetle_on_black_qb,
@@ -891,7 +915,8 @@ class HiveGameBoard:
 
             # Black utilities (negative)
             num_around_white_qb,
-            total_around_white_qb - num_around_white_qb,
+            num_white_immovable_around_white_qb,
+            num_white_movable_around_white_qb,
             num_black_can_move_to_white_qb,
 
             beetle_on_white_qb,
@@ -905,20 +930,23 @@ class HiveGameBoard:
             1 if self.num_black_free_pieces[Piece.QUEEN_BEE] and (self.turn_number + 1) // 2 >= 5 else 0,
             self.num_black_free_pieces[Piece.SPIDER] if (self.turn_number + 1) // 2 >= 5 else 0,
         ]
+
+        value_of_piece_around_qb = 25
         white_values = np.array([
-            25,  # Multiplied by the number of white pieces around the black queen bee
-            25 * 0.3,  # Multiplied by the number of black pieces around the black queen bee
-            25 * 0.9,  # Multiplied by the number of white pieces that can move to locations around the black queen bee
+            value_of_piece_around_qb,  # Multiplied by the number of white pieces around the black queen bee
+            value_of_piece_around_qb * 0.9,  # Multiplied by the number of black pieces around the black queen bee that cannot move
+            value_of_piece_around_qb * 0.1,  # Multiplied by the number of black pieces around the black queen bee that can move
+            value_of_piece_around_qb * 0.75,  # Multiplied by the number of white pieces that can move to locations around the black queen bee
 
             10,  # Beetle on Black Queen Bee
 
             5,  # One over the average manhattan distance between all white pieces and the black queen bee
             1,  # Number of white pieces
 
-            1.5,  # Multiplied by number of free white ants
+            1,  # Multiplied by number of free white ants
             1,  # Multiplied by number of free white beetles
             1,  # Multiplied by number of free white grasshoppers
-            10,  # Multiplied by number of free white queen bees (after turn 4)
+            value_of_piece_around_qb * 1.1,  # Multiplied by number of free white queen bees (after turn 4)
             1,  # Multiplied by number of free white spiders
         ])
         black_values = -white_values
@@ -930,8 +958,6 @@ class HiveGameBoard:
         # self.print_board()
         # print([utility * value for utility, value in zip(utilities, values)])
         # print(evaluation)
-
-        # TODO: Allied Pieces around own QB count as enemy pieces for points if they cannot move.
 
         return evaluation
 

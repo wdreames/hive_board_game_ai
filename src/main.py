@@ -571,7 +571,7 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
           f'{sum(board_manager.getting_actions_times)/len(board_manager.getting_actions_times)}')
     print(f'Total time taken to create an action list: {sum(board_manager.getting_actions_times)}')
 
-    graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
+    # graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
 
 
 def test_undo():
@@ -630,12 +630,12 @@ if __name__ == '__main__':
     # play_game(player, minimax_ai1)
     # exit(0)
 
-    num_games = 10
+    num_games = 1
     num_white_wins = 0
     num_black_wins = 0
     num_draws = 0
     for i in range(num_games):
-        play_game(best_next_move_ai, minimax_ai2, max_turns=50)
+        play_game(player, minimax_ai1, max_turns=50)
         game_board = board.BoardManager().get_board()
         if game_board.determine_winner() == board.HiveGameBoard.WHITE_WINNER:
             num_white_wins += 1
