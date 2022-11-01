@@ -815,15 +815,21 @@ class HiveGameBoard:
         num_white_pieces = 0
         num_black_pieces = 0
 
+        num_white_can_move_to_black_qb = 0
+        num_black_can_move_to_white_qb = 0
+
         beetle_on_white_qb = 0
         beetle_on_black_qb = 0
 
         if self.white_queen_location is not None and self.black_queen_location is not None:
-            pieces_around_white_qb = self.pieces[self.white_queen_location].connected_pieces
-            pieces_around_black_qb = self.pieces[self.black_queen_location].connected_pieces
+            white_queen_bee = self.pieces[self.white_queen_location]
+            black_queen_bee = self.pieces[self.black_queen_location]
 
-            beetle_on_white_qb = 1 if self.pieces[self.white_queen_location].name != Piece.QUEEN_BEE else 0
-            beetle_on_black_qb = 1 if self.pieces[self.black_queen_location].name != Piece.QUEEN_BEE else 0
+            pieces_around_white_qb = white_queen_bee.connected_pieces
+            pieces_around_black_qb = black_queen_bee.connected_pieces
+
+            beetle_on_white_qb = 1 if white_queen_bee.name != Piece.QUEEN_BEE else 0
+            beetle_on_black_qb = 1 if black_queen_bee.name != Piece.QUEEN_BEE else 0
 
             total_around_white_qb = len(pieces_around_white_qb)
             total_around_black_qb = len(pieces_around_black_qb)
@@ -837,6 +843,11 @@ class HiveGameBoard:
 
                     if piece_location in pieces_around_black_qb:
                         num_around_black_qb += 1
+
+                    if piece.location not in black_queen_bee.get_all_surrounding_locations() \
+                            and piece_location in self.white_possible_moves \
+                            and not self.white_possible_moves[piece_location].isdisjoint(black_queen_bee.connected_empty_spaces):
+                        num_white_can_move_to_black_qb += 1
                 else:
                     dist = abs(piece_location[0] - self.white_queen_location[0]) + \
                            abs(piece_location[1] - self.white_queen_location[1])
@@ -846,13 +857,26 @@ class HiveGameBoard:
                     if piece_location in pieces_around_white_qb:
                         num_around_white_qb += 1
 
+                    if piece.location not in white_queen_bee.get_all_surrounding_locations() \
+                            and piece_location in self.black_possible_moves \
+                            and not self.black_possible_moves[piece_location].isdisjoint(white_queen_bee.connected_empty_spaces):
+                        num_black_can_move_to_white_qb += 1
+
             avg_white_dist_from_black_qb = total_white_dist_from_black_qb/num_white_pieces
             avg_black_dist_from_white_qb = total_black_dist_from_white_qb/num_black_pieces
+
+            empty_spaces_around_black_qb = 6 - total_around_black_qb
+            empty_spaces_around_white_qb = 6 - total_around_white_qb
+            if num_white_can_move_to_black_qb > empty_spaces_around_black_qb:
+                num_white_can_move_to_black_qb = empty_spaces_around_black_qb
+            if num_black_can_move_to_white_qb > empty_spaces_around_white_qb:
+                num_black_can_move_to_white_qb = empty_spaces_around_white_qb
 
         utilities = [
             # White utilities (positive)
             num_around_black_qb,
             total_around_black_qb - num_around_black_qb,
+            num_white_can_move_to_black_qb,
 
             beetle_on_black_qb,
 
@@ -868,6 +892,7 @@ class HiveGameBoard:
             # Black utilities (negative)
             num_around_white_qb,
             total_around_white_qb - num_around_white_qb,
+            num_black_can_move_to_white_qb,
 
             beetle_on_white_qb,
 
@@ -882,7 +907,8 @@ class HiveGameBoard:
         ]
         white_values = np.array([
             25,  # Multiplied by the number of white pieces around the black queen bee
-            12.5,  # Multiplied by the number of black pieces around the black queen bee
+            25 * 0.3,  # Multiplied by the number of black pieces around the black queen bee
+            25 * 0.9,  # Multiplied by the number of white pieces that can move to locations around the black queen bee
 
             10,  # Beetle on Black Queen Bee
 
@@ -897,7 +923,6 @@ class HiveGameBoard:
         ])
         black_values = -white_values
         values = np.concatenate((white_values, black_values))
-        # print(values)
 
         evaluation = sum([utility * value for utility, value in zip(utilities, values)])
 
@@ -905,6 +930,8 @@ class HiveGameBoard:
         # self.print_board()
         # print([utility * value for utility, value in zip(utilities, values)])
         # print(evaluation)
+
+        # TODO: Allied Pieces around own QB count as enemy pieces for points if they cannot move.
 
         return evaluation
 
