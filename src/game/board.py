@@ -1,6 +1,8 @@
 import random
 from timeit import default_timer as timer
 
+import numpy as np
+
 from src.game.spaces import EmptySpace
 from src.game.spaces import Piece
 from src.game.pieces import Ant
@@ -789,53 +791,72 @@ class HiveGameBoard:
 
     # TODO: Documentation
     def evaluate_state(self):
-        # Utitlity function:
-        # 6 around enemy QB: +10000
-        # 5 around enemy QB: +10
-        # Free Ant: +3
-        # Free Beetle: +2
-        # Free Grasshopper: +2
-        # Free Spider: +2
-        # Enemy Free Ant: -3
-        # Enemy Free Beetle: -2
-        # Enemy Free Spider: -2
-        # Enemy Free Spider: -2
 
-        if self.black_queen_location is None:
-            num_around_black_qb = 0
-        else:
-            num_around_black_qb = len(self.pieces[self.black_queen_location].connected_pieces)
+        # Evaluate if this is an end-game state:
+        winner = self.determine_winner()
+        if winner == self.WHITE_WINNER:
+            return 100000
+        elif winner == self.BLACK_WINNER:
+            return -100000
+        elif winner == self.DRAW:
+            return 0
 
-        if self.white_queen_location is None:
-            num_around_white_qb = 0
-        else:
-            num_around_white_qb = len(self.pieces[self.white_queen_location].connected_pieces)
+        # Otherwise, evaluate a utility function
+
+        num_around_white_qb = 0
+        total_around_white_qb = 0
+        num_around_black_qb = 0
+        total_around_black_qb = 0
 
         total_white_dist_from_black_qb = 0
         total_black_dist_from_white_qb = 0
+        avg_white_dist_from_black_qb = 0
+        avg_black_dist_from_white_qb = 0
         num_white_pieces = 0
         num_black_pieces = 0
+
+        beetle_on_white_qb = 0
+        beetle_on_black_qb = 0
+
         if self.white_queen_location is not None and self.black_queen_location is not None:
+            pieces_around_white_qb = self.pieces[self.white_queen_location].connected_pieces
+            pieces_around_black_qb = self.pieces[self.black_queen_location].connected_pieces
+
+            beetle_on_white_qb = 1 if self.pieces[self.white_queen_location].name != Piece.QUEEN_BEE else 0
+            beetle_on_black_qb = 1 if self.pieces[self.black_queen_location].name != Piece.QUEEN_BEE else 0
+
+            total_around_white_qb = len(pieces_around_white_qb)
+            total_around_black_qb = len(pieces_around_black_qb)
+
             for piece_location, piece in self.pieces.items():
                 if piece.is_white:
                     dist = abs(piece_location[0] - self.black_queen_location[0]) + \
                            abs(piece_location[1] - self.black_queen_location[1])
                     total_white_dist_from_black_qb += dist
                     num_white_pieces += 1
+
+                    if piece_location in pieces_around_black_qb:
+                        num_around_black_qb += 1
                 else:
                     dist = abs(piece_location[0] - self.white_queen_location[0]) + \
                            abs(piece_location[1] - self.white_queen_location[1])
                     total_black_dist_from_white_qb += dist
                     num_black_pieces += 1
 
+                    if piece_location in pieces_around_white_qb:
+                        num_around_white_qb += 1
+
+            avg_white_dist_from_black_qb = total_white_dist_from_black_qb/num_white_pieces
+            avg_black_dist_from_white_qb = total_black_dist_from_white_qb/num_black_pieces
+
         utilities = [
             # White utilities (positive)
-            1 if num_around_black_qb == 6 else 0,
-            1 if num_around_black_qb == 5 else 0,
-            1 if num_around_black_qb == 4 else 0,
-            1 if num_around_black_qb == 3 else 0,
+            num_around_black_qb,
+            total_around_black_qb - num_around_black_qb,
 
-            1/total_white_dist_from_black_qb if total_white_dist_from_black_qb else 0,
+            beetle_on_black_qb,
+
+            1/avg_white_dist_from_black_qb if avg_white_dist_from_black_qb else 0,
             num_white_pieces,
 
             self.num_white_free_pieces[Piece.ANT] if (self.turn_number + 1) // 2 >= 5 else 0,
@@ -845,12 +866,12 @@ class HiveGameBoard:
             self.num_white_free_pieces[Piece.SPIDER] if (self.turn_number + 1) // 2 >= 5 else 0,
 
             # Black utilities (negative)
-            1 if num_around_white_qb == 6 else 0,
-            1 if num_around_white_qb == 5 else 0,
-            1 if num_around_white_qb == 4 else 0,
-            1 if num_around_white_qb == 3 else 0,
+            num_around_white_qb,
+            total_around_white_qb - num_around_white_qb,
 
-            1/total_black_dist_from_white_qb if total_black_dist_from_white_qb else 0,
+            beetle_on_white_qb,
+
+            1/avg_black_dist_from_white_qb if avg_black_dist_from_white_qb else 0,
             num_black_pieces,
 
             self.num_black_free_pieces[Piece.ANT] if (self.turn_number + 1) // 2 >= 5 else 0,
@@ -859,37 +880,32 @@ class HiveGameBoard:
             1 if self.num_black_free_pieces[Piece.QUEEN_BEE] and (self.turn_number + 1) // 2 >= 5 else 0,
             self.num_black_free_pieces[Piece.SPIDER] if (self.turn_number + 1) // 2 >= 5 else 0,
         ]
-        values = [
-            100000,  # 6 around black qb
-            100,  # 5 around black qb
-            80,  # 4 around black qb
-            60,  # 3 around black qb
+        white_values = np.array([
+            25,  # Multiplied by the number of white pieces around the black queen bee
+            12.5,  # Multiplied by the number of black pieces around the black queen bee
 
-            2.5,  # Total manhattan distance between all white pieces from the black queen bee
-            5,  # Number of white pieces
+            10,  # Beetle on Black Queen Bee
 
-            1,  # Multiplied by number of free white ants
+            5,  # One over the average manhattan distance between all white pieces and the black queen bee
+            1,  # Number of white pieces
+
+            1.5,  # Multiplied by number of free white ants
             1,  # Multiplied by number of free white beetles
             1,  # Multiplied by number of free white grasshoppers
             10,  # Multiplied by number of free white queen bees (after turn 4)
             1,  # Multiplied by number of free white spiders
-
-            -100000,  # 6 around white qb
-            -100,  # 5 around white qb
-            -80,  # 4 around white qb
-            -60,  # 3 around white qb
-
-            -2.5,  # Total manhattan distance between all black pieces from the white queen bee
-            -5,  # Number of black pieces
-
-            -1,  # Multiplied by number of free black ants
-            -1,  # Multiplied by number of free black beetles
-            -1,  # Multiplied by number of free black grasshoppers
-            -10,  # Multiplied by number of free black queen bees (after turn 4)
-            -1  # Multiplied by number of free black spiders
-        ]
+        ])
+        black_values = -white_values
+        values = np.concatenate((white_values, black_values))
+        # print(values)
 
         evaluation = sum([utility * value for utility, value in zip(utilities, values)])
+
+        # print('='*50)
+        # self.print_board()
+        # print([utility * value for utility, value in zip(utilities, values)])
+        # print(evaluation)
+
         return evaluation
 
     # TODO: [UI] This is a temporary solution. Do not use this in the final product...

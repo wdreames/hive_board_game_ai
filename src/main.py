@@ -526,7 +526,7 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
     except KeyboardInterrupt:
         pass
     except Exception:
-        traceback.format_exc()
+        print(traceback.format_exc())
 
     end_of_game = timer()
 
@@ -627,4 +627,22 @@ if __name__ == '__main__':
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    play_game(best_next_move_ai, minimax_ai2, max_turns=50)
+    # play_game(player, minimax_ai1)
+    # exit(0)
+
+    num_games = 10
+    num_white_wins = 0
+    num_black_wins = 0
+    num_draws = 0
+    for i in range(num_games):
+        play_game(best_next_move_ai, minimax_ai2, max_turns=50)
+        game_board = board.BoardManager().get_board()
+        if game_board.determine_winner() == board.HiveGameBoard.WHITE_WINNER:
+            num_white_wins += 1
+        elif game_board.determine_winner() == board.HiveGameBoard.BLACK_WINNER:
+            num_black_wins += 1
+        elif game_board.determine_winner() == board.HiveGameBoard.DRAW:
+            num_draws += 1
+
+        print(f'\nResults after {i + 1} games:')
+        print(f'White wins: {num_white_wins} / Black wins: {num_black_wins} / Draws: {num_draws}\n')
