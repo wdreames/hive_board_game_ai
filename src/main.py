@@ -623,14 +623,12 @@ if __name__ == '__main__':
     minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=120)
     minimax_ai4 = agents.MinimaxAI(max_depth=4, max_time=10)
     minimax_ai8 = agents.MinimaxAI(max_depth=8, max_time=10)
-    expectimax_ai1 = agents.ExpectimaxAI(max_depth=1)
+    expectimax_ai1 = agents.ExpectimaxAI(max_depth=1, max_time=30)
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    # play_game(player, minimax_ai1)
-    # exit(0)
-
     num_games = 1
+    num_turns = 0
     num_white_wins = 0
     num_black_wins = 0
     num_draws = 0
@@ -644,5 +642,8 @@ if __name__ == '__main__':
         elif game_board.determine_winner() == board.HiveGameBoard.DRAW:
             num_draws += 1
 
-        print(f'\nResults after {i + 1} games:')
-        print(f'White wins: {num_white_wins} / Black wins: {num_black_wins} / Draws: {num_draws}\n')
+        num_turns += game_board.turn_number
+
+        print(f'\nResults after {i + 1} game{"s" if i != 0 else ""}:')
+        print(f'White wins: {num_white_wins} / Black wins: {num_black_wins} / Draws: {num_draws}')
+        print(f'Average number of turns per game: {num_turns/(i+1):.1f}\n')

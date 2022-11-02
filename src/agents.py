@@ -86,6 +86,8 @@ class BestNextMoveAI(Agent):
             if not self.is_white:
                 evaluation *= -1
 
+            # print(f'{self} - {str(action):45} {evaluation:.2f}')
+
             if evaluation >= self.winning_value:
                 return action
             if evaluation > best_evaluation:
@@ -133,7 +135,7 @@ class MinimaxAI(Agent):
                 action_eval = self.min_value(next_board_state, alpha, beta, (d * 2) + 1, start_time)
                 self.board_manager.get_predecessor()
 
-                print(f'{self} - {d + 1} - {str(action):45} {action_eval:.2f} \talpha: {alpha:.2f}')
+                # print(f'{self} - {d + 1} - {str(action):45} {action_eval:.2f} \talpha: {alpha:.2f}')
 
                 if action_eval >= self.winning_value:
                     return action
