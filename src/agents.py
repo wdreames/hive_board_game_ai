@@ -85,44 +85,83 @@ class HexPlayer(Player):
         ui_id_to_coords = self.board_manager.get_board().ui_id_to_coords
         ui_coords_to_id = self.board_manager.get_board().ui_coords_to_id
 
-        # Check if there are no possible actions
-        if not (pieces_to_play and locations_to_place) and not possible_moves_dict:
-            print('You have no legal moves. Skipping turn...')
-            chosen_action = (board.HiveGameBoard.SKIP_TURN, None, None)
+        has_legal_placements = pieces_to_play and locations_to_place
+        has_legal_movements = len(possible_moves_dict) > 0
 
         # Tell the player which pieces they can place
-        print('You have the following pieces in your reserve:')
-        for piece_type, amount in pieces_to_play.items():
-            print(f'\t* {piece_type} x {amount}')
+        if has_legal_placements:
+            print('You have the following pieces in your reserve:')
+            for piece_type, amount in pieces_to_play.items():
+                if amount:
+                    print(f'\t* {piece_type} x {amount}')
 
         # Tell the player which pieces they can move
+        if has_legal_movements:
+            print('You can move the following pieces on the board (represented by their number ID):')
+            for i, piece_location in enumerate(possible_moves_dict.keys()):
+                if i < len(possible_moves_dict.keys()) - 1:
+                    print(f'{ui_coords_to_id[piece_location]}, ', end='')
+                else:
+                    print(f'{ui_coords_to_id[piece_location]}')
 
         # Determine if the player is placing or moving a piece
-        action_type = self.make_choice(
-            'Do you want to place a piece or move a piece?',
-            'Select an action type:',
-            [board.HiveGameBoard.PLACE_PIECE, board.HiveGameBoard.MOVE_PIECE]
-        )
+        if has_legal_placements and has_legal_movements:
+            action_type = self.make_choice(
+                'Do you want to place a piece or move a piece?',
+                'Select an action type:',
+                [board.HiveGameBoard.PLACE_PIECE, board.HiveGameBoard.MOVE_PIECE]
+            )
+        elif has_legal_placements:
+            action_type = board.HiveGameBoard.PLACE_PIECE
+        elif has_legal_movements:
+            action_type = board.HiveGameBoard.MOVE_PIECE
+        else:
+            action_type = board.HiveGameBoard.SKIP_TURN
 
+        # Player places a piece
         if action_type == board.HiveGameBoard.PLACE_PIECE:
-            pieces_to_play, locations_to_place = self.board_manager.get_board().get_all_possible_placements()
             piece_options = []
             for type_of_piece, amount in pieces_to_play.items():
                 if amount:
                     piece_options.append(type_of_piece)
+
+            # Player chooses a piece to place
             piece_type = self.make_choice(
                 'Which type of piece would you like to place?',
                 'Select a type of piece:',
                 piece_options
             )
 
+            # Player chooses a location to place a piece
             location_number = self.make_choice(
                 f'Where would you like to place a new {piece_type}?',
                 'Select a location:',
                 [ui_coords_to_id[coordinate] for coordinate in locations_to_place]
             )
+
             chosen_action = (action_type, ui_id_to_coords[location_number], piece_type)
+        # Player moves a piece
+        elif action_type == board.HiveGameBoard.MOVE_PIECE:
+            # Player chooses a piece to move
+            location_number = self.make_choice(
+                'Which piece would you like to move?',
+                'Select a piece (represented by number ID):',
+                [ui_coords_to_id[coordinate] for coordinate in possible_moves_dict.keys()]
+            )
+            piece_location = ui_id_to_coords[location_number]
+            piece_moves = possible_moves_dict[piece_location]
+
+            new_location_number = self.make_choice(
+                f'Where would you like to move the piece at {location_number}',
+                'Select an empty space on the board (represented by number ID):',
+                [ui_coords_to_id[coordinate] for coordinate in piece_moves]
+            )
+            new_location = ui_id_to_coords[new_location_number]
+
+            chosen_action = (board.HiveGameBoard.MOVE_PIECE, piece_location, new_location)
+        # Player has no legal actions - skip their turn.
         else:
+            print('You have no legal moves. Skipping turn...')
             chosen_action = (board.HiveGameBoard.SKIP_TURN, None, None)
 
         return chosen_action
