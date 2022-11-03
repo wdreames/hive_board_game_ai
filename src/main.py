@@ -638,7 +638,7 @@ if __name__ == '__main__':
     num_black_wins = 0
     num_draws = 0
     for i in range(num_games):
-        play_game(hex_player, hex_player, max_turns=50)
+        play_game(minimax_ai1, hex_player, max_turns=50)
         game_board = board.BoardManager().get_board()
         if game_board.determine_winner() == board.HiveGameBoard.WHITE_WINNER:
             num_white_wins += 1

@@ -136,7 +136,7 @@ class HexPlayer(Player):
             location_number = self.make_choice(
                 f'Where would you like to place a new {piece_type}?',
                 'Select a location:',
-                [ui_coords_to_id[coordinate] for coordinate in locations_to_place]
+                sorted([ui_coords_to_id[coordinate] for coordinate in locations_to_place])
             )
 
             chosen_action = (action_type, ui_id_to_coords[location_number], piece_type)
@@ -146,7 +146,7 @@ class HexPlayer(Player):
             location_number = self.make_choice(
                 'Which piece would you like to move?',
                 'Select a piece (represented by number ID):',
-                [ui_coords_to_id[coordinate] for coordinate in possible_moves_dict.keys()]
+                sorted([ui_coords_to_id[coordinate] for coordinate in possible_moves_dict.keys()])
             )
             piece_location = ui_id_to_coords[location_number]
             piece_moves = possible_moves_dict[piece_location]
@@ -154,7 +154,7 @@ class HexPlayer(Player):
             new_location_number = self.make_choice(
                 f'Where would you like to move the piece at {location_number}',
                 'Select an empty space on the board (represented by number ID):',
-                [ui_coords_to_id[coordinate] for coordinate in piece_moves]
+                sorted([ui_coords_to_id[coordinate] for coordinate in piece_moves])
             )
             new_location = ui_id_to_coords[new_location_number]
 

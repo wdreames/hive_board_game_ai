@@ -1035,8 +1035,8 @@ class HiveGameBoard:
         X_REPEAT = 9  # How many times to tessellate horizontally.
         Y_REPEAT = 9  # How many times to tessellate vertically.
 
-        print(f'min_x: {min_x}\tmax_x: {max_x}')
-        print(f'min_y: {min_y}\tmax_y: {max_y}')
+        # print(f'min_x: {min_x}\tmax_x: {max_x}')
+        # print(f'min_y: {min_y}\tmax_y: {max_y}')
 
         for y in range(Y_REPEAT):
             # Display the top half of the hexagon
@@ -1055,17 +1055,17 @@ class HiveGameBoard:
                 y_coord = y - x + min_y
                 if (x_coord, y_coord) in self.pieces:
                     if self.pieces[(x_coord, y_coord)].is_white:
-                        base_str1 = '/.....\\'
-                    else:
                         base_str1 = '/#####\\'
+                    else:
+                        base_str1 = '/.....\\'
                 else:
                     base_str1 = '/     \\'
                 y_coord -= 1
                 if (x_coord, y_coord) in self.pieces:
                     if self.pieces[(x_coord, y_coord)].is_white:
-                        base_str2 = r'.......'
-                    else:
                         base_str2 = r'#######'
+                    else:
+                        base_str2 = r'.......'
                 else:
                     base_str2 = r'       '
 
@@ -1078,9 +1078,9 @@ class HiveGameBoard:
                 if x < X_REPEAT - 1:
                     if (x_coord, y_coord - 1) in self.pieces:
                         if self.pieces[(x_coord, y_coord - 1)].is_white:
-                            base_str2 = r'.....'
-                        else:
                             base_str2 = r'#####'
+                        else:
+                            base_str2 = r'.....'
                     else:
                         base_str2 = r'_____'
                     print(rf'/{self.get_print_char(x_coord, y_coord)}\{base_str2}', end='')
@@ -1094,18 +1094,18 @@ class HiveGameBoard:
                 y_coord = y - x + min_y
                 if (x_coord, y_coord) in self.pieces:
                     if self.pieces[(x_coord, y_coord)].is_white:
-                        base_str1 = r'\......./'
-                    else:
                         base_str1 = r'\#######/'
+                    else:
+                        base_str1 = r'\......./'
                 else:
                     base_str1 = r'\       /'
 
                 x_coord += 1
                 if (x_coord, y_coord) in self.pieces:
                     if self.pieces[(x_coord, y_coord)].is_white:
-                        base_str2 = r'.....'
-                    else:
                         base_str2 = r'#####'
+                    else:
+                        base_str2 = r'.....'
                 else:
                     base_str2 = r'     '
 
@@ -1117,9 +1117,9 @@ class HiveGameBoard:
                 y_coord = y - x + min_y
                 if (x_coord, y_coord) in self.pieces:
                     if self.pieces[(x_coord, y_coord)].is_white:
-                        base_str = r'\...../'
-                    else:
                         base_str = r'\#####/'
+                    else:
+                        base_str = r'\...../'
                 else:
                     base_str = r'\_____/'
 
@@ -1139,7 +1139,7 @@ class HiveGameBoard:
                 piece_char = 'b'
             else:
                 piece_char = current_piece.name[:1]
-            if not current_piece.is_white:
+            if current_piece.is_white:
                 piece_char = f'# {piece_char}{self.ui_space_id:<2n} #'
             else:
                 piece_char = f'. {piece_char}{self.ui_space_id:<2n} .'
