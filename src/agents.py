@@ -40,17 +40,92 @@ class Player(Agent):
     def get_action_selection(self):
         actions = self.board_manager.get_action_list()
 
-        print(f'The following actions can be played:')
-        for i, action in enumerate(actions):
-            print(f'{i + 1}: {action}')
+        if len(actions) == 1 and actions[0][0] == board.HiveGameBoard.SKIP_TURN:
+            print('You have no legal moves. Skipping turn...')
+            return actions[0]
 
-        selection = input('Select an action:')
-        if not selection.isnumeric() or int(selection) not in range(1, len(actions) + 1):
-            print('Invalid selection. You must enter an integer value from the list of available actions.')
-            return self.get_action_selection()
+        # print(f'The following actions can be played:')
+        # for i, action in enumerate(actions):
+        #     print(f'{i + 1}: {action}')
+        #
+        # selection = input('Select an action:')
+        # if not selection.isnumeric() or int(selection) not in range(1, len(actions) + 1):
+        #     print('Invalid selection. You must enter an integer value from the list of available actions.')
+        #     return self.get_action_selection()
+        #
+        # selected_action = actions[int(selection) - 1]
+        # # return selected_action
 
-        selected_action = actions[int(selection) - 1]
-        return selected_action
+        return self.make_choice(
+            'The following actions can be played:',
+            'Select an action:',
+            actions
+        )
+
+    def make_choice(self, description, prompt, choices):
+        print(description)
+        for i, choice in enumerate(choices):
+            print(f'{i + 1}: {choice}')
+
+        selection = input(prompt)
+        if not selection.isnumeric() or int(selection) not in range(1, len(choices) + 1):
+            return self.make_choice(description, prompt, choices)
+
+        return choices[int(selection) - 1]
+
+
+class HexPlayer(Player):
+
+    def __init__(self, is_white=True, board_manager=None):
+        super().__init__(is_white, board_manager)
+        self.name = 'Player'
+
+    def get_action_selection(self):
+        pieces_to_play, locations_to_place, possible_moves_dict = self.board_manager.get_board().get_all_possible_actions()
+        ui_id_to_coords = self.board_manager.get_board().ui_id_to_coords
+        ui_coords_to_id = self.board_manager.get_board().ui_coords_to_id
+
+        # Check if there are no possible actions
+        if not (pieces_to_play and locations_to_place) and not possible_moves_dict:
+            print('You have no legal moves. Skipping turn...')
+            chosen_action = (board.HiveGameBoard.SKIP_TURN, None, None)
+
+        # Tell the player which pieces they can place
+        print('You have the following pieces in your reserve:')
+        for piece_type, amount in pieces_to_play.items():
+            print(f'\t* {piece_type} x {amount}')
+
+        # Tell the player which pieces they can move
+
+        # Determine if the player is placing or moving a piece
+        action_type = self.make_choice(
+            'Do you want to place a piece or move a piece?',
+            'Select an action type:',
+            [board.HiveGameBoard.PLACE_PIECE, board.HiveGameBoard.MOVE_PIECE]
+        )
+
+        if action_type == board.HiveGameBoard.PLACE_PIECE:
+            pieces_to_play, locations_to_place = self.board_manager.get_board().get_all_possible_placements()
+            piece_options = []
+            for type_of_piece, amount in pieces_to_play.items():
+                if amount:
+                    piece_options.append(type_of_piece)
+            piece_type = self.make_choice(
+                'Which type of piece would you like to place?',
+                'Select a type of piece:',
+                piece_options
+            )
+
+            location_number = self.make_choice(
+                f'Where would you like to place a new {piece_type}?',
+                'Select a location:',
+                [ui_coords_to_id[coordinate] for coordinate in locations_to_place]
+            )
+            chosen_action = (action_type, ui_id_to_coords[location_number], piece_type)
+        else:
+            chosen_action = (board.HiveGameBoard.SKIP_TURN, None, None)
+
+        return chosen_action
 
 
 class RandomActionAI(Agent):

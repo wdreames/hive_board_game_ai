@@ -148,17 +148,19 @@ def test_game1():
     game_board.perform_action_helper(PLACE, (0, 0), piece_type=spaces.Piece.BEETLE)
     print(game_board)
     game_board.print_board()
+    game_board.print_hex_board()
 
     game_board.perform_action_helper(PLACE, (-1, -1), piece_type=spaces.Piece.ANT)
     print(game_board)
     game_board.print_board()
+    game_board.print_hex_board()
 
-    game_board.perform_action_helper(MOVE, (0, 0), new_location=(-1, -1))
+    # game_board.perform_action_helper(MOVE, (0, 0), new_location=(-1, -1))
 
     print(game_board)
-    game_board.print_board()
-    print(board.HiveGameBoard().empty_spaces[(0, 0)])
-    print(board.HiveGameBoard().empty_spaces[(-1, 0)])
+    game_board.print_hex_board()
+    # print(board.HiveGameBoard().empty_spaces[(0, 0)])
+    # print(board.HiveGameBoard().empty_spaces[(-1, 0)])
 
 
 def test_game2():
@@ -614,8 +616,11 @@ if __name__ == '__main__':
     # test_game5()
     # check_for_errors(max_num_runs=250, max_actions=1000)
     # test_undo()
+    # test_game1()
+    # exit(0)
 
     player = agents.Player()
+    hex_player = agents.HexPlayer()
     random_ai = agents.RandomActionAI()
     best_next_move_ai = agents.BestNextMoveAI()
     minimax_ai1 = agents.MinimaxAI(max_depth=1)
@@ -633,7 +638,7 @@ if __name__ == '__main__':
     num_black_wins = 0
     num_draws = 0
     for i in range(num_games):
-        play_game(player, minimax_ai1, max_turns=50)
+        play_game(hex_player, hex_player, max_turns=50)
         game_board = board.BoardManager().get_board()
         if game_board.determine_winner() == board.HiveGameBoard.WHITE_WINNER:
             num_white_wins += 1
