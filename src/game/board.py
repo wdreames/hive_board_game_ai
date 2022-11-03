@@ -1026,7 +1026,7 @@ class HiveGameBoard:
         self.ui_id_to_coords.clear()
         self.ui_space_id = 1
 
-        # Code based off of https://nostarch.com/big-book-small-python-programming
+        # Code based off of https://inventwithpython.com/bigbookpython/project35.html
 
         # Set up the constants:
         # TODO: Don't hardcode these values.
@@ -1046,32 +1046,90 @@ class HiveGameBoard:
                 print()
 
             for x in range(X_REPEAT):
-                print(r' /     \      ', end='')
+                if x == 0:
+                    base_str0 = ' '
+                else:
+                    base_str0 = ''
+
+                x_coord = x + y + min_x
+                y_coord = y - x + min_y
+                if (x_coord, y_coord) in self.pieces:
+                    if self.pieces[(x_coord, y_coord)].is_white:
+                        base_str1 = '/.....\\'
+                    else:
+                        base_str1 = '/#####\\'
+                else:
+                    base_str1 = '/     \\'
+                y_coord -= 1
+                if (x_coord, y_coord) in self.pieces:
+                    if self.pieces[(x_coord, y_coord)].is_white:
+                        base_str2 = r'.......'
+                    else:
+                        base_str2 = r'#######'
+                else:
+                    base_str2 = r'       '
+
+                print(f'{base_str0}{base_str1}{base_str2}', end='')
             print()
 
             for x in range(X_REPEAT):
                 x_coord = x + y + min_x
                 y_coord = y - x + min_y
                 if x < X_REPEAT - 1:
-                    print(rf'/{self.get_print_char(x_coord, y_coord)}\_____', end='')
+                    if (x_coord, y_coord - 1) in self.pieces:
+                        if self.pieces[(x_coord, y_coord - 1)].is_white:
+                            base_str2 = r'.....'
+                        else:
+                            base_str2 = r'#####'
+                    else:
+                        base_str2 = r'_____'
+                    print(rf'/{self.get_print_char(x_coord, y_coord)}\{base_str2}', end='')
                 else:
                     print(rf'/{self.get_print_char(x_coord, y_coord)}\ ', end='')
             print()
 
             # Display the bottom half of the hexagon:
             for x in range(X_REPEAT):
-                print(r'\       /     ', end='')
+                x_coord = x + y + min_x
+                y_coord = y - x + min_y
+                if (x_coord, y_coord) in self.pieces:
+                    if self.pieces[(x_coord, y_coord)].is_white:
+                        base_str1 = r'\......./'
+                    else:
+                        base_str1 = r'\#######/'
+                else:
+                    base_str1 = r'\       /'
+
+                x_coord += 1
+                if (x_coord, y_coord) in self.pieces:
+                    if self.pieces[(x_coord, y_coord)].is_white:
+                        base_str2 = r'.....'
+                    else:
+                        base_str2 = r'#####'
+                else:
+                    base_str2 = r'     '
+
+                print(f'{base_str1}{base_str2}', end='')
             print()
 
             for x in range(X_REPEAT):
-                x_coord = x + y + 1 + min_x
+                x_coord = x + y + min_x
                 y_coord = y - x + min_y
-                if x == 0:
-                    print(rf' \_____/{self.get_print_char(x_coord, y_coord)}', end='')
-                elif x < X_REPEAT - 1:
-                    print(rf'\_____/{self.get_print_char(x_coord, y_coord)}', end='')
+                if (x_coord, y_coord) in self.pieces:
+                    if self.pieces[(x_coord, y_coord)].is_white:
+                        base_str = r'\...../'
+                    else:
+                        base_str = r'\#####/'
                 else:
-                    print(r'\_____/ ', end='')
+                    base_str = r'\_____/'
+
+                x_coord += 1
+                if x == 0:
+                    print(rf' {base_str}{self.get_print_char(x_coord, y_coord)}', end='')
+                elif x < X_REPEAT - 1:
+                    print(rf'{base_str}{self.get_print_char(x_coord, y_coord)}', end='')
+                else:
+                    print(rf'{base_str} ', end='')
             print()
 
     def get_print_char(self, x, y):
@@ -1082,23 +1140,24 @@ class HiveGameBoard:
             else:
                 piece_char = current_piece.name[:1]
             if not current_piece.is_white:
-                piece_char = f'({piece_char}{self.ui_space_id:<2n})'
+                piece_char = f'# {piece_char}{self.ui_space_id:<2n} #'
             else:
-                piece_char = f' {piece_char}{self.ui_space_id:<2n} '
+                piece_char = f'. {piece_char}{self.ui_space_id:<2n} .'
             self.ui_id_to_coords[self.ui_space_id] = (x, y)
             self.ui_coords_to_id[(x, y)] = self.ui_space_id
             self.ui_space_id += 1
         elif (x, y) in self.empty_spaces:
-            piece_char = f' {self.ui_space_id:2}  '
+            piece_char = f'  {self.ui_space_id:2}   '
             self.ui_id_to_coords[self.ui_space_id] = (x, y)
             self.ui_coords_to_id[(x, y)] = self.ui_space_id
             self.ui_space_id += 1
         else:
-            piece_char = '     '
-        if (x, y) == (0, 0):
-            return f'*{piece_char}*'
-        else:
-            return f' {piece_char} '
+            piece_char = '       '
+        # if (x, y) == (0, 0):
+        #     return f'*{piece_char}*'
+        # else:
+        #     return f' {piece_char} '
+        return piece_char
 
     def __str__(self):
         # Used to print the board state
