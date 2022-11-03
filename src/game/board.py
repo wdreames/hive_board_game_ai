@@ -171,6 +171,11 @@ class HiveGameBoard:
         self.tarjan_discovery_time = 0
         self.prepare_to_find_articulation_pts = False
 
+        # Used to convert player input into coordinates when displaying the board
+        self.ui_id_to_coords = dict()
+        self.ui_coords_to_id = dict()
+        self.ui_space_id = 1
+
         # Create board with one empty square
         EmptySpace(self, 0, 0)
         self.white_locations_to_place = {(0, 0)}
@@ -967,6 +972,10 @@ class HiveGameBoard:
 
     # TODO: [UI] This is a temporary solution. Do not use this in the final product...
     def print_board(self):
+
+        self.print_hex_board()
+        return
+
         if not self.pieces:
             return
 
@@ -979,11 +988,10 @@ class HiveGameBoard:
         max_y = piece_coords[-1][1]
 
         board_str = ''
-        for y in range(0, max_y - min_y + 1):
-            for x in range(0, max_x - min_x + 1):
-                # Actual points are (x + min_x, y + min_y)
-                if (x + min_x, y + min_y) in self.pieces:
-                    current_piece = self.pieces[(x + min_x, y + min_y)]
+        for y in range(min_y, max_y + 1):
+            for x in range(min_x, max_x + 1):
+                if (x, y) in self.pieces:
+                    current_piece = self.pieces[(x, y)]
                     if current_piece.name == Piece.BEETLE and current_piece.stacked_piece_obj is not None:
                         piece_char = 'b'
                     else:
@@ -992,16 +1000,105 @@ class HiveGameBoard:
                         piece_char = '(' + piece_char + ')'
                     else:
                         piece_char = ' ' + piece_char + ' '
-                elif (x + min_x, y + min_y) in self.empty_spaces:
+                elif (x, y) in self.empty_spaces:
                     piece_char = ' _ '
                 else:
                     piece_char = '   '
-                if (x + min_x, y + min_y) == (0, 0):
+                if (x, y) == (0, 0):
                     board_str += '*{}*|'.format(piece_char)
                 else:
                     board_str += ' {} |'.format(piece_char)
             board_str += '\n'
         print(board_str)
+
+    def print_hex_board(self):
+        # if not self.pieces:
+        #     return
+
+        piece_coords = list(self.get_all_spaces().keys())
+        piece_coords.sort(key=lambda x: x[0])
+        min_x = piece_coords[0][0]
+        max_x = piece_coords[-1][0]
+        piece_coords.sort(key=lambda y: y[1])
+        min_y = piece_coords[0][1]
+        max_y = piece_coords[-1][1]
+
+        self.ui_id_to_coords.clear()
+        self.ui_space_id = 1
+
+        # Code based off of https://nostarch.com/big-book-small-python-programming
+
+        # Set up the constants:
+        # TODO: Don't hardcode these values.
+        min_x = -8
+        min_y = 0
+        X_REPEAT = 9  # How many times to tessellate horizontally.
+        Y_REPEAT = 9  # How many times to tessellate vertically.
+
+        print(f'min_x: {min_x}\tmax_x: {max_x}')
+        print(f'min_y: {min_y}\tmax_y: {max_y}')
+
+        for y in range(Y_REPEAT):
+            # Display the top half of the hexagon
+            if y == 0:
+                for x in range(X_REPEAT):
+                    print(r'  _____       ', end='')
+                print()
+
+            for x in range(X_REPEAT):
+                print(r' /     \      ', end='')
+            print()
+
+            for x in range(X_REPEAT):
+                x_coord = x + y + min_x
+                y_coord = y - x + min_y
+                if x < X_REPEAT - 1:
+                    print(rf'/{self.get_print_char(x_coord, y_coord)}\_____', end='')
+                else:
+                    print(rf'/{self.get_print_char(x_coord, y_coord)}\ ', end='')
+            print()
+
+            # Display the bottom half of the hexagon:
+            for x in range(X_REPEAT):
+                print(r'\       /     ', end='')
+            print()
+
+            for x in range(X_REPEAT):
+                x_coord = x + y + 1 + min_x
+                y_coord = y - x + min_y
+                if x == 0:
+                    print(rf' \_____/{self.get_print_char(x_coord, y_coord)}', end='')
+                elif x < X_REPEAT - 1:
+                    print(rf'\_____/{self.get_print_char(x_coord, y_coord)}', end='')
+                else:
+                    print(r'\_____/ ', end='')
+            print()
+
+    def get_print_char(self, x, y):
+        if (x, y) in self.pieces:
+            current_piece = self.pieces[(x, y)]
+            if current_piece.name == Piece.BEETLE and current_piece.stacked_piece_obj is not None:
+                piece_char = 'b'
+            else:
+                piece_char = current_piece.name[:1]
+            if not current_piece.is_white:
+                piece_char = f'({piece_char}{self.ui_space_id:<2n})'
+            else:
+                piece_char = f' {piece_char}{self.ui_space_id:<2n} '
+            self.ui_id_to_coords[self.ui_space_id] = (x, y)
+            self.ui_coords_to_id[(x, y)] = self.ui_space_id
+            self.ui_space_id += 1
+        elif (x, y) in self.empty_spaces:
+            piece_char = f' {self.ui_space_id:2}  '
+            self.ui_id_to_coords[self.ui_space_id] = (x, y)
+            self.ui_coords_to_id[(x, y)] = self.ui_space_id
+            self.ui_space_id += 1
+        else:
+            piece_char = '     '
+        if (x, y) == (0, 0):
+            return f'*{piece_char}*'
+        else:
+            return f' {piece_char} '
 
     def __str__(self):
         # Used to print the board state
