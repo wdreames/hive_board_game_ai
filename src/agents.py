@@ -23,6 +23,31 @@ class Agent:
         self.board_manager.reset_board()
         return chosen_action
 
+    def get_evaluation(self):
+        # Base evaluation of the board state
+        evaluation = self.board_manager.get_board().evaluate_state()
+
+        # Want to ignore the values for the number of free pieces this agent has. It should only make the score more
+        # negative based on the number of its opponent's free pieces.
+
+        # Number of free pieces is not calculated before each player has performed 4 actions
+        if (self.board_manager.get_board().turn_number + 1) // 2 < 5:
+            return evaluation
+
+        if self.is_white:
+            free_pieces_dict = self.board_manager.get_board().num_white_free_pieces
+        else:
+            evaluation *= -1
+            free_pieces_dict = self.board_manager.get_board().num_black_free_pieces
+
+        free_piece_multiplier = 5
+        evaluation -= free_piece_multiplier * free_pieces_dict[spaces.Piece.ANT]
+        evaluation -= free_piece_multiplier * free_pieces_dict[spaces.Piece.BEETLE]
+        evaluation -= free_piece_multiplier * free_pieces_dict[spaces.Piece.GRASSHOPPER]
+        evaluation -= free_piece_multiplier * free_pieces_dict[spaces.Piece.SPIDER]
+
+        return evaluation
+
     @abstractmethod
     def get_action_selection(self):
         pass
@@ -80,6 +105,8 @@ class HexPlayer(Player):
         super().__init__(is_white, board_manager)
         self.name = 'Player'
 
+    # TODO: Allow the player to cancel an action after selecting it but before it is performed.
+    # TODO: Possibly allow the player to undo actions?
     def get_action_selection(self):
         pieces_to_play, locations_to_place, possible_moves_dict = self.board_manager.get_board().get_all_possible_actions()
         ui_id_to_coords = self.board_manager.get_board().ui_id_to_coords
@@ -195,7 +222,8 @@ class BestNextMoveAI(Agent):
         best_evaluation = -float("inf")
         best_actions = []
         for i, action in enumerate(actions):
-            evaluation = self.board_manager.get_successor(action).evaluate_state()
+            self.board_manager.get_successor(action)
+            evaluation = self.get_evaluation()
             self.board_manager.get_predecessor()
             if not self.is_white:
                 evaluation *= -1
@@ -273,10 +301,7 @@ class MinimaxAI(Agent):
 
     def max_value(self, board_state, alpha, beta, depth, start_time):
         if depth <= 0 or board_state.determine_winner() is not None:
-            if self.is_white:
-                return board_state.evaluate_state()
-            else:
-                return -board_state.evaluate_state()
+            return self.get_evaluation()
 
         value = -float("inf")
         actions = board_state.get_action_list(randomize_actions=True)
@@ -294,10 +319,7 @@ class MinimaxAI(Agent):
 
     def min_value(self, board_state, alpha, beta, depth, start_time):
         if depth <= 0 or board_state.determine_winner() is not None:
-            if self.is_white:
-                return board_state.evaluate_state()
-            else:
-                return -board_state.evaluate_state()
+            return self.get_evaluation()
 
         value = float("inf")
         actions = board_state.get_action_list(randomize_actions=True)
@@ -324,10 +346,7 @@ class ExpectimaxAI(MinimaxAI):
 
     def expected_value(self, board_state, alpha, beta, current_depth, start_time):
         if current_depth <= 0 or board_state.determine_winner() is not None:
-            if self.is_white:
-                return board_state.evaluate_state()
-            else:
-                return -board_state.evaluate_state()
+            return self.get_evaluation()
 
         sum_of_values = 0
         actions = board_state.get_action_list()

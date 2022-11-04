@@ -512,8 +512,10 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
             start_of_action_decision = timer()
             if board_manager.get_board().is_white_turn():
                 chosen_action = player1.get_action()
+                agent_evaluation = player1.get_evaluation()
             else:
                 chosen_action = player2.get_action()
+                agent_evaluation = player2.get_evaluation()
             end_of_action_decision = timer()
             print(f'Took {end_of_action_decision - start_of_action_decision} seconds to decide which action to take.')
             times_taken.append(end_of_action_decision - start_of_action_decision)
@@ -521,7 +523,7 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
 
             evaluations_during_game.append(board_manager.get_board().evaluate_state())
 
-            perform_action_str = f'Performing action: {chosen_action}'
+            perform_action_str = f'Agent eval before action: {agent_evaluation:0.2f} Performing action: {chosen_action}'
             print(perform_action_str)
             print('=' * len(perform_action_str))
             board_manager.perform_action(chosen_action)
@@ -638,7 +640,7 @@ if __name__ == '__main__':
     num_black_wins = 0
     num_draws = 0
     for i in range(num_games):
-        play_game(minimax_ai1, hex_player, max_turns=50)
+        play_game(hex_player, minimax_ai1)
         game_board = board.BoardManager().get_board()
         if game_board.determine_winner() == board.HiveGameBoard.WHITE_WINNER:
             num_white_wins += 1

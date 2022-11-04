@@ -937,6 +937,7 @@ class HiveGameBoard:
         ]
 
         value_of_piece_around_qb = 25
+        free_piece_multiplier = 5
         white_values = np.array([
             # Multiplied by the number of white pieces around the black queen bee
             value_of_piece_around_qb,
@@ -949,14 +950,14 @@ class HiveGameBoard:
 
             10,  # Beetle on Black Queen Bee
 
-            5,  # One over the average manhattan distance between all white pieces and the black queen bee
-            1,  # Number of white pieces
+            0,  # One over the average manhattan distance between all white pieces and the black queen bee
+            0,  # Number of white pieces
 
-            1,  # Multiplied by number of free white ants
-            1,  # Multiplied by number of free white beetles
-            1,  # Multiplied by number of free white grasshoppers
+            free_piece_multiplier,  # Multiplied by number of free white ants
+            free_piece_multiplier,  # Multiplied by number of free white beetles
+            free_piece_multiplier,  # Multiplied by number of free white grasshoppers
             value_of_piece_around_qb * 1.1,  # Multiplied by number of free white queen bees (after turn 4)
-            1,  # Multiplied by number of free white spiders
+            free_piece_multiplier,  # Multiplied by number of free white spiders
         ])
         black_values = -white_values
         values = np.concatenate((white_values, black_values))
@@ -1030,10 +1031,14 @@ class HiveGameBoard:
 
         # Set up the constants:
         # TODO: Don't hardcode these values.
-        min_x = -8
+        #       I will need to figure out a way to calculate these values such that the entire board can be displayed
+        #       with a minimal amount of additional output
+
+        min_x = -11
         min_y = 0
-        X_REPEAT = 9  # How many times to tessellate horizontally.
-        Y_REPEAT = 9  # How many times to tessellate vertically.
+
+        X_REPEAT = 12  # How many times to tessellate horizontally.
+        Y_REPEAT = 12  # How many times to tessellate vertically.
 
         # print(f'min_x: {min_x}\tmax_x: {max_x}')
         # print(f'min_y: {min_y}\tmax_y: {max_y}')
