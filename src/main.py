@@ -484,7 +484,7 @@ def graph_data(evaluations_during_game, times_taken, num_actions_per_turn, playe
     plt.show()
 
 
-def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
+def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), graph_data_after_run=False):
     board_manager = board.BoardManager(new_manager=True)
 
     if player1 == player2:
@@ -575,7 +575,8 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
           f'{sum(board_manager.getting_actions_times)/len(board_manager.getting_actions_times)}')
     print(f'Total time taken to create an action list: {sum(board_manager.getting_actions_times)}')
 
-    # graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
+    if graph_data_after_run:
+        graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
 
 
 def test_undo():
@@ -640,7 +641,7 @@ if __name__ == '__main__':
     num_black_wins = 0
     num_draws = 0
     for i in range(num_games):
-        play_game(hex_player, minimax_ai1)
+        play_game(minimax_ai1, hex_player, graph_data_after_run=True)
         game_board = board.BoardManager().get_board()
         if game_board.determine_winner() == board.HiveGameBoard.WHITE_WINNER:
             num_white_wins += 1

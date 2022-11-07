@@ -832,8 +832,8 @@ class HiveGameBoard:
         num_white_can_move_to_black_qb = 0
         num_black_can_move_to_white_qb = 0
 
-        beetle_on_white_qb = 0
-        beetle_on_black_qb = 0
+        black_beetle_on_white_qb = 0
+        white_beetle_on_black_qb = 0
 
         if self.white_queen_location is not None and self.black_queen_location is not None:
             white_queen_bee = self.pieces[self.white_queen_location]
@@ -842,8 +842,10 @@ class HiveGameBoard:
             pieces_around_white_qb = white_queen_bee.connected_pieces
             pieces_around_black_qb = black_queen_bee.connected_pieces
 
-            beetle_on_white_qb = 1 if white_queen_bee.name != Piece.QUEEN_BEE else 0
-            beetle_on_black_qb = 1 if black_queen_bee.name != Piece.QUEEN_BEE else 0
+            if white_queen_bee.name != Piece.QUEEN_BEE and not white_queen_bee.is_white:
+                black_beetle_on_white_qb = 1
+            if black_queen_bee.name != Piece.QUEEN_BEE and black_queen_bee.is_white:
+                white_beetle_on_black_qb = 1
 
             total_around_white_qb = len(pieces_around_white_qb)
             total_around_black_qb = len(pieces_around_black_qb)
@@ -907,16 +909,16 @@ class HiveGameBoard:
             num_black_movable_around_black_qb,
             num_white_can_move_to_black_qb,
 
-            beetle_on_black_qb,
+            white_beetle_on_black_qb,
 
             1 / avg_white_dist_from_black_qb if avg_white_dist_from_black_qb else 0,
             num_white_pieces,
 
-            self.num_white_free_pieces[Piece.ANT] if (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_white_free_pieces[Piece.BEETLE] if (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_white_free_pieces[Piece.GRASSHOPPER] if (self.turn_number + 1) // 2 >= 5 else 0,
-            1 if self.num_white_free_pieces[Piece.QUEEN_BEE] and (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_white_free_pieces[Piece.SPIDER] if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.GRASSHOPPER],  # if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.QUEEN_BEE],  #  and (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.SPIDER],  # if (self.turn_number + 1) // 2 >= 5 else 0,
 
             # Black utilities (negative)
             num_around_white_qb ** 1.5,
@@ -924,16 +926,16 @@ class HiveGameBoard:
             num_white_movable_around_white_qb,
             num_black_can_move_to_white_qb,
 
-            beetle_on_white_qb,
+            black_beetle_on_white_qb,
 
             1 / avg_black_dist_from_white_qb if avg_black_dist_from_white_qb else 0,
             num_black_pieces,
 
-            self.num_black_free_pieces[Piece.ANT] if (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_black_free_pieces[Piece.BEETLE] if (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_black_free_pieces[Piece.GRASSHOPPER] if (self.turn_number + 1) // 2 >= 5 else 0,
-            1 if self.num_black_free_pieces[Piece.QUEEN_BEE] and (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_black_free_pieces[Piece.SPIDER] if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_black_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 > 2 else 0,
+            self.num_black_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 > 2 else 0,
+            self.num_black_free_pieces[Piece.GRASSHOPPER],  # if (self.turn_number + 1) // 2 > 2 else 0,
+            self.num_black_free_pieces[Piece.QUEEN_BEE],  # and (self.turn_number + 1) // 2 > 4 else 0,
+            self.num_black_free_pieces[Piece.SPIDER],  # if (self.turn_number + 1) // 2 > 2 else 0,
         ]
 
         value_of_piece_around_qb = 25
@@ -948,7 +950,8 @@ class HiveGameBoard:
             # Multiplied by the number of white pieces that can move to locations around the black queen bee
             value_of_piece_around_qb * 0.7,
 
-            10,  # Beetle on Black Queen Bee
+            # White Beetle on Black Queen Bee
+            value_of_piece_around_qb,
 
             0,  # One over the average manhattan distance between all white pieces and the black queen bee
             0,  # Number of white pieces
@@ -956,7 +959,8 @@ class HiveGameBoard:
             free_piece_multiplier,  # Multiplied by number of free white ants
             free_piece_multiplier,  # Multiplied by number of free white beetles
             free_piece_multiplier,  # Multiplied by number of free white grasshoppers
-            value_of_piece_around_qb * 1.1,  # Multiplied by number of free white queen bees (after turn 4)
+            # Multiplied by number of free white queen bees
+            value_of_piece_around_qb * 1.1 if (self.turn_number + 1) // 2 > 4 else free_piece_multiplier,
             free_piece_multiplier,  # Multiplied by number of free white spiders
         ])
         black_values = -white_values

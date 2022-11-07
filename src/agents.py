@@ -40,11 +40,11 @@ class Agent:
             evaluation *= -1
             free_pieces_dict = self.board_manager.get_board().num_black_free_pieces
 
-        free_piece_multiplier = 5
-        evaluation -= free_piece_multiplier * free_pieces_dict[spaces.Piece.ANT]
-        evaluation -= free_piece_multiplier * free_pieces_dict[spaces.Piece.BEETLE]
-        evaluation -= free_piece_multiplier * free_pieces_dict[spaces.Piece.GRASSHOPPER]
-        evaluation -= free_piece_multiplier * free_pieces_dict[spaces.Piece.SPIDER]
+        # free_piece_multiplier = 5
+        # evaluation -= free_piece_multiplier * free_pieces_dict[spaces.Piece.ANT]
+        # evaluation -= free_piece_multiplier * free_pieces_dict[spaces.Piece.BEETLE]
+        # evaluation -= free_piece_multiplier * free_pieces_dict[spaces.Piece.GRASSHOPPER]
+        # evaluation -= free_piece_multiplier * free_pieces_dict[spaces.Piece.SPIDER]
 
         return evaluation
 
@@ -251,18 +251,54 @@ class MinimaxAI(Agent):
         self.name = f'Minimax AI with Depth {self.max_depth}'
         self.winning_value = winning_value
 
+    def get_opening_move(self, actions, action_number):
+        if action_number == 1:
+            possible_pieces_to_place = [spaces.Piece.SPIDER, spaces.Piece.GRASSHOPPER, spaces.Piece.BEETLE]
+        elif action_number == 2:
+            placed_piece = None
+            if self.is_white:
+                for piece, amount in self.board_manager.get_board().num_white_free_pieces.items():
+                    if amount:
+                        placed_piece = piece
+                        break
+            if not self.is_white:
+                for piece, amount in self.board_manager.get_board().num_black_free_pieces.items():
+                    if amount:
+                        placed_piece = piece
+                        break
+
+            if placed_piece == spaces.Piece.GRASSHOPPER or placed_piece == spaces.Piece.BEETLE:
+                possible_pieces_to_place = [spaces.Piece.ANT]
+            else:
+                possible_pieces_to_place = [spaces.Piece.GRASSHOPPER, spaces.Piece.ANT]
+        elif action_number == 3:
+            possible_pieces_to_place = [spaces.Piece.ANT, ]
+        else:
+            return None
+
+        print(f'Turn: {action_number}, Possible Pieces to Place: {possible_pieces_to_place}')
+        random_piece = random.choice(possible_pieces_to_place)
+        random_action = actions.pop()
+        return random_action[0], random_action[1], random_piece
+
     def get_action_selection(self):
         actions = self.board_manager.get_action_list(randomize_actions=True)
 
         if len(actions) == 1:
             return actions.pop()
 
-        # Don't think too much during the first few moves
-        if (self.board_manager.get_board().turn_number + 1) // 2 < 3:
-            random_action = actions.pop()
-            while random_action[2] == spaces.Piece.QUEEN_BEE and actions:
-                random_action = actions.pop()
-            return random_action
+        # Opening moves
+        action_number = (self.board_manager.get_board().turn_number + 1) // 2
+        if action_number <= 2:
+            chosen_action = self.get_opening_move(actions, action_number)
+            if chosen_action is not None:
+                return chosen_action
+        elif action_number <= 4:
+            better_action_list = []
+            for action in actions:
+                if action[2] not in [spaces.Piece.BEETLE, spaces.Piece.SPIDER]:
+                    better_action_list.append(action)
+            actions = better_action_list
 
         action_evaluations = dict()
 
