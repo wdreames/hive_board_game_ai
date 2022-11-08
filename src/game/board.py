@@ -859,6 +859,7 @@ class HiveGameBoard:
             pieces_around_white_qb = white_queen_bee.connected_pieces
             pieces_around_black_qb = black_queen_bee.connected_pieces
 
+            # If the name != QUEEN_BEE, white_queen_bee or black_queen_bee are actually Beetles
             if white_queen_bee.name != Piece.QUEEN_BEE and not white_queen_bee.is_white:
                 black_beetle_on_white_qb = 1
             if black_queen_bee.name != Piece.QUEEN_BEE and black_queen_bee.is_white:
@@ -917,6 +918,14 @@ class HiveGameBoard:
             if num_black_can_move_to_white_qb > empty_spaces_around_white_qb:
                 num_black_can_move_to_white_qb = empty_spaces_around_white_qb - 1
 
+            # Include beetles on queen bees in count around the queen bee
+            if total_around_black_qb >= 5:
+                white_beetle_on_black_qb = 0
+            if total_around_white_qb >= 5:
+                black_beetle_on_white_qb = 0
+            num_white_around_black_qb += white_beetle_on_black_qb
+            num_black_around_white_qb += black_beetle_on_white_qb
+
         utilities = [
             # White utilities (positive)
             num_white_around_black_qb ** 1.5,
@@ -966,7 +975,7 @@ class HiveGameBoard:
             value_of_piece_around_qb * 0.7,
 
             # White Beetle on Black Queen Bee
-            value_of_piece_around_qb,
+            value_of_piece_around_qb * 0.2,  # Included in white pieces around black qb now
 
             0,  # One over the average manhattan distance between all white pieces and the black queen bee
             0,  # Number of white pieces
