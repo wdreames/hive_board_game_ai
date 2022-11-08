@@ -809,11 +809,6 @@ class HiveGameBoard:
         # Otherwise, evaluate a utility function
         # TODO: Clean this up. It looks pretty messy and is hard to follow
 
-        num_around_white_qb = 0
-        total_around_white_qb = 0
-        num_around_black_qb = 0
-        total_around_black_qb = 0
-
         num_black_around_white_qb = 0
         num_white_movable_around_white_qb = 0
         num_white_immovable_around_white_qb = 0
@@ -858,7 +853,6 @@ class HiveGameBoard:
                     num_white_pieces += 1
 
                     if piece_location in pieces_around_black_qb:
-                        num_around_black_qb += 1
                         num_white_around_black_qb += 1
 
                     if piece_location in pieces_around_white_qb:
@@ -878,7 +872,6 @@ class HiveGameBoard:
                     num_black_pieces += 1
 
                     if piece_location in pieces_around_white_qb:
-                        num_around_white_qb += 1
                         num_black_around_white_qb += 1
 
                     if piece_location in pieces_around_black_qb:
@@ -898,13 +891,13 @@ class HiveGameBoard:
             empty_spaces_around_black_qb = 6 - total_around_black_qb
             empty_spaces_around_white_qb = 6 - total_around_white_qb
             if num_white_can_move_to_black_qb > empty_spaces_around_black_qb:
-                num_white_can_move_to_black_qb = empty_spaces_around_black_qb
+                num_white_can_move_to_black_qb = empty_spaces_around_black_qb - 1
             if num_black_can_move_to_white_qb > empty_spaces_around_white_qb:
-                num_black_can_move_to_white_qb = empty_spaces_around_white_qb
+                num_black_can_move_to_white_qb = empty_spaces_around_white_qb - 1
 
         utilities = [
             # White utilities (positive)
-            num_around_black_qb ** 1.5,
+            num_white_around_black_qb ** 1.5,
             num_black_immovable_around_black_qb,
             num_black_movable_around_black_qb,
             num_white_can_move_to_black_qb,
@@ -917,11 +910,11 @@ class HiveGameBoard:
             self.num_white_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 >= 5 else 0,
             self.num_white_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 >= 5 else 0,
             self.num_white_free_pieces[Piece.GRASSHOPPER],  # if (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_white_free_pieces[Piece.QUEEN_BEE],  #  and (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.QUEEN_BEE],  # and (self.turn_number + 1) // 2 >= 5 else 0,
             self.num_white_free_pieces[Piece.SPIDER],  # if (self.turn_number + 1) // 2 >= 5 else 0,
 
             # Black utilities (negative)
-            num_around_white_qb ** 1.5,
+            num_black_around_white_qb ** 1.5,
             num_white_immovable_around_white_qb,
             num_white_movable_around_white_qb,
             num_black_can_move_to_white_qb,
@@ -939,7 +932,7 @@ class HiveGameBoard:
         ]
 
         value_of_piece_around_qb = 25
-        free_piece_multiplier = 5
+        free_piece_multiplier = 1 if (self.turn_number + 1) // 2 <= 4 else 0
         white_values = np.array([
             # Multiplied by the number of white pieces around the black queen bee
             value_of_piece_around_qb,
@@ -976,10 +969,11 @@ class HiveGameBoard:
         return evaluation
 
     # TODO: [UI] This is a temporary solution. Do not use this in the final product...
-    def print_board(self):
+    def print_board(self, hex_board=True):
 
-        self.print_hex_board()
-        return
+        if hex_board:
+            self.print_hex_board()
+            return
 
         if not self.pieces:
             return

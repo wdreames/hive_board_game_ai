@@ -271,8 +271,6 @@ class MinimaxAI(Agent):
                 possible_pieces_to_place = [spaces.Piece.ANT]
             else:
                 possible_pieces_to_place = [spaces.Piece.GRASSHOPPER, spaces.Piece.ANT]
-        elif action_number == 3:
-            possible_pieces_to_place = [spaces.Piece.ANT, ]
         else:
             return None
 

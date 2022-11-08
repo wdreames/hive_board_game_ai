@@ -530,6 +530,7 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), g
     except KeyboardInterrupt:
         pass
     except Exception:
+        board_manager.get_board().print_board(hex_board=False)
         print(traceback.format_exc())
 
     end_of_game = timer()
@@ -568,8 +569,8 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), g
     print(f'Average across all actions: {total_action_times/total_num_actions:.6f}')
     print(f'Total action times:         {total_action_times:.6f}')
 
-    print(f'\nAverage time taken to clone a board: {sum(board_manager.cloning_times)/len(board_manager.cloning_times)}')
-    print(f'Total time taken to clone boards: {sum(board_manager.cloning_times)}')
+    print(f'\nAverage time taken to undo an action: {sum(board_manager.cloning_times)/len(board_manager.cloning_times)}')
+    print(f'Total time taken to undo actions: {sum(board_manager.cloning_times)}')
 
     print(f'\nAverage time taken to create an action list: '
           f'{sum(board_manager.getting_actions_times)/len(board_manager.getting_actions_times)}')
@@ -635,13 +636,13 @@ if __name__ == '__main__':
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    num_games = 1
+    num_games = 10
     num_turns = 0
     num_white_wins = 0
     num_black_wins = 0
     num_draws = 0
     for i in range(num_games):
-        play_game(minimax_ai1, hex_player, graph_data_after_run=True)
+        play_game(minimax_ai1, random_ai, graph_data_after_run=False)
         game_board = board.BoardManager().get_board()
         if game_board.determine_winner() == board.HiveGameBoard.WHITE_WINNER:
             num_white_wins += 1
