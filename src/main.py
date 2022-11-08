@@ -523,6 +523,8 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), g
 
             evaluations_during_game.append(board_manager.get_board().evaluate_state())
 
+            print(f'Board hash: {hash(board_manager.get_board())}')
+
             perform_action_str = f'Agent eval before action: {agent_evaluation:0.2f} Performing action: {chosen_action}'
             print(perform_action_str)
             print('=' * len(perform_action_str))
@@ -642,7 +644,7 @@ if __name__ == '__main__':
     num_black_wins = 0
     num_draws = 0
     for i in range(num_games):
-        play_game(minimax_ai1, random_ai, graph_data_after_run=False)
+        play_game(hex_player, hex_player, graph_data_after_run=False)
         game_board = board.BoardManager().get_board()
         if game_board.determine_winner() == board.HiveGameBoard.WHITE_WINNER:
             num_white_wins += 1

@@ -1,3 +1,5 @@
+import copy
+import json
 import random
 from timeit import default_timer as timer
 
@@ -166,6 +168,10 @@ class HiveGameBoard:
         self.ant_mvt_preventions_to_add = set()
         self.ant_locations = set()
 
+        # List of hashes of board states. Used to determine draw by repetition
+        self.previous_states = {}
+        self.draw_by_repetition = False
+
         # Variables for determining which pieces can move if a loop was formed
         # self.loop_was_formed = False
         self.tarjan_discovery_time = 0
@@ -204,6 +210,13 @@ class HiveGameBoard:
         action_type = action[0]
         piece_location = action[1]
         action_variable = action[2]
+
+        if action_type != HiveGameBoard.SKIP_TURN:
+            # Remove state from list of hashes
+            state_hash = hash(self)
+            if self.previous_states[state_hash] >= 3:
+                self.draw_by_repetition = False
+            self.previous_states[state_hash] -= 1
 
         if action_type == HiveGameBoard.PLACE_PIECE:
             # Remove the piece that was placed.
@@ -523,6 +536,15 @@ class HiveGameBoard:
             self.pieces[piece_location].update()
         self.spaces_requiring_updates.clear()
 
+        # Log the current state in the list of board hashes.
+        state_hash = hash(self)
+        if state_hash in self.previous_states:
+            self.previous_states[state_hash] += 1
+            if self.previous_states[state_hash] >= 3:
+                self.draw_by_repetition = True
+        else:
+            self.previous_states[state_hash] = 1
+
     def update_piece_movement(self):
         """
         Updates the movement for certain Pieces. This involves updating Ant movement prevention sets, along with
@@ -785,7 +807,7 @@ class HiveGameBoard:
             Returns 'black' if Black has won
             Returns 'draw' if the game is a draw
         """
-        if self._black_queen_surrounded() and self._white_queen_surrounded():
+        if self.draw_by_repetition or self._black_queen_surrounded() and self._white_queen_surrounded():
             return HiveGameBoard.DRAW
         elif self._black_queen_surrounded():
             return HiveGameBoard.WHITE_WINNER
@@ -1161,6 +1183,41 @@ class HiveGameBoard:
         # else:
         #     return f' {piece_char} '
         return piece_char
+
+    def make_hash(self, o):
+
+        """
+        Makes a hash from a dictionary, list, tuple or set to any level, that contains
+        only other hashable types (including any lists, tuples, sets, and
+        dictionaries).
+
+        Taken from https://stackoverflow.com/questions/5884066/hashing-a-dictionary
+        """
+
+        if isinstance(o, (set, tuple, list)):
+
+            return tuple([self.make_hash(e) for e in o])
+
+        elif not isinstance(o, dict):
+
+            return hash(o)
+
+        new_o = copy.deepcopy(o)
+        for k, v in new_o.items():
+            new_o[k] = self.make_hash(v)
+
+        return hash(tuple(frozenset(sorted(new_o.items()))))
+
+    def __eq__(self, other):
+        return isinstance(other, HiveGameBoard) and self.pieces == other.pieces
+
+    def __hash__(self):
+        list_to_hash = []
+        for location, piece in self.pieces.items():
+            list_to_hash.append(location)
+            list_to_hash.append(piece.name)
+            list_to_hash.append(piece.is_white)
+        return hash(tuple(list_to_hash))
 
     def __str__(self):
         # Used to print the board state
