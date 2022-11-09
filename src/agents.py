@@ -126,10 +126,7 @@ class HexPlayer(Player):
         if has_legal_movements:
             print('You can move the following pieces on the board (represented by their number ID):')
             for i, piece_location in enumerate(possible_moves_dict.keys()):
-                if i < len(possible_moves_dict.keys()) - 1:
-                    print(f'{ui_coords_to_id[piece_location]}, ', end='')
-                else:
-                    print(f'{ui_coords_to_id[piece_location]}')
+                print(f'\t* {ui_coords_to_id[piece_location]}')
 
         # Determine if the player is placing or moving a piece
         if has_legal_placements and has_legal_movements:
@@ -162,7 +159,7 @@ class HexPlayer(Player):
             # Player chooses a location to place a piece
             location_number = self.make_choice(
                 f'Where would you like to place a new {piece_type}?',
-                'Select a location:',
+                'Select a location (represented by number ID):',
                 sorted([ui_coords_to_id[coordinate] for coordinate in locations_to_place])
             )
 
@@ -180,7 +177,7 @@ class HexPlayer(Player):
 
             new_location_number = self.make_choice(
                 f'Where would you like to move the piece at {location_number}',
-                'Select an empty space on the board (represented by number ID):',
+                'Select a space on the board (represented by number ID):',
                 sorted([ui_coords_to_id[coordinate] for coordinate in piece_moves])
             )
             new_location = ui_id_to_coords[new_location_number]
