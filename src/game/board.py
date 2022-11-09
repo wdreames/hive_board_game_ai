@@ -1170,13 +1170,14 @@ class HiveGameBoard:
         if (x, y) in self.pieces:
             current_piece = self.pieces[(x, y)]
             if current_piece.name == Piece.BEETLE and current_piece.stacked_piece_obj is not None:
-                piece_char = 'b'
+                char_around_piece = '*'
             else:
-                piece_char = current_piece.name[:1]
+                char_around_piece = ' '
+            piece_char = current_piece.name[:1]
             if current_piece.is_white:
-                piece_char = f'# {piece_char}{self.ui_space_id:<2n} #'
+                piece_char = f'#{char_around_piece}{piece_char}{self.ui_space_id:<2n}{char_around_piece}#'
             else:
-                piece_char = f'. {piece_char}{self.ui_space_id:<2n} .'
+                piece_char = f'.{char_around_piece}{piece_char}{self.ui_space_id:<2n}{char_around_piece}.'
             self.ui_id_to_coords[self.ui_space_id] = (x, y)
             self.ui_coords_to_id[(x, y)] = self.ui_space_id
             self.ui_space_id += 1
