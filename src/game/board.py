@@ -963,7 +963,7 @@ class HiveGameBoard:
         ]
 
         value_of_piece_around_qb = 25
-        free_piece_multiplier = 1 if (self.turn_number + 1) // 2 <= 4 else 0
+        free_piece_multiplier = 1  # if (self.turn_number + 1) // 2 <= 4 else 0
         white_values = np.array([
             # Multiplied by the number of white pieces around the black queen bee
             value_of_piece_around_qb,
@@ -984,7 +984,7 @@ class HiveGameBoard:
             free_piece_multiplier,  # Multiplied by number of free white beetles
             free_piece_multiplier,  # Multiplied by number of free white grasshoppers
             # Multiplied by number of free white queen bees
-            value_of_piece_around_qb * 1.1 if (self.turn_number + 1) // 2 > 4 else free_piece_multiplier,
+            value_of_piece_around_qb * 1.1 if (self.turn_number + 1) // 2 >= 4 else free_piece_multiplier,
             free_piece_multiplier,  # Multiplied by number of free white spiders
         ])
         black_values = -white_values

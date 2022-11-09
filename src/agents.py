@@ -225,10 +225,8 @@ class BestNextMoveAI(Agent):
             self.board_manager.get_successor(action)
             evaluation = self.get_evaluation()
             self.board_manager.get_predecessor()
-            if not self.is_white:
-                evaluation *= -1
 
-            # print(f'{self} - {str(action):45} {evaluation:.2f}')
+            print(f'{self} - {str(action):45} {evaluation:.2f}')
 
             if evaluation >= self.winning_value:
                 return action

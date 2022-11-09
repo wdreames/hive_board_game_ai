@@ -39,7 +39,6 @@ import matplotlib.pyplot as plt
 #         print('{} has the following pieces to move: {}'.format(current_player, set(possible_moves.keys())))
 #
 #         try:
-#             # TODO: [UI] Assuming properly formatted input for now
 #             place_or_move = input('Do you want to place a piece (1) or move a piece (2)?')
 #             if int(place_or_move) == 1:
 #                 piece_input = input('Which piece would you like to play?')
@@ -636,13 +635,13 @@ if __name__ == '__main__':
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    num_games = 10
+    num_games = 1
     num_turns = 0
     num_white_wins = 0
     num_black_wins = 0
     num_draws = 0
     for i in range(num_games):
-        play_game(minimax_ai1, hex_player, graph_data_after_run=False)
+        play_game(minimax_ai1, random_ai, graph_data_after_run=False)
         game_board = board.BoardManager().get_board()
         if game_board.determine_winner() == board.HiveGameBoard.WHITE_WINNER:
             num_white_wins += 1

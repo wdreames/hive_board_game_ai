@@ -725,19 +725,13 @@ class Piece(HexSpace):
                     self.board.ant_mvt_preventions_to_add.add(space2_loc)
                 elif space2_on_outside:
                     self.board.ant_mvt_preventions_to_add.add(space1_loc)
-                else:
-                    # TODO: Remove this line after testing
-                    raise RuntimeError('Error! This line should never be executed!')
+
             # Both empty spaces are within the same ant movement prevention set
             elif space1_prevention_index == space2_prevention_index:
                 # Split the prevention sets
                 self.board.remove_from_ant_movement_prevention_set(space1_loc, space1_prevention_index)
                 self.board.add_to_ant_movement_prevention_set(space1_loc)
-            # else:
-            #     # TODO: Remove this line after testing
-            #     raise RuntimeError('Error! This line should never be executed!')
 
-    # TODO: [Formatting] Put this function into a utils class
     @staticmethod
     def _helper_add_to_dict_set(dictionary, key, value):
         """
