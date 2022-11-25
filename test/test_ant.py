@@ -1,3 +1,5 @@
+import os
+import pickle
 import unittest
 import src.game.board as board
 import src.game.spaces as spaces
@@ -413,31 +415,43 @@ class TestAntBoard3(unittest.TestCase):
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
 
+class TestAntBoard4(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.manager = board.BoardManager(new_manager=True)
+        with open(os.path.join('test', 'data', 'ant_board_4.hv'), 'rb') as file:
+            game_state = pickle.load(file)
+            cls.manager.current_board = game_state
+
+    def test_ant(self):
+        # The pickle of this object was made before this attribute was added. Adding it here.
+        self.manager.current_board.disconnected_empty_spaces = set()
+
+        self.manager.get_successor(('Move Piece', (1, 1), (1, 2)))
+        self.manager.get_successor(('Move Piece', (0, 1), (-3, 0)))
+        self.manager.get_successor(('Move Piece', (0, 2), (2, 5)))
+        self.manager.get_successor(('Move Piece', (-3, -2), (0, -1)))
+        self.manager.get_successor((board.HiveGameBoard.SKIP_TURN, None, None))
+        self.manager.get_board().print_board(hex_board=False)
+
+        self.assertRaisesRegex(
+            RuntimeError,
+            "[Illegal action. Piece at ] [cannot move to]",
+            self.manager.get_successor,
+            ('Move Piece', (-3, 0), (-1, 1))
+        )
+
+
 class TestAntErrorsFromRandomBoards(unittest.TestCase):
     """
     This class tests errors found from running random games.
     The test cases pass if no errors occur.
     """
 
-    @staticmethod
-    def _test_game_helper(actions):
-        game_board = board.BoardManager(new_manager=True)
-        for action in actions[:-3]:
-            game_board.perform_action(action)
-        game_board.get_board().print_board()
-
-        for action in actions[-3:-1]:
-            game_board.perform_action(action)
-            game_board.get_board().print_board()
-
-        print(game_board.get_board())
-
-        print(f'Perfoming final action: {actions[-1]}:')
-        game_board.perform_action(actions[-1])
-        game_board.get_board().print_board()
-
-    def test_game_one(self):
-        actions = [
+    @classmethod
+    def setUpClass(cls):
+        cls.actions = [
             ('Place Piece', (0, 0), 'Grasshopper'),
             ('Place Piece', (1, 1), 'Spider'),
             ('Place Piece', (-1, -1), 'Queen Bee'),
@@ -706,12 +720,58 @@ class TestAntErrorsFromRandomBoards(unittest.TestCase):
             ('Move Piece', (-1, -1), (1, -1)),
             ('Move Piece', (0, -2), (1, -1)),
         ]
+
+    def test_game_1(self):
+        manager = board.BoardManager(new_manager=True)
+        for action in self.actions[:-3]:
+            manager.perform_action(action)
+        manager.get_board().print_board()
+
+        for action in self.actions[-3:-1]:
+            manager.perform_action(action)
+            manager.get_board().print_board()
+
+        print(manager.get_board())
+
+        print(f'Perfoming final action: {self.actions[-1]}:')
         self.assertRaisesRegex(
             RuntimeError,
             "[Illegal action. Piece at ] [cannot move to]",
-            self._test_game_helper,
-            actions
+            manager.perform_action,
+            self.actions[-1]
         )
+        manager.get_board().print_board()
+
+    def test_game_2(self):
+        manager = board.BoardManager(new_manager=True)
+        for action in self.actions[:-3]:
+            manager.perform_action(action)
+        manager.get_board().print_board(hex_board=False)
+
+        manager.perform_action((board.HiveGameBoard.SKIP_TURN, None, None))
+        manager.perform_action((board.HiveGameBoard.MOVE_PIECE, (-1, -1), (1, -2)))
+        manager.get_board().print_board()
+        print(manager.get_board().is_white_turn())
+
+        expected_prevention_sets = sorted([
+            {(0, 0), (1, 0), (1, -1), (0, -2), (-1, -3), (-1, -2), (-1, -1), (0, -1)},
+            {(3, 0)},
+            {(3, 2)},
+        ])
+
+        sets_that_do_not_exist = []
+        for prevention_set in expected_prevention_sets:
+            if prevention_set not in manager.get_board().ant_mvt_prevention_sets:
+                sets_that_do_not_exist.append(prevention_set)
+
+        print(manager.get_board().ant_mvt_prevention_sets)
+        output_string = '\nThe following ant movement prevention sets do not exist in the game board:\n'
+        for prevention_set in sets_that_do_not_exist:
+            output_string += f'\t{prevention_set}\n'
+        output_string += 'The game board contains the following:\n'
+        for prevention_set in manager.get_board().ant_mvt_prevention_sets:
+            output_string += f'\t{prevention_set}\n'
+        self.assertFalse(sets_that_do_not_exist, output_string)
 
 
 def ant_board1():
