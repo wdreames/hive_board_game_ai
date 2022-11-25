@@ -39,7 +39,6 @@ import matplotlib.pyplot as plt
 #         print('{} has the following pieces to move: {}'.format(current_player, set(possible_moves.keys())))
 #
 #         try:
-#             # TODO: [UI] Assuming properly formatted input for now
 #             place_or_move = input('Do you want to place a piece (1) or move a piece (2)?')
 #             if int(place_or_move) == 1:
 #                 piece_input = input('Which piece would you like to play?')
@@ -484,8 +483,8 @@ def graph_data(evaluations_during_game, times_taken, num_actions_per_turn, playe
     plt.show()
 
 
-def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
-    board_manager = board.BoardManager(new_manager=True)
+def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), graph_data_after_run=False):
+    board_manager = board.BoardManager()  # new_manager=True)
 
     if player1 == player2:
         player2 = copy.deepcopy(player1)
@@ -512,8 +511,10 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
             start_of_action_decision = timer()
             if board_manager.get_board().is_white_turn():
                 chosen_action = player1.get_action()
+                agent_evaluation = player1.get_evaluation()
             else:
                 chosen_action = player2.get_action()
+                agent_evaluation = player2.get_evaluation()
             end_of_action_decision = timer()
             print(f'Took {end_of_action_decision - start_of_action_decision} seconds to decide which action to take.')
             times_taken.append(end_of_action_decision - start_of_action_decision)
@@ -521,13 +522,15 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
 
             evaluations_during_game.append(board_manager.get_board().evaluate_state())
 
-            perform_action_str = f'Performing action: {chosen_action}'
+            perform_action_str = f'Agent eval before action: {agent_evaluation:0.2f} Performing action: {chosen_action}'
             print(perform_action_str)
             print('=' * len(perform_action_str))
             board_manager.perform_action(chosen_action)
     except KeyboardInterrupt:
         pass
     except Exception:
+        board_manager.get_board().print_board(hex_board=False)
+        board_manager.save_state('last_hive_error.hv')
         print(traceback.format_exc())
 
     end_of_game = timer()
@@ -566,14 +569,17 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf")):
     print(f'Average across all actions: {total_action_times/total_num_actions:.6f}')
     print(f'Total action times:         {total_action_times:.6f}')
 
-    print(f'\nAverage time taken to clone a board: {sum(board_manager.cloning_times)/len(board_manager.cloning_times)}')
-    print(f'Total time taken to clone boards: {sum(board_manager.cloning_times)}')
+    print(f'\nAverage time taken to undo an action: {sum(board_manager.cloning_times)/len(board_manager.cloning_times)}')
+    print(f'Total time taken to undo actions: {sum(board_manager.cloning_times)}')
 
     print(f'\nAverage time taken to create an action list: '
           f'{sum(board_manager.getting_actions_times)/len(board_manager.getting_actions_times)}')
     print(f'Total time taken to create an action list: {sum(board_manager.getting_actions_times)}')
 
-    # graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
+    if graph_data_after_run:
+        graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
+
+    return evaluations_during_game, white_times_taken, black_times_taken, num_actions_per_turn, total_num_actions
 
 
 def test_undo():
@@ -583,32 +589,44 @@ def test_undo():
     board_manager = board.BoardManager(new_manager=True)
     board_manager.current_board = game_board
 
-    board_manager.get_successor((board.HiveGameBoard.PLACE_PIECE, (-3, 0), spaces.Piece.ANT))
-    board_manager.get_board().print_board()
+    board_state2 = board_manager.get_successor((board.HiveGameBoard.PLACE_PIECE, (-3, 0), spaces.Piece.ANT))
+    board_manager.get_board().print_board(hex_board=False)
     print(board_manager.get_board())
 
     board_manager.get_successor((board.HiveGameBoard.MOVE_PIECE, (2, 0), (-3, 1)))
-    board_manager.get_board().print_board()
+    board_manager.get_board().print_board(hex_board=False)
     print(board_manager.get_board())
 
+    board_state2.print_board(hex_board=False)
+
     board_manager.get_predecessor()
-    board_manager.get_board().print_board()
+    board_manager.get_board().print_board(hex_board=False)
     print(board_manager.get_board())
 
     board_manager.get_successor((board.HiveGameBoard.MOVE_PIECE, (2, 0), (-4, 0)))
-    board_manager.get_board().print_board()
+    board_manager.get_board().print_board(hex_board=False)
     print(board_manager.get_board())
 
     board_manager.get_predecessor()
-    board_manager.get_board().print_board()
+    board_manager.get_board().print_board(hex_board=False)
     print(board_manager.get_board())
 
     board_manager.get_predecessor()
-    board_manager.get_board().print_board()
+    board_manager.get_board().print_board(hex_board=False)
     print(board_manager.get_board())
+
+    board_state2.print_board(hex_board=False)
+
+
+def test_load_last_game():
+    manager = board.BoardManager(new_manager=True)
+    manager.load_state('last_hive_game.hv')
+    manager.get_board().print_board(hex_board=False)
 
 
 if __name__ == '__main__':
+    # test_load_last_game()
+    # exit(0)
     # test_sliding_rules()
     # demo_game()
     # play_game_with_manager()
@@ -624,7 +642,7 @@ if __name__ == '__main__':
     random_ai = agents.RandomActionAI()
     best_next_move_ai = agents.BestNextMoveAI()
     minimax_ai1 = agents.MinimaxAI(max_depth=1)
-    minimax_ai2 = agents.MinimaxAI(max_depth=2, max_time=120)
+    minimax_ai2 = agents.MinimaxAI(max_depth=2, max_time=10)
     minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=120)
     minimax_ai4 = agents.MinimaxAI(max_depth=4, max_time=10)
     minimax_ai8 = agents.MinimaxAI(max_depth=8, max_time=10)
@@ -632,23 +650,57 @@ if __name__ == '__main__':
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    num_games = 1
+    num_games = 10
     num_turns = 0
     num_white_wins = 0
     num_black_wins = 0
     num_draws = 0
+
+    all_white_times_taken = []
+    all_black_times_taken = []
+    all_num_actions_per_turn = []
+    actions_processed = []
+
     for i in range(num_games):
-        play_game(minimax_ai1, hex_player, max_turns=50)
+        _, white_times, black_times, num_actions_per_turn, total_num_actions = play_game(
+            minimax_ai1,
+            best_next_move_ai,
+            graph_data_after_run=False,
+            max_turns=50,
+        )
+
         game_board = board.BoardManager().get_board()
         if game_board.determine_winner() == board.HiveGameBoard.WHITE_WINNER:
             num_white_wins += 1
+            all_white_times_taken += white_times
+            all_black_times_taken += black_times
+            all_num_actions_per_turn += num_actions_per_turn
+            actions_processed.append(total_num_actions)
         elif game_board.determine_winner() == board.HiveGameBoard.BLACK_WINNER:
             num_black_wins += 1
+            all_white_times_taken += white_times
+            all_black_times_taken += black_times
+            all_num_actions_per_turn += num_actions_per_turn
+            actions_processed.append(total_num_actions)
         elif game_board.determine_winner() == board.HiveGameBoard.DRAW:
             num_draws += 1
+            all_white_times_taken += white_times
+            all_black_times_taken += black_times
+            all_num_actions_per_turn += num_actions_per_turn
+            actions_processed.append(total_num_actions)
 
         num_turns += game_board.turn_number
 
+        print('='*50)
         print(f'\nResults after {i + 1} game{"s" if i != 0 else ""}:')
         print(f'White wins: {num_white_wins} / Black wins: {num_black_wins} / Draws: {num_draws}')
         print(f'Average number of turns per game: {num_turns/(i+1):.1f}\n')
+        print()
+        if all_white_times_taken and all_black_times_taken and all_num_actions_per_turn:
+            print(f'Average time taken by White across all games: {sum(all_white_times_taken)/len(all_white_times_taken):0.6f}')
+            print(f'Average time taken by Black across all games: {sum(all_black_times_taken)/len(all_black_times_taken):0.6f}')
+            print(f'Average number of actions on a turn: {sum(all_num_actions_per_turn)/len(all_num_actions_per_turn):.0f}')
+            print(f'Average number of actions processed in a game: {sum(actions_processed)/num_games:.0f}')
+        print('='*50)
+
+        board.BoardManager(new_manager=True)

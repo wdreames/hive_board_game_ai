@@ -50,7 +50,7 @@ class Ant(Piece):
                 if len(empty_space.connected_pieces) == 1 and self.location in empty_space.connected_pieces:
                     moveset.remove(space_location)
 
-            self.possible_moves = moveset
+            self.possible_moves = moveset.difference(self.board.disconnected_empty_spaces)
         self.update_board_moves()
         return self.possible_moves
 
@@ -262,15 +262,6 @@ class Grasshopper(Piece):
 
     def remove(self):
         # Unlink pieces on the movement path. This needs to happen *before* this grasshopper's location is updated
-        # TODO: Remove this and replace with below for loop. This is primarily to ensure the remove function works
-        #       properly.
-        for piece_location in self.connected_pieces:
-            self.remove_grasshopper_path(piece_location)
-        if self.paths:
-            raise RuntimeError(f'Paths should be empty before removing a Grasshopper.\n'
-                               f'Grasshopper location: {self.location}\n'
-                               f'Grasshopper paths: {self.paths}')
-
         for path_location in self.paths:
             self.board.get_all_spaces()[path_location].linked_grasshoppers.remove(self.location)
         self.paths.clear()
@@ -445,9 +436,6 @@ class Spider(Piece):
         starts_to_paths = self.get_queen_bee_moves()
 
         if self.initialize_paths:
-            # Add paths in direction of connected empty spaces
-            # TODO: [Debugging] Clearing this does not remove linked EmptySpaces
-
             # Clear all previous paths
             for empty_space_location in self.paths:
                 if empty_space_location in self.board.empty_spaces:
@@ -455,13 +443,6 @@ class Spider(Piece):
                     if self.location in empty_space.linked_spiders:
                         empty_space.linked_spiders.remove(self.location)
 
-            # for path_id, path_root in self.path_roots.copy().items():
-            #     self.remove_spider_path(path_root.location, path_id=path_id)
-            # if self.paths or self.path_roots:
-            #     raise RuntimeError(f'Paths should be empty before removing a Spider.\n'
-            #                        f'Spider location: {self.location}\n'
-            #                        f'Spider paths: {self.paths}\n'
-            #                        f'Spider path roots: {self.path_roots}')
             self.paths.clear()
             self.path_roots.clear()
             self.possible_moves.clear()
@@ -473,9 +454,18 @@ class Spider(Piece):
 
             self.previous_path_starts = set(self.path_roots.values())
         else:
+            # If a start path was removed, remove it
+            removed_starting_paths = self.previous_path_starts.difference(starts_to_paths)
+            for path_start in removed_starting_paths:
+                self.remove_spider_path(path_start)
+
+            # If there is a new start path, add it
+            new_starting_paths = starts_to_paths.difference(self.previous_path_starts, self.paths_to_add)
+            for path_start in new_starting_paths:
+                self.add_spider_path(path_start)
+
             # Add recorded paths to add during update
             for spider_path in self.paths_to_add:
-                # TODO: [Debugging] This line is not called during testing.
                 self.add_spider_path(
                     empty_space_location=spider_path.location,
                     previous_location=spider_path.previous_location,
@@ -483,18 +473,6 @@ class Spider(Piece):
                     path_id=spider_path.path_id,
                     visited=spider_path.visited.copy()
                 )
-
-            # Compare current path starts to previous path starts
-            new_starting_paths = starts_to_paths.difference(self.previous_path_starts)
-            removed_starting_paths = self.previous_path_starts.difference(starts_to_paths)
-
-            # If a start path was removed, remove it
-            for path_start in removed_starting_paths:
-                self.remove_spider_path(path_start)
-
-            # If there is a new start path, add it
-            for path_start in new_starting_paths:
-                self.add_spider_path(path_start)
 
         self.paths_to_add.clear()
         self.previous_path_starts = starts_to_paths

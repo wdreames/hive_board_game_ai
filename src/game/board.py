@@ -1,3 +1,5 @@
+import os
+import pickle
 import random
 from timeit import default_timer as timer
 
@@ -35,19 +37,11 @@ class BoardManager:
 
         return cls.instance
 
-    # def __init__(self):
-    #     self.root_board = HiveGameBoard()
-    #     self.current_board = self.root_board
-
     def reset_board(self):
         # For every action in self.successor_actions, undo that action
         while self.successor_actions:
             self.get_predecessor()
         return self.current_board
-        # self.set_board(self.root_board)
-
-    # def set_board(self, new_board):
-    #     self.current_board = new_board
 
     def get_board(self):
         return self.current_board
@@ -61,27 +55,9 @@ class BoardManager:
         return self.current_board
 
     def get_successor(self, action):
-        # start_time = timer()
         self.current_board.perform_action(action)
         self.successor_actions.append(action)
-        # self.cloning_times.append(timer() - start_time)
         return self.current_board
-
-    def _get_successor(self, board_instance=None, action=None):
-        # Take current board, perform action
-        # Add action to the list of actions
-
-        if action is None:
-            return self.get_board()
-        if board_instance is None:
-            board_instance = self.get_board()
-
-        start_time = timer()
-        successor_board = board_instance.deepcopy()
-        self.cloning_times.append(timer() - start_time)
-
-        successor_board.perform_action(action)
-        return successor_board
 
     def get_action_list(self, randomize_actions=False):
         self.reset_board()
@@ -90,16 +66,23 @@ class BoardManager:
     def perform_action(self, action):
         self.reset_board()
         self.get_board().perform_action(action)
+        self.save_state()
+
+    def save_state(self, filename='last_hive_game.hv'):
+        with open(os.path.join('data', filename), 'wb') as file:
+            pickle.dump(self.current_board, file)
+
+    def load_state(self, filename='last_hive_game.hv'):
+        with open(os.path.join('data', filename), 'rb') as file:
+            self.current_board = pickle.load(file)
 
     def __str__(self):
         return str(self.current_board)
 
 
-# TODO: Update Documentation
 class HiveGameBoard:
     """
-    This class is used to store the board state of the game. A singleton design pattern is used for this class so there
-    can only ever be one instance of the game board. This can be accessed across all files.
+    This class is used to store the state of a game.
     """
 
     MOVE_PIECE = 'Move Piece'
@@ -160,6 +143,7 @@ class HiveGameBoard:
 
         self.spaces_requiring_updates = set()
         self.empty_spaces_requiring_deletion = set()
+        self.disconnected_empty_spaces = set()
 
         # Variables for keeping track of Ant movement
         self.ant_mvt_prevention_sets = []
@@ -179,26 +163,6 @@ class HiveGameBoard:
         # Create board with one empty square
         EmptySpace(self, 0, 0)
         self.white_locations_to_place = {(0, 0)}
-
-    # def deepcopy(self):
-    #     new_board = HiveGameBoard()
-    #     new_board.pieces = copy.deepcopy(self.pieces)
-    #     new_board.empty_spaces = copy.deepcopy(self.empty_spaces)
-    #     new_board.white_pieces_to_place = self.white_pieces_to_place.copy()
-    #     new_board.black_pieces_to_place = self.black_pieces_to_place.copy()
-    #     new_board.turn_number = self.turn_number
-    #     new_board.white_locations_to_place = self.white_locations_to_place.copy()
-    #     new_board.black_locations_to_place = self.black_locations_to_place.copy()
-    #     new_board.white_possible_moves = self.white_possible_moves.copy()
-    #     new_board.black_possible_moves = self.black_possible_moves.copy()
-    #     new_board.white_queen_location = self.white_queen_location
-    #     new_board.black_queen_location = self.black_queen_location
-    #     new_board.num_white_free_pieces = self.num_white_free_pieces.copy()
-    #     new_board.num_black_free_pieces = self.num_black_free_pieces.copy()
-    #     new_board.ant_mvt_prevention_sets = self.ant_mvt_prevention_sets[:]
-    #
-    #     print(new_board)
-    #     return new_board
 
     def undo_action(self, action):
         action_type = action[0]
@@ -286,7 +250,20 @@ class HiveGameBoard:
 
         # Move actions
         move_actions = []
-        for piece_location, move_locations in possible_moves_dict.items():
+
+        # Order Pieces so that Pieces with longer processing times are processed last
+        order_of_pieces = {
+            Piece.QUEEN_BEE: 0,
+            Piece.BEETLE: 1,
+            Piece.GRASSHOPPER: 2,
+            Piece.SPIDER: 3,
+            Piece.ANT: 4,
+        }
+
+        for piece_location, move_locations in sorted(
+                possible_moves_dict.items(),
+                key=lambda item: order_of_pieces[self.pieces[item[0]].name]
+        ):
             for new_location in move_locations:
                 move_actions.append((
                     HiveGameBoard.MOVE_PIECE,
@@ -296,7 +273,10 @@ class HiveGameBoard:
 
         # Place actions
         place_actions = []
-        for piece_type, amount_of_type in pieces_to_play.items():
+        for piece_type, amount_of_type in sorted(
+                pieces_to_play.items(),
+                key=lambda item: order_of_pieces[item[0]]
+        ):
             if amount_of_type:
                 for possible_location in locations_to_place:
                     place_actions.append((
@@ -514,7 +494,8 @@ class HiveGameBoard:
         # TODO: [Efficiency] Add to these sets directly instead of having to use an intersection
         empty_spaces_requiring_updates = self.spaces_requiring_updates.intersection(self.empty_spaces.keys())
         for empty_space_location in empty_spaces_requiring_updates:
-            self.empty_spaces[empty_space_location].update()
+            if empty_space_location in self.empty_spaces:
+                self.empty_spaces[empty_space_location].update()
 
         self.update_piece_movement()
 
@@ -522,6 +503,15 @@ class HiveGameBoard:
         for piece_location in pieces_requiring_updates:
             self.pieces[piece_location].update()
         self.spaces_requiring_updates.clear()
+
+        # Log the current state in the list of board hashes.
+        # state_hash = hash(self)
+        # if state_hash in self.previous_states:
+        #     self.previous_states[state_hash] += 1
+        #     if self.previous_states[state_hash] >= 3:
+        #         self.draw_by_repetition = True
+        # else:
+        #     self.previous_states[state_hash] = 1
 
     def update_piece_movement(self):
         """
@@ -532,7 +522,6 @@ class HiveGameBoard:
         while self.ant_mvt_preventions_to_add:
             location = self.ant_mvt_preventions_to_add.pop()
             self.add_to_ant_movement_prevention_set(location)
-        self.ant_mvt_preventions_to_add.clear()
 
         # Determine which pieces can move under the OneHive rule
         if self.turn_number <= 2:
@@ -640,7 +629,12 @@ class HiveGameBoard:
         self.ant_mvt_prevention_sets[set_index].add(current_space)
         visited_spaces.add(current_space)
 
-        for connected_space in self.empty_spaces[current_space].get_queen_bee_moves().difference(visited_spaces):
+        current_empty_space = self.empty_spaces[current_space]
+        spaces_to_search = current_empty_space.connected_empty_spaces.difference(
+            current_empty_space.sliding_prevented_to.keys(),
+            visited_spaces
+        )
+        for connected_space in spaces_to_search:
             result = self.add_to_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
             if result == CLEARED_SET:
                 return result
@@ -795,7 +789,7 @@ class HiveGameBoard:
             return None
 
     # TODO: Documentation
-    def evaluate_state(self):
+    def evaluate_state(self, print_utilities=False):
 
         # Evaluate if this is an end-game state:
         winner = self.determine_winner()
@@ -809,11 +803,6 @@ class HiveGameBoard:
         # Otherwise, evaluate a utility function
         # TODO: Clean this up. It looks pretty messy and is hard to follow
 
-        num_around_white_qb = 0
-        total_around_white_qb = 0
-        num_around_black_qb = 0
-        total_around_black_qb = 0
-
         num_black_around_white_qb = 0
         num_white_movable_around_white_qb = 0
         num_white_immovable_around_white_qb = 0
@@ -824,16 +813,14 @@ class HiveGameBoard:
 
         total_white_dist_from_black_qb = 0
         total_black_dist_from_white_qb = 0
-        avg_white_dist_from_black_qb = 0
-        avg_black_dist_from_white_qb = 0
         num_white_pieces = 0
         num_black_pieces = 0
 
         num_white_can_move_to_black_qb = 0
         num_black_can_move_to_white_qb = 0
 
-        beetle_on_white_qb = 0
-        beetle_on_black_qb = 0
+        black_beetle_on_white_qb = 0
+        white_beetle_on_black_qb = 0
 
         if self.white_queen_location is not None and self.black_queen_location is not None:
             white_queen_bee = self.pieces[self.white_queen_location]
@@ -842,8 +829,11 @@ class HiveGameBoard:
             pieces_around_white_qb = white_queen_bee.connected_pieces
             pieces_around_black_qb = black_queen_bee.connected_pieces
 
-            beetle_on_white_qb = 1 if white_queen_bee.name != Piece.QUEEN_BEE else 0
-            beetle_on_black_qb = 1 if black_queen_bee.name != Piece.QUEEN_BEE else 0
+            # If the name != QUEEN_BEE, white_queen_bee or black_queen_bee are actually Beetles
+            if white_queen_bee.name != Piece.QUEEN_BEE and not white_queen_bee.is_white:
+                black_beetle_on_white_qb = 1
+            if black_queen_bee.name != Piece.QUEEN_BEE and black_queen_bee.is_white:
+                white_beetle_on_black_qb = 1
 
             total_around_white_qb = len(pieces_around_white_qb)
             total_around_black_qb = len(pieces_around_black_qb)
@@ -856,7 +846,6 @@ class HiveGameBoard:
                     num_white_pieces += 1
 
                     if piece_location in pieces_around_black_qb:
-                        num_around_black_qb += 1
                         num_white_around_black_qb += 1
 
                     if piece_location in pieces_around_white_qb:
@@ -865,7 +854,7 @@ class HiveGameBoard:
                         else:
                             num_white_immovable_around_white_qb += 1
 
-                    if piece.location not in black_queen_bee.get_all_surrounding_locations() \
+                    if piece_location not in black_queen_bee.get_all_surrounding_locations() \
                             and piece_location in self.white_possible_moves \
                             and not self.white_possible_moves[piece_location].isdisjoint(black_queen_bee.connected_empty_spaces):
                         num_white_can_move_to_black_qb += 1
@@ -876,7 +865,6 @@ class HiveGameBoard:
                     num_black_pieces += 1
 
                     if piece_location in pieces_around_white_qb:
-                        num_around_white_qb += 1
                         num_black_around_white_qb += 1
 
                     if piece_location in pieces_around_black_qb:
@@ -885,13 +873,10 @@ class HiveGameBoard:
                         else:
                             num_black_immovable_around_black_qb += 1
 
-                    if piece.location not in white_queen_bee.get_all_surrounding_locations() \
+                    if piece_location not in white_queen_bee.get_all_surrounding_locations() \
                             and piece_location in self.black_possible_moves \
                             and not self.black_possible_moves[piece_location].isdisjoint(white_queen_bee.connected_empty_spaces):
                         num_black_can_move_to_white_qb += 1
-
-            avg_white_dist_from_black_qb = total_white_dist_from_black_qb / num_white_pieces
-            avg_black_dist_from_white_qb = total_black_dist_from_white_qb / num_black_pieces
 
             empty_spaces_around_black_qb = 6 - total_around_black_qb
             empty_spaces_around_white_qb = 6 - total_around_white_qb
@@ -902,79 +887,61 @@ class HiveGameBoard:
 
         utilities = [
             # White utilities (positive)
-            num_around_black_qb ** 1.5,
-            num_black_immovable_around_black_qb,
+            (num_white_around_black_qb + num_black_immovable_around_black_qb + white_beetle_on_black_qb) ** 1.2,
             num_black_movable_around_black_qb,
             num_white_can_move_to_black_qb,
 
-            beetle_on_black_qb,
-
-            1 / avg_white_dist_from_black_qb if avg_white_dist_from_black_qb else 0,
-            num_white_pieces,
-
-            self.num_white_free_pieces[Piece.ANT] if (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_white_free_pieces[Piece.BEETLE] if (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_white_free_pieces[Piece.GRASSHOPPER] if (self.turn_number + 1) // 2 >= 5 else 0,
-            1 if self.num_white_free_pieces[Piece.QUEEN_BEE] and (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_white_free_pieces[Piece.SPIDER] if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.GRASSHOPPER],  # if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.QUEEN_BEE],  # and (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.SPIDER],  # if (self.turn_number + 1) // 2 >= 5 else 0,
 
             # Black utilities (negative)
-            num_around_white_qb ** 1.5,
-            num_white_immovable_around_white_qb,
+            (num_black_around_white_qb + num_white_immovable_around_white_qb + black_beetle_on_white_qb) ** 1.2,
             num_white_movable_around_white_qb,
             num_black_can_move_to_white_qb,
 
-            beetle_on_white_qb,
-
-            1 / avg_black_dist_from_white_qb if avg_black_dist_from_white_qb else 0,
-            num_black_pieces,
-
-            self.num_black_free_pieces[Piece.ANT] if (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_black_free_pieces[Piece.BEETLE] if (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_black_free_pieces[Piece.GRASSHOPPER] if (self.turn_number + 1) // 2 >= 5 else 0,
-            1 if self.num_black_free_pieces[Piece.QUEEN_BEE] and (self.turn_number + 1) // 2 >= 5 else 0,
-            self.num_black_free_pieces[Piece.SPIDER] if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_black_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 > 2 else 0,
+            self.num_black_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 > 2 else 0,
+            self.num_black_free_pieces[Piece.GRASSHOPPER],  # if (self.turn_number + 1) // 2 > 2 else 0,
+            self.num_black_free_pieces[Piece.QUEEN_BEE],  # and (self.turn_number + 1) // 2 > 4 else 0,
+            self.num_black_free_pieces[Piece.SPIDER],  # if (self.turn_number + 1) // 2 > 2 else 0,
         ]
 
-        value_of_piece_around_qb = 25
+        value_of_piece_around_qb = 25 if (self.turn_number + 1) // 2 > 4 else 0
+        free_piece_multiplier = 1 if (self.turn_number + 1) // 2 <= 4 else 0
         white_values = np.array([
             # Multiplied by the number of white pieces around the black queen bee
             value_of_piece_around_qb,
-            # Multiplied by the number of black pieces around the black queen bee that cannot move
-            value_of_piece_around_qb * 0.8,
             # Multiplied by the number of black pieces around the black queen bee that can move
-            value_of_piece_around_qb * 0.1,
+            value_of_piece_around_qb * 0.5,
             # Multiplied by the number of white pieces that can move to locations around the black queen bee
-            value_of_piece_around_qb * 0.7,
+            value_of_piece_around_qb * 0.5,
 
-            10,  # Beetle on Black Queen Bee
-
-            5,  # One over the average manhattan distance between all white pieces and the black queen bee
-            1,  # Number of white pieces
-
-            1,  # Multiplied by number of free white ants
-            1,  # Multiplied by number of free white beetles
-            1,  # Multiplied by number of free white grasshoppers
-            value_of_piece_around_qb * 1.1,  # Multiplied by number of free white queen bees (after turn 4)
-            1,  # Multiplied by number of free white spiders
+            free_piece_multiplier,  # Multiplied by number of free white ants
+            free_piece_multiplier,  # Multiplied by number of free white beetles
+            free_piece_multiplier,  # Multiplied by number of free white grasshoppers
+            # Multiplied by number of free white queen bees
+            value_of_piece_around_qb * 1.1 if (self.turn_number + 1) // 2 > 4 else free_piece_multiplier,
+            free_piece_multiplier,  # Multiplied by number of free white spiders
         ])
         black_values = -white_values
         values = np.concatenate((white_values, black_values))
 
         evaluation = sum([utility * value for utility, value in zip(utilities, values)])
 
-        # print('='*50)
-        # self.print_board()
-        # print([utility * value for utility, value in zip(utilities, values)])
-        # print(evaluation)
+        if print_utilities:
+            print([utility * value for utility, value in zip(utilities, values)])
 
-        return evaluation
+        return round(evaluation, 2)
 
     # TODO: [UI] This is a temporary solution. Do not use this in the final product...
-    def print_board(self):
+    def print_board(self, hex_board=True):
 
-        self.print_hex_board()
-        return
+        if hex_board:
+            self.print_hex_board()
+            return
 
         if not self.pieces:
             return
@@ -1012,17 +979,6 @@ class HiveGameBoard:
         print(board_str)
 
     def print_hex_board(self):
-        # if not self.pieces:
-        #     return
-
-        piece_coords = list(self.get_all_spaces().keys())
-        piece_coords.sort(key=lambda x: x[0])
-        min_x = piece_coords[0][0]
-        max_x = piece_coords[-1][0]
-        piece_coords.sort(key=lambda y: y[1])
-        min_y = piece_coords[0][1]
-        max_y = piece_coords[-1][1]
-
         self.ui_id_to_coords.clear()
         self.ui_space_id = 1
 
@@ -1030,13 +986,14 @@ class HiveGameBoard:
 
         # Set up the constants:
         # TODO: Don't hardcode these values.
-        min_x = -8
-        min_y = 0
-        X_REPEAT = 9  # How many times to tessellate horizontally.
-        Y_REPEAT = 9  # How many times to tessellate vertically.
+        #       I will need to figure out a way to calculate these values such that the entire board can be displayed
+        #       with a minimal amount of additional output
 
-        # print(f'min_x: {min_x}\tmax_x: {max_x}')
-        # print(f'min_y: {min_y}\tmax_y: {max_y}')
+        min_x = -11
+        min_y = 0
+
+        X_REPEAT = 12  # How many times to tessellate horizontally.
+        Y_REPEAT = 12  # How many times to tessellate vertically.
 
         for y in range(Y_REPEAT):
             # Display the top half of the hexagon
@@ -1136,13 +1093,14 @@ class HiveGameBoard:
         if (x, y) in self.pieces:
             current_piece = self.pieces[(x, y)]
             if current_piece.name == Piece.BEETLE and current_piece.stacked_piece_obj is not None:
-                piece_char = 'b'
+                char_around_piece = '*'
             else:
-                piece_char = current_piece.name[:1]
+                char_around_piece = ' '
+            piece_char = current_piece.name[:1]
             if current_piece.is_white:
-                piece_char = f'# {piece_char}{self.ui_space_id:<2n} #'
+                piece_char = f'#{char_around_piece}{piece_char}{self.ui_space_id:<2n}{char_around_piece}#'
             else:
-                piece_char = f'. {piece_char}{self.ui_space_id:<2n} .'
+                piece_char = f'.{char_around_piece}{piece_char}{self.ui_space_id:<2n}{char_around_piece}.'
             self.ui_id_to_coords[self.ui_space_id] = (x, y)
             self.ui_coords_to_id[(x, y)] = self.ui_space_id
             self.ui_space_id += 1
@@ -1153,11 +1111,10 @@ class HiveGameBoard:
             self.ui_space_id += 1
         else:
             piece_char = '       '
-        # if (x, y) == (0, 0):
-        #     return f'*{piece_char}*'
-        # else:
-        #     return f' {piece_char} '
         return piece_char
+
+    def __eq__(self, other):
+        return isinstance(other, HiveGameBoard) and self.pieces == other.pieces
 
     def __str__(self):
         # Used to print the board state
