@@ -313,6 +313,4 @@ cython_debug/
 
 # Ignore coverage results
 .coverage
-
-# Ignore old file structure
-src/game/old_formatting
+data/*.hv

@@ -1,3 +1,5 @@
+import os
+import pickle
 import unittest
 import src.game.board as board
 import src.game.spaces as spaces
@@ -7,75 +9,75 @@ class TestAntBoard1Move0(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        ant_board1()
-        board.HiveGameBoard().print_board()
+        cls.game_board = ant_board1()
+        cls.game_board.print_board()
 
     def test_ant1(self):
         # Test ant movement at (0, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, -1), (-2, -1), (-2, -2), (-1, -2), (1, -1), (2, -1)})
         expected_possible_moves.remove((1, 1))
-        actual_possible_moves = board.HiveGameBoard().pieces[(0, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(0, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant2(self):
         # Test ant movement at (-1, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(1, -1), (2, -1)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(-1, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(-1, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant3(self):
         # Test ant movement at (-2, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, -1), (-2, -1), (-2, -2), (-1, -2), (1, -1), (2, -1)})
         expected_possible_moves.remove((-2, 1))
-        actual_possible_moves = board.HiveGameBoard().pieces[(-2, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(-2, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant4(self):
         # Test ant movement at (-2, -3)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(1, -1), (2, -1)})
         expected_possible_moves.remove((-2, -4))
-        actual_possible_moves = board.HiveGameBoard().pieces[(-2, -3)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(-2, -3)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant5(self):
         # Test ant movement at (0, -1)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(2, -1)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(0, -1)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(0, -1)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant6(self):
         # Test ant movement at (1, -2)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, -1), (-2, -1), (-2, -2), (-1, -2)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(1, -2)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(1, -2)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant7(self):
         # Test ant movement at (2, -2)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, -1), (-2, -1), (-2, -2), (-1, -2), (1, -1), (2, -1)})
         expected_possible_moves.remove((2, -3))
-        actual_possible_moves = board.HiveGameBoard().pieces[(2, -2)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(2, -2)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant8(self):
         # Test ant movement at (2, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, -1), (-2, -1), (-2, -2), (-1, -2)})
         expected_possible_moves.remove((2, 1))
-        actual_possible_moves = board.HiveGameBoard().pieces[(2, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(2, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
@@ -84,72 +86,71 @@ class TestAntBoard1Move1(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        ant_board1()
-        game_board = board.HiveGameBoard()
-        game_board.move_piece((-2, -3), (1, 0))
-        game_board.print_board()
+        cls.game_board = ant_board1()
+        cls.game_board.move_piece((-2, -3), (1, 0))
+        cls.game_board.print_board()
 
     def test_ant1(self):
         # Test ant movement at (0, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(1, -1), (2, -1)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(0, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(0, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant2(self):
         # Test ant movement at (-1, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(1, -1), (2, -1)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(-1, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(-1, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant3(self):
         # Test ant movement at (-2, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(1, -1), (2, -1)})
         expected_possible_moves.remove((-2, 1))
-        actual_possible_moves = board.HiveGameBoard().pieces[(-2, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(-2, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant4(self):
         # Test ant movement at (1, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(1, -1), (2, -1)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(1, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(1, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant5(self):
         # Test ant movement at (0, -1)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(1, -1), (2, -1)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(0, -1)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(0, -1)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant6(self):
         # Test ant movement at (1, -2)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys())
-        actual_possible_moves = board.HiveGameBoard().pieces[(1, -2)].possible_moves
+        expected_possible_moves = set(self.game_board.empty_spaces.keys())
+        actual_possible_moves = self.game_board.pieces[(1, -2)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant7(self):
         # Test ant movement at (2, -2)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(1, -1), (2, -1)})
         expected_possible_moves.remove((2, -3))
-        actual_possible_moves = board.HiveGameBoard().pieces[(2, -2)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(2, -2)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant8(self):
         # Test ant movement at (2, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys())
-        actual_possible_moves = board.HiveGameBoard().pieces[(2, 0)].possible_moves
+        expected_possible_moves = set(self.game_board.empty_spaces.keys())
+        actual_possible_moves = self.game_board.pieces[(2, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
@@ -158,73 +159,72 @@ class TestAntBoard1Move2(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        ant_board1()
-        game_board = board.HiveGameBoard()
-        game_board.move_piece((-2, -3), (1, 0))
-        game_board.move_piece((2, 0), (-1, -2))
-        game_board.print_board()
+        cls.game_board = ant_board1()
+        cls.game_board.move_piece((-2, -3), (1, 0))
+        cls.game_board.move_piece((2, 0), (-1, -2))
+        cls.game_board.print_board()
 
     def test_ant1(self):
         # Test ant movement at (0, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, -1), (-2, -1), (-2, -2)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(0, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(0, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant2(self):
         # Test ant movement at (-1, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys())
-        actual_possible_moves = board.HiveGameBoard().pieces[(-1, 0)].possible_moves
+        expected_possible_moves = set(self.game_board.empty_spaces.keys())
+        actual_possible_moves = self.game_board.pieces[(-1, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant3(self):
         # Test ant movement at (-2, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, -1), (-2, -1), (-2, -2)})
         expected_possible_moves.remove((-2, 1))
-        actual_possible_moves = board.HiveGameBoard().pieces[(-2, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(-2, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant4(self):
         # Test ant movement at (1, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, -1), (-2, -1), (-2, -2)})
         expected_possible_moves.remove((2, 1))
-        actual_possible_moves = board.HiveGameBoard().pieces[(1, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(1, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant5(self):
         # Test ant movement at (0, -1)
         expected_possible_moves = set()
-        actual_possible_moves = board.HiveGameBoard().pieces[(0, -1)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(0, -1)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant6(self):
         # Test ant movement at (1, -2)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, -1), (-2, -1), (-2, -2)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(1, -2)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(1, -2)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant7(self):
         # Test ant movement at (2, -2)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, -1), (-2, -1), (-2, -2)})
         expected_possible_moves.remove((2, -3))
-        actual_possible_moves = board.HiveGameBoard().pieces[(2, -2)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(2, -2)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant8(self):
         # Test ant movement at (-1, -2)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys())
-        actual_possible_moves = board.HiveGameBoard().pieces[(-1, -2)].possible_moves
+        expected_possible_moves = set(self.game_board.empty_spaces.keys())
+        actual_possible_moves = self.game_board.pieces[(-1, -2)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
@@ -233,42 +233,42 @@ class TestAntBoard2Move0(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        ant_board2()
-        board.HiveGameBoard().print_board()
+        cls.game_board = ant_board2()
+        cls.game_board.print_board()
 
     def test_prevention_sets(self):
         expected_prevention_sets = [{(-1, 0)}, {(-2, -1), (-2, -2), (-3, -2)}]
-        actual_prevention_sets = board.HiveGameBoard().ant_mvt_prevention_sets
+        actual_prevention_sets = self.game_board.ant_mvt_prevention_sets
         self.assertEqual(expected_prevention_sets, actual_prevention_sets)
 
     def test_ant1(self):
         # Test ant movement at (0, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, 0), (-2, -1), (-2, -2), (-3, -2)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(0, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(0, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant2(self):
         # Test ant movement at (-2, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys())
-        actual_possible_moves = board.HiveGameBoard().pieces[(-2, 0)].possible_moves
+        expected_possible_moves = set(self.game_board.empty_spaces.keys())
+        actual_possible_moves = self.game_board.pieces[(-2, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant3(self):
         # Test ant movement at (-4, -2)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, 0)}, {(-5, -2), (-5, -3)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(-4, -2)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(-4, -2)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant4(self):
         # Test ant movement at (-3, -3)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, 0)}, {(-4, -4)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(-3, -3)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(-3, -3)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
@@ -277,46 +277,46 @@ class TestAntBoard2Move1(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        ant_board2()
-        board.HiveGameBoard().place_piece(spaces.Piece.BEETLE, (0, 2))  # Black
+        cls.game_board = ant_board2()
+        cls.game_board.place_piece(spaces.Piece.BEETLE, (0, 2))  # Black
 
         # Combine prevention sets in the middle of the group
-        board.HiveGameBoard().move_piece((-1, -1), (1, 1))  # White
+        cls.game_board.move_piece((-1, -1), (1, 1))  # White
 
-        board.HiveGameBoard().print_board()
+        cls.game_board.print_board()
 
     def test_prevention_sets(self):
         expected_prevention_sets = [{(-1, 0), (-1, -1), (-2, -1), (-2, -2), (-3, -2)}]
-        actual_prevention_sets = board.HiveGameBoard().ant_mvt_prevention_sets
+        actual_prevention_sets = self.game_board.ant_mvt_prevention_sets
         self.assertEqual(expected_prevention_sets, actual_prevention_sets)
 
     def test_ant1(self):
         # Test ant movement at (0, 0)
         expected_possible_moves = {(-1, 0), (-2, -1), (-2, -2), (-3, -2), (-1, -1)}
-        actual_possible_moves = board.HiveGameBoard().pieces[(0, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(0, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant2(self):
         # Test ant movement at (-2, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys())
-        actual_possible_moves = board.HiveGameBoard().pieces[(-2, 0)].possible_moves
+        expected_possible_moves = set(self.game_board.empty_spaces.keys())
+        actual_possible_moves = self.game_board.pieces[(-2, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant3(self):
         # Test ant movement at (-4, -2)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-5, -2), (-5, -3)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(-4, -2)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(-4, -2)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant4(self):
         # Test ant movement at (-3, -3)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-4, -4)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(-3, -3)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(-3, -3)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
@@ -325,59 +325,457 @@ class TestAntBoard2Move2(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        ant_board2()
-        board.HiveGameBoard().place_piece(spaces.Piece.BEETLE, (0, 2))  # Black
+        cls.game_board = ant_board2()
+        cls.game_board.place_piece(spaces.Piece.BEETLE, (0, 2))  # Black
 
         # Combine prevention sets in the middle of the group
-        board.HiveGameBoard().move_piece((-1, -1), (1, 1))  # White
+        cls.game_board.move_piece((-1, -1), (1, 1))  # White
 
         # Filler move for black
-        board.HiveGameBoard().move_piece((0, 2), (-1, 2))  # Black
+        cls.game_board.move_piece((0, 2), (-1, 2))  # Black
 
         # Separate prevention sets again
-        board.HiveGameBoard().move_piece((1, 1), (-1, -1))
+        cls.game_board.move_piece((1, 1), (-1, -1))
 
-        board.HiveGameBoard().print_board()
+        cls.game_board.print_board()
 
     def test_prevention_sets(self):
         expected_prevention_sets = [{(-1, 0)}, {(-2, -1), (-2, -2), (-3, -2)}]
-        actual_prevention_sets = board.HiveGameBoard().ant_mvt_prevention_sets
+        actual_prevention_sets = self.game_board.ant_mvt_prevention_sets
         self.assertEqual(expected_prevention_sets, actual_prevention_sets)
 
     def test_ant1(self):
         # Test ant movement at (0, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, 0), (-2, -1), (-2, -2), (-3, -2)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(0, 0)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(0, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant2(self):
         # Test ant movement at (-2, 0)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys())
-        actual_possible_moves = board.HiveGameBoard().pieces[(-2, 0)].possible_moves
+        expected_possible_moves = set(self.game_board.empty_spaces.keys())
+        actual_possible_moves = self.game_board.pieces[(-2, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant3(self):
         # Test ant movement at (-4, -2)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, 0)}, {(-5, -2), (-5, -3)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(-4, -2)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(-4, -2)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
     def test_ant4(self):
         # Test ant movement at (-3, -3)
-        expected_possible_moves = set(board.HiveGameBoard().empty_spaces.keys()).difference(
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference(
             {(-1, 0)}, {(-4, -4)})
-        actual_possible_moves = board.HiveGameBoard().pieces[(-3, -3)].possible_moves
+        actual_possible_moves = self.game_board.pieces[(-3, -3)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
 
 
+class TestAntBoard3(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        game_board = board.HiveGameBoard()
+        ant = spaces.Piece.ANT
+        beetle = spaces.Piece.BEETLE
+        grasshopper = spaces.Piece.GRASSHOPPER
+        queen_bee = spaces.Piece.QUEEN_BEE
+        spider = spaces.Piece.SPIDER
+
+        game_board.place_piece(beetle, (0, 0))
+        game_board.place_piece(queen_bee, (0, 1))
+        game_board.place_piece(queen_bee, (0, -1))
+        game_board.place_piece(spider, (0, 2))
+        game_board.place_piece(beetle, (-1, -1))
+        game_board.move_piece((0, 2), (1, 0))
+        game_board.move_piece((-1, -1), (-1, 0))
+        game_board.place_piece(ant, (1, 2))
+        game_board.place_piece(ant, (-1, -1))
+        game_board.place_piece(ant, (2, 2))
+        game_board.move_piece((0, 0), (0, 1))
+
+        game_board.print_board()
+
+        cls.game_board = game_board
+
+    def test_ant(self):
+        # Test ant movement at (-1, -1)
+        expected_possible_moves = set(self.game_board.empty_spaces.keys()).difference({
+            (0, 0),  # New prevention set made by beetle moving out of the middle of a group of pieces
+            (1, 1),  # Blocked by sliding rules
+            (-2, -2)  # Only connected to Ant
+        })
+        actual_possible_moves = self.game_board.pieces[(-1, -1)].possible_moves
+
+        self.assertEqual(expected_possible_moves, actual_possible_moves)
+
+
+class TestAntBoard4(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.manager = board.BoardManager(new_manager=True)
+        with open(os.path.join('test', 'data', 'ant_board_4.hv'), 'rb') as file:
+            game_state = pickle.load(file)
+            cls.manager.current_board = game_state
+
+    def test_ant(self):
+        # The pickle of this object was made before this attribute was added. Adding it here.
+        self.manager.current_board.disconnected_empty_spaces = set()
+
+        self.manager.get_successor(('Move Piece', (1, 1), (1, 2)))
+        self.manager.get_successor(('Move Piece', (0, 1), (-3, 0)))
+        self.manager.get_successor(('Move Piece', (0, 2), (2, 5)))
+        self.manager.get_successor(('Move Piece', (-3, -2), (0, -1)))
+        self.manager.get_successor((board.HiveGameBoard.SKIP_TURN, None, None))
+        self.manager.get_board().print_board(hex_board=False)
+
+        self.assertRaisesRegex(
+            RuntimeError,
+            "[Illegal action. Piece at ] [cannot move to]",
+            self.manager.get_successor,
+            ('Move Piece', (-3, 0), (-1, 1))
+        )
+
+
+class TestAntErrorsFromRandomBoards(unittest.TestCase):
+    """
+    This class tests errors found from running random games.
+    The test cases pass if no errors occur.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.actions = [
+            ('Place Piece', (0, 0), 'Grasshopper'),
+            ('Place Piece', (1, 1), 'Spider'),
+            ('Place Piece', (-1, -1), 'Queen Bee'),
+            ('Place Piece', (2, 2), 'Beetle'),
+            ('Place Piece', (-1, -2), 'Grasshopper'),
+            ('Place Piece', (3, 2), 'Spider'),
+            ('Place Piece', (-2, -1), 'Ant'),
+            ('Place Piece', (4, 2), 'Queen Bee'),
+            ('Place Piece', (-1, 0), 'Beetle'),
+            ('Place Piece', (1, 2), 'Beetle'),
+            ('Place Piece', (-2, -2), 'Ant'),
+            ('Move Piece', (1, 2), (2, 3)),
+            ('Move Piece', (-1, 0), (0, 0)),
+            ('Place Piece', (4, 3), 'Ant'),
+            ('Move Piece', (-2, -2), (-1, 0)),
+            ('Move Piece', (4, 3), (-3, -1)),
+            ('Move Piece', (-1, 0), (-3, 0)),
+            ('Move Piece', (2, 3), (3, 3)),
+            ('Move Piece', (-3, 0), (-1, -3)),
+            ('Move Piece', (-3, -1), (-2, -2)),
+            ('Place Piece', (-2, -4), 'Beetle'),
+            ('Place Piece', (1, 2), 'Grasshopper'),
+            ('Move Piece', (-2, -1), (1, 3)),
+            ('Move Piece', (-2, -2), (-1, 0)),
+            ('Move Piece', (-2, -4), (-1, -4)),
+            ('Move Piece', (-1, 0), (4, 1)),
+            ('Move Piece', (0, 0), (-1, -1)),
+            ('Move Piece', (4, 1), (3, 1)),
+            ('Move Piece', (1, 3), (3, 0)),
+            ('Place Piece', (5, 3), 'Grasshopper'),
+            ('Move Piece', (-1, -4), (-1, -3)),
+            ('Place Piece', (4, 4), 'Ant'),
+            ('Move Piece', (3, 0), (1, 0)),
+            ('Move Piece', (3, 1), (0, -2)),
+            ('Place Piece', (-1, 0), 'Ant'),
+            ('Place Piece', (6, 4), 'Ant'),
+            ('Place Piece', (-2, -3), 'Spider'),
+            ('Place Piece', (3, 4), 'Grasshopper'),
+            ('Move Piece', (1, 0), (-2, 0)),
+            ('Move Piece', (0, -2), (5, 5)),
+            ('Move Piece', (-2, 0), (-1, -4)),
+            ('Move Piece', (6, 4), (3, 5)),
+            ('Place Piece', (-3, -3), 'Spider'),
+            ('Move Piece', (5, 5), (0, -4)),
+            ('Move Piece', (-1, -1), (-1, 0)),
+            ('Move Piece', (4, 4), (1, -4)),
+            ('Move Piece', (-1, -3), (0, -3)),
+            ('Move Piece', (1, -4), (-3, -4)),
+            ('Move Piece', (-1, -4), (1, -4)),
+            ('Move Piece', (-3, -4), (5, 4)),
+            ('Place Piece', (0, -2), 'Grasshopper'),
+            ('Move Piece', (5, 4), (2, 3)),
+            ('Move Piece', (-1, 0), (-1, -1)),
+            ('Move Piece', (3, 5), (0, -1)),
+            ('Move Piece', (1, -4), (0, 1)),
+            ('Move Piece', (2, 3), (4, 4)),
+            ('Move Piece', (0, 1), (2, 1)),
+            ('Move Piece', (4, 4), (-1, -4)),
+            ('Move Piece', (-1, 0), (1, -4)),
+            ('Move Piece', (0, -1), (4, 3)),
+            ('Move Piece', (0, -3), (-1, -3)),
+            ('Move Piece', (4, 3), (2, 0)),
+            ('Move Piece', (-1, -1), (-1, -2)),
+            ('Move Piece', (2, 0), (5, 2)),
+            ('Move Piece', (-1, -3), (-2, -3)),
+            ('Move Piece', (5, 2), (0, -1)),
+            ('Move Piece', (1, -4), (3, 5)),
+            ('Move Piece', (0, -4), (-2, -1)),
+            ('Move Piece', (2, 1), (-3, -4)),
+            ('Move Piece', (-1, -4), (1, -1)),
+            ('Move Piece', (3, 5), (3, 1)),
+            ('Move Piece', (1, -1), (5, 4)),
+            ('Move Piece', (3, 1), (4, 1)),
+            ('Move Piece', (5, 4), (-3, -1)),
+            ('Move Piece', (4, 1), (1, 3)),
+            ('Move Piece', (0, -1), (4, 5)),
+            ('Move Piece', (-3, -4), (0, 3)),
+            ('Move Piece', (4, 5), (-1, 2)),
+            ('Move Piece', (-2, -3), (-3, -3)),
+            ('Move Piece', (-3, -1), (0, 4)),
+            ('Move Piece', (-1, -3), (-2, -4)),
+            ('Move Piece', (-2, -1), (-3, -2)),
+            ('Move Piece', (-2, -4), (6, 3)),
+            ('Move Piece', (-1, 2), (-2, -1)),
+            ('Move Piece', (-2, -3), (-4, -3)),
+            ('Move Piece', (0, 4), (6, 2)),
+            ('Move Piece', (-3, -3), (-3, -4)),
+            ('Move Piece', (6, 2), (-5, -4)),
+            ('Move Piece', (0, 3), (-3, -1)),
+            ('Move Piece', (-5, -4), (7, 4)),
+            ('Move Piece', (-1, -2), (-2, -2)),
+            ('Move Piece', (7, 4), (0, 3)),
+            ('Move Piece', (-3, -1), (6, 4)),
+            ('Move Piece', (-3, -2), (-2, 0)),
+            ('Move Piece', (6, 4), (0, -3)),
+            ('Move Piece', (0, 3), (-2, -4)),
+            ('Move Piece', (1, 3), (4, 5)),
+            ('Move Piece', (-2, -4), (6, 2)),
+            ('Move Piece', (0, -3), (-1, -3)),
+            ('Move Piece', (6, 2), (6, 4)),
+            ('Move Piece', (-1, -3), (6, 2)),
+            ('Move Piece', (6, 4), (3, 5)),
+            ('Move Piece', (4, 5), (7, 3)),
+            ('Move Piece', (-2, 0), (-5, -4)),
+            ('Move Piece', (7, 3), (-4, -4)),
+            ('Move Piece', (-5, -4), (6, 4)),
+            ('Move Piece', (6, 2), (4, 1)),
+            ('Move Piece', (-2, -1), (2, 3)),
+            ('Move Piece', (4, 1), (-2, -4)),
+            ('Move Piece', (6, 4), (-4, -2)),
+            ('Move Piece', (-2, -4), (3, 6)),
+            ('Move Piece', (-4, -2), (5, 2)),
+            ('Move Piece', (3, 6), (-5, -3)),
+            ('Move Piece', (3, 5), (-1, -3)),
+            ('Move Piece', (6, 3), (-3, -2)),
+            ('Move Piece', (2, 3), (1, 3)),
+            ('Move Piece', (-4, -4), (4, 3)),
+            ('Move Piece', (1, 3), (5, 4)),
+            ('Move Piece', (-5, -3), (0, 2)),
+            ('Move Piece', (-1, -3), (6, 3)),
+            ('Move Piece', (-3, -2), (-2, -1)),
+            ('Move Piece', (6, 3), (-1, 0)),
+            ('Move Piece', (0, 2), (-2, -3)),
+            ('Move Piece', (-1, 0), (-4, -2)),
+            ('Move Piece', (-2, -1), (5, 1)),
+            ('Move Piece', (-4, -2), (2, 1)),
+            ('Move Piece', (-2, -3), (6, 5)),
+            ('Move Piece', (2, 2), (3, 2)),
+            ('Move Piece', (6, 5), (-4, -4)),
+            ('Move Piece', (5, 3), (2, 3)),
+            ('Move Piece', (5, 1), (1, 0)),
+            ('Move Piece', (3, 2), (3, 1)),
+            ('Move Piece', (1, 0), (3, 0)),
+            ('Move Piece', (5, 4), (-5, -5)),
+            ('Move Piece', (3, 0), (-4, -2)),
+            ('Move Piece', (5, 2), (-2, -4)),
+            ('Move Piece', (-4, -2), (1, 0)),
+            ('Move Piece', (-2, -4), (3, 5)),
+            ('Move Piece', (4, 3), (4, 1)),
+            ('Move Piece', (3, 5), (1, -1)),
+            ('Move Piece', (4, 1), (1, 3)),
+            ('Move Piece', (3, 4), (0, 1)),
+            ('Move Piece', (-3, -4), (-4, -4)),
+            ('Move Piece', (1, -1), (1, 4)),
+            ('Move Piece', (1, 0), (1, -1)),
+            ('Move Piece', (-5, -5), (5, 2)),
+            ('Move Piece', (1, -1), (-1, 0)),
+            ('Move Piece', (5, 2), (-5, -3)),
+            ('Move Piece', (-1, 0), (2, 4)),
+            ('Move Piece', (2, 1), (1, -1)),
+            ('Move Piece', (1, 3), (-1, 1)),
+            ('Move Piece', (-5, -3), (-2, -1)),
+            ('Move Piece', (-1, 1), (0, 2)),
+            ('Move Piece', (-2, -1), (2, 5)),
+            ('Move Piece', (-4, -4), (-3, -3)),
+            ('Move Piece', (2, 5), (-2, -1)),
+            ('Move Piece', (-3, -3), (-2, -2)),
+            ('Move Piece', (-2, -1), (3, 5)),
+            ('Move Piece', (-2, -2), (-2, -3)),
+            ('Move Piece', (3, 5), (1, 0)),
+            ('Move Piece', (0, 2), (0, -3)),
+            ('Move Piece', (1, 0), (3, 4)),
+            ('Move Piece', (-4, -4), (-4, -2)),
+            ('Move Piece', (3, 4), (-3, -1)),
+            ('Move Piece', (0, -3), (-2, -1)),
+            ('Move Piece', (1, 4), (-3, -4)),
+            ('Move Piece', (2, 4), (-4, -4)),
+            ('Move Piece', (1, -1), (5, 2)),
+            ('Move Piece', (-4, -2), (4, 1)),
+            ('Move Piece', (-3, -1), (4, 3)),
+            ('Move Piece', (4, 1), (2, 1)),
+            ('Move Piece', (3, 3), (3, 2)),
+            ('Move Piece', (-2, -1), (1, 3)),
+            ('Move Piece', (5, 2), (0, -3)),
+            ('Move Piece', (1, 3), (1, 0)),
+            ('Move Piece', (-3, -4), (3, 4)),
+            ('Move Piece', (1, 0), (0, -1)),
+            ('Move Piece', (4, 3), (2, 4)),
+            ('Move Piece', (-4, -4), (4, 1)),
+            ('Move Piece', (3, 4), (3, 0)),
+            ('Move Piece', (0, -1), (-1, 0)),
+            ('Move Piece', (3, 1), (4, 1)),
+            ('Move Piece', (-1, 0), (5, 1)),
+            ('Move Piece', (3, 0), (1, 4)),
+            ('Move Piece', (5, 1), (0, 3)),
+            ('Move Piece', (3, 2), (4, 3)),
+            ('Move Piece', (0, 3), (1, -2)),
+            ('Move Piece', (0, -3), (0, 3)),
+            ('Move Piece', (1, -2), (0, 2)),
+            ('Move Piece', (1, 4), (5, 4)),
+            ('Move Piece', (-2, -3), (-1, -2)),
+            ('Move Piece', (2, 4), (3, 1)),
+            ('Move Piece', (0, -2), (-3, -2)),
+            ('Move Piece', (3, 1), (6, 4)),
+            ('Move Piece', (-1, -2), (-1, -1)),
+            ('Move Piece', (6, 4), (-4, -2)),
+            ('Move Piece', (-1, -1), (-2, -1)),
+            ('Move Piece', (-4, -2), (3, 0)),
+            ('Move Piece', (-3, -3), (-5, -3)),
+            ('Move Piece', (5, 4), (-4, -2)),
+            ('Move Piece', (-2, -2), (-2, -3)),
+            ('Move Piece', (-4, -2), (3, 3)),
+            ('Move Piece', (2, 1), (-1, 2)),
+            ('Move Piece', (3, 0), (5, 2)),
+            ('Move Piece', (-1, 2), (-2, -4)),
+            ('Move Piece', (0, 3), (-4, -2)),
+            ('Move Piece', (-2, -4), (-1, -3)),
+            ('Move Piece', (5, 2), (2, 4)),
+            ('Move Piece', (-5, -3), (-3, -3)),
+            ('Move Piece', (4, 1), (5, 1)),
+            ('Move Piece', (0, 2), (4, 0)),
+            ('Move Piece', (-4, -2), (3, 1)),
+            ('Move Piece', (4, 0), (6, 1)),
+            ('Move Piece', (3, 2), (2, 0)),
+            ('Move Piece', (-1, -2), (-1, 0)),
+            ('Move Piece', (2, 4), (4, 0)),
+            ('Move Piece', (-1, -3), (6, 2)),
+            ('Move Piece', (4, 0), (5, 2)),
+            ('Move Piece', (0, 0), (2, 2)),
+            ('Move Piece', (5, 2), (-2, 0)),
+            ('Move Piece', (6, 1), (-1, 1)),
+            ('Move Piece', (-2, 0), (-4, -2)),
+            ('Move Piece', (-1, 1), (7, 2)),
+            ('Move Piece', (-4, -2), (8, 3)),
+            ('Move Piece', (-1, -1), (-2, -2)),
+            ('Move Piece', (8, 3), (3, 4)),
+            ('Move Piece', (7, 2), (-1, -3)),
+            ('Move Piece', (1, 2), (4, 5)),
+            ('Move Piece', (6, 2), (-5, -4)),
+            ('Move Piece', (2, 3), (2, 1)),
+            ('Move Piece', (-5, -4), (0, 2)),
+            ('Move Piece', (4, 3), (4, 4)),
+            ('Move Piece', (-3, -3), (-1, -4)),
+            ('Move Piece', (3, 4), (1, 0)),
+            ('Move Piece', (0, 2), (0, -2)),
+            ('Move Piece', (1, 0), (-4, -4)),
+            ('Move Piece', (0, -2), (6, 1)),
+            ('Move Piece', (-4, -4), (4, 3)),
+            ('Move Piece', (2, 2), (2, -1)),
+            ('Move Piece', (3, 3), (5, 5)),
+            ('Move Piece', (6, 1), (6, 5)),
+            ('Move Piece', (4, 5), (4, 0)),
+            ('Move Piece', (6, 5), (-3, -3)),
+            ('Move Piece', (5, 5), (2, 2)),
+            ('Move Piece', (-3, -3), (-5, -3)),
+            ('Move Piece', (2, 2), (6, 2)),
+            ('Move Piece', (-5, -3), (6, 3)),
+            ('Move Piece', (4, 4), (3, 3)),
+            ('Move Piece', (6, 3), (7, 3)),
+            ('Move Piece', (4, 0), (8, 4)),
+            ('Move Piece', (-4, -3), (-2, -4)),
+            ('Move Piece', (8, 4), (4, 0)),
+            ('Move Piece', (7, 3), (2, 2)),
+            ('Move Piece', (4, 3), (-1, -1)),
+            ('Move Piece', (-1, -3), (0, -1)),
+            ('Move Piece', (6, 2), (6, 1)),
+            ('Move Piece', (0, -1), (1, 2)),
+            ('Move Piece', (6, 1), (3, -1)),
+            ('Move Piece', (1, 2), (-3, -5)),
+            ('Move Piece', (3, -1), (1, 2)),
+            ('Move Piece', (-3, -5), (-1, 1)),
+            ('Move Piece', (1, 2), (0, -1)),
+            ('Move Piece', (-3, -2), (1, 2)),
+            ('Move Piece', (0, -1), (0, -3)),
+            ('Move Piece', (-1, 1), (0, -2)),
+            ('Move Piece', (-1, -1), (1, -1)),
+            ('Move Piece', (0, -2), (1, -1)),
+        ]
+
+    def test_game_1(self):
+        manager = board.BoardManager(new_manager=True)
+        for action in self.actions[:-3]:
+            manager.perform_action(action)
+        manager.get_board().print_board()
+
+        for action in self.actions[-3:-1]:
+            manager.perform_action(action)
+            manager.get_board().print_board()
+
+        print(manager.get_board())
+
+        print(f'Perfoming final action: {self.actions[-1]}:')
+        self.assertRaisesRegex(
+            RuntimeError,
+            "[Illegal action. Piece at ] [cannot move to]",
+            manager.perform_action,
+            self.actions[-1]
+        )
+        manager.get_board().print_board()
+
+    def test_game_2(self):
+        manager = board.BoardManager(new_manager=True)
+        for action in self.actions[:-3]:
+            manager.perform_action(action)
+        manager.get_board().print_board(hex_board=False)
+
+        manager.perform_action((board.HiveGameBoard.SKIP_TURN, None, None))
+        manager.perform_action((board.HiveGameBoard.MOVE_PIECE, (-1, -1), (1, -2)))
+        manager.get_board().print_board()
+        print(manager.get_board().is_white_turn())
+
+        expected_prevention_sets = sorted([
+            {(0, 0), (1, 0), (1, -1), (0, -2), (-1, -3), (-1, -2), (-1, -1), (0, -1)},
+            {(3, 0)},
+            {(3, 2)},
+        ])
+
+        sets_that_do_not_exist = []
+        for prevention_set in expected_prevention_sets:
+            if prevention_set not in manager.get_board().ant_mvt_prevention_sets:
+                sets_that_do_not_exist.append(prevention_set)
+
+        print(manager.get_board().ant_mvt_prevention_sets)
+        output_string = '\nThe following ant movement prevention sets do not exist in the game board:\n'
+        for prevention_set in sets_that_do_not_exist:
+            output_string += f'\t{prevention_set}\n'
+        output_string += 'The game board contains the following:\n'
+        for prevention_set in manager.get_board().ant_mvt_prevention_sets:
+            output_string += f'\t{prevention_set}\n'
+        self.assertFalse(sets_that_do_not_exist, output_string)
+
+
 def ant_board1():
-    game_board = board.HiveGameBoard(new_board=True)
+    game_board = board.HiveGameBoard()
 
     # Making sure there are enough pieces to be placed for my test cases
     game_board.white_pieces_to_place = {
@@ -409,9 +807,11 @@ def ant_board1():
 
     game_board.place_piece('Ant', (2, 0))  # Black
 
+    return game_board
+
 
 def ant_board2():
-    game_board = board.HiveGameBoard(new_board=True)
+    game_board = board.HiveGameBoard()
     ant = spaces.Piece.ANT
     beetle = spaces.Piece.BEETLE
     grasshopper = spaces.Piece.GRASSHOPPER
@@ -429,6 +829,8 @@ def ant_board2():
     game_board.place_piece(spider, (-2, -3))  # White
     game_board.place_piece(ant, (-4, -2))  # Black
     game_board.place_piece(ant, (-3, -3))  # White
+
+    return game_board
 
 
 if __name__ == '__main__':

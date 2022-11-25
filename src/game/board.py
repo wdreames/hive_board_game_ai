@@ -1,3 +1,10 @@
+import os
+import pickle
+import random
+from timeit import default_timer as timer
+
+import numpy as np
+
 from src.game.spaces import EmptySpace
 from src.game.spaces import Piece
 from src.game.pieces import Ant
@@ -7,104 +14,214 @@ from src.game.pieces import QueenBee
 from src.game.pieces import Spider
 
 
-# TODO: Update Documentation
+class BoardManager:
+
+    def __new__(cls, new_manager=False):
+        if not hasattr(cls, 'instance') or new_manager:
+            cls.instance = super(BoardManager, cls).__new__(cls)
+            board = HiveGameBoard()
+            # cls.root_board = board
+            cls.current_board = board
+
+            cls.object_action_times = {
+                Piece.ANT: [],
+                Piece.BEETLE: [],
+                Piece.GRASSHOPPER: [],
+                Piece.QUEEN_BEE: [],
+                Piece.SPIDER: []
+            }
+            cls.cloning_times = []
+            cls.getting_actions_times = []
+
+            cls.successor_actions = []
+
+        return cls.instance
+
+    def reset_board(self):
+        # For every action in self.successor_actions, undo that action
+        while self.successor_actions:
+            self.get_predecessor()
+        return self.current_board
+
+    def get_board(self):
+        return self.current_board
+
+    def get_predecessor(self):
+        start_time = timer()
+        if self.successor_actions:
+            action = self.successor_actions.pop()
+            self.current_board.undo_action(action)
+        self.cloning_times.append(timer() - start_time)
+        return self.current_board
+
+    def get_successor(self, action):
+        self.current_board.perform_action(action)
+        self.successor_actions.append(action)
+        return self.current_board
+
+    def get_action_list(self, randomize_actions=False):
+        self.reset_board()
+        return self.get_board().get_action_list(randomize_actions=randomize_actions)
+
+    def perform_action(self, action):
+        self.reset_board()
+        self.get_board().perform_action(action)
+        self.save_state()
+
+    def save_state(self, filename='last_hive_game.hv'):
+        with open(os.path.join('data', filename), 'wb') as file:
+            pickle.dump(self.current_board, file)
+
+    def load_state(self, filename='last_hive_game.hv'):
+        with open(os.path.join('data', filename), 'rb') as file:
+            self.current_board = pickle.load(file)
+
+    def __str__(self):
+        return str(self.current_board)
+
+
 class HiveGameBoard:
     """
-    This class is used to store the board state of the game. A singleton design pattern is used for this class so there
-    can only ever be one instance of the game board. This can be accessed across all files.
+    This class is used to store the state of a game.
     """
 
-    MOVE_PIECE = 'Move piece'
-    PLACE_PIECE = 'Place piece'
+    MOVE_PIECE = 'Move Piece'
+    PLACE_PIECE = 'Place Piece'
+    SKIP_TURN = 'Skip Action'
     WHITE_WINNER = 'White'
     BLACK_WINNER = 'Black'
     DRAW = 'Draw'
 
-    # TODO: [AI] Would it be possible to have this return whatever the current instance of the board is?
-    #       - This way the AI could traverse down multiple layers, but the internal code would not need to change.
-    #       - Question: Would this also be able to manage Piece interactions?
-    #         - As long as all actions are called via the board, it should be okay
-    #       - Maybe have an instance=board_instance parameter?
-    #       - Or I could have a separate BoardManager class that uses Singleton, but can control which board instance
-    #       to return when requested.
-    def __new__(cls, new_board=False):
+    def __init__(self):
         """
         Method used to get an instance of the game board. A singleton design pattern is used here so the class is
         only initialized the first time it is called.
 
         This begins the game with an empty space at (0, 0), with white having the first move.
-
-        :param new_board: boolean
-            When this parameter is set to True, the game board is reset. False by default
         """
-        # TODO: [NOTE] I'll probably need to trash the singleton design pattern when I start simulating moves...
-        # TODO: [NOTE] Although I could create a main class as a singleton and have the same effect
-        # Singleton design pattern
-        if not hasattr(cls, 'instance') or new_board:
-            cls.instance = super(HiveGameBoard, cls).__new__(cls)
 
-            cls.pieces = dict()
-            cls.empty_spaces = dict()
-            cls.white_pieces_to_place = {
-                Piece.ANT: 3,
-                Piece.BEETLE: 2,
-                Piece.GRASSHOPPER: 3,
-                Piece.QUEEN_BEE: 1,
-                Piece.SPIDER: 2
-            }
-            cls.black_pieces_to_place = {
-                Piece.ANT: 3,
-                Piece.BEETLE: 2,
-                Piece.GRASSHOPPER: 3,
-                Piece.QUEEN_BEE: 1,
-                Piece.SPIDER: 2
-            }
+        self.pieces = dict()
+        self.empty_spaces = dict()
+        self.white_pieces_to_place = {
+            Piece.BEETLE: 2,
+            Piece.GRASSHOPPER: 3,
+            Piece.ANT: 3,
+            Piece.SPIDER: 2,
+            Piece.QUEEN_BEE: 1,
+        }
+        self.black_pieces_to_place = {
+            Piece.BEETLE: 2,
+            Piece.GRASSHOPPER: 3,
+            Piece.ANT: 3,
+            Piece.SPIDER: 2,
+            Piece.QUEEN_BEE: 1,
+        }
 
-            cls.turn_number = 1
-            cls.white_locations_to_place = set()
-            cls.black_locations_to_place = set()
-            cls.white_possible_moves = dict()
-            cls.black_possible_moves = dict()
-            cls.white_queen_location = None
-            cls.black_queen_location = None
+        self.turn_number = 1
+        self.white_locations_to_place = set()
+        self.black_locations_to_place = set()
+        self.white_possible_moves = dict()
+        self.black_possible_moves = dict()
+        self.white_queen_location = None
+        self.black_queen_location = None
 
-            cls.spaces_requiring_updates = set()
-            cls.empty_spaces_requiring_deletion = set()
+        # Used for evaluating state
+        self.num_white_free_pieces = {
+            Piece.ANT: 0,
+            Piece.BEETLE: 0,
+            Piece.GRASSHOPPER: 0,
+            Piece.QUEEN_BEE: 0,
+            Piece.SPIDER: 0
+        }
+        self.num_black_free_pieces = {
+            Piece.ANT: 0,
+            Piece.BEETLE: 0,
+            Piece.GRASSHOPPER: 0,
+            Piece.QUEEN_BEE: 0,
+            Piece.SPIDER: 0
+        }
 
-            # Variables for keeping track of Ant movement
-            cls.ant_mvt_prevention_sets = []
-            cls.ant_mvt_preventions_to_add = set()
-            cls.ant_locations = set()
+        self.spaces_requiring_updates = set()
+        self.empty_spaces_requiring_deletion = set()
+        self.disconnected_empty_spaces = set()
 
-            # Variables for determining which pieces can move if a loop was formed
-            # cls.loop_was_formed = False
-            cls.tarjan_discovery_time = 0
-            cls.prepare_to_find_articulation_pts = False
+        # Variables for keeping track of Ant movement
+        self.ant_mvt_prevention_sets = []
+        self.ant_mvt_preventions_to_add = set()
+        self.ant_locations = set()
 
-            # Create board with one empty square
-            EmptySpace(0, 0)
-            cls.white_locations_to_place = {(0, 0)}
+        # Variables for determining which pieces can move if a loop was formed
+        # self.loop_was_formed = False
+        self.tarjan_discovery_time = 0
+        self.prepare_to_find_articulation_pts = False
 
-        return cls.instance
+        # Used to convert player input into coordinates when displaying the board
+        self.ui_id_to_coords = dict()
+        self.ui_coords_to_id = dict()
+        self.ui_space_id = 1
 
-    def perform_action(self, action):
+        # Create board with one empty square
+        EmptySpace(self, 0, 0)
+        self.white_locations_to_place = {(0, 0)}
+
+    def undo_action(self, action):
         action_type = action[0]
         piece_location = action[1]
         action_variable = action[2]
 
-        print(action)
+        if action_type == HiveGameBoard.PLACE_PIECE:
+            # Remove the piece that was placed.
+            piece_to_remove = self.pieces[piece_location]
+            piece_to_remove.remove()
+            if piece_to_remove.is_white:
+                self.white_pieces_to_place[piece_to_remove.name] += 1
+                self.num_white_free_pieces[piece_to_remove.name] -= 1
+                if piece_to_remove.name == Piece.QUEEN_BEE:
+                    self.white_queen_location = None
+            else:
+                self.black_pieces_to_place[piece_to_remove.name] += 1
+                self.num_black_free_pieces[piece_to_remove.name] -= 1
+                if piece_to_remove.name == Piece.QUEEN_BEE:
+                    self.black_queen_location = None
+
+            del piece_to_remove
+            self.update_spaces()
+        elif action_type == HiveGameBoard.MOVE_PIECE:
+            # Move from final location to initial location
+            self.pieces[action_variable].move_to(piece_location)
+            self.update_spaces()
+
+        self.turn_number -= 1
+
+        if self.turn_number == 1:
+            EmptySpace(self, 0, 0)
+            self.white_locations_to_place = {(0, 0)}
+
+    def perform_action(self, action):
+        start_time = timer()
+        action_type = action[0]
+        piece_location = action[1]
+        action_variable = action[2]
 
         if action_type == HiveGameBoard.PLACE_PIECE:
             self.perform_action_helper(action_type, piece_location, piece_type=action_variable)
         else:
             self.perform_action_helper(action_type, piece_location, new_location=action_variable)
 
+        self._log_time(action, timer() - start_time)
+
+    def _log_time(self, action, time):
+        if action[0] == HiveGameBoard.PLACE_PIECE:
+            BoardManager().object_action_times[action[2]].append(time)
+        elif action[0] == HiveGameBoard.MOVE_PIECE:
+            BoardManager().object_action_times[self.pieces[action[2]].name].append(time)
+
     def perform_action_helper(self, action_type, piece_location, new_location=None, piece_type=None):
         """
         Performs an action on the game board. Possible actions are HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE
 
         :param action_type:
-            Must be HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE
+            Must be HiveGameBoard.MOVE_PIECE, HiveGameBoard.PLACE_PIECE, or HiveGameBoard.SKIP_TURN
         :param piece_location: (x, y)
             When placing a Piece, this is the location the Piece will be placed.
             When moving a Piece, this is the initial location of the Piece.
@@ -117,37 +234,67 @@ class HiveGameBoard:
             A ValueError will be raised if action_types other than HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE
             are used.
         """
-
-        if action_type == HiveGameBoard.MOVE_PIECE:
+        if action_type == HiveGameBoard.SKIP_TURN:
+            self.turn_number += 1
+        elif action_type == HiveGameBoard.MOVE_PIECE:
             self.move_piece(piece_location, new_location)
         elif action_type == HiveGameBoard.PLACE_PIECE:
             self.place_piece(piece_type, piece_location)
         else:
             raise ValueError('Action type can only be HiveGameBoard.MOVE_PIECE or HiveGameBoard.PLACE_PIECE.')
 
-    def get_action_list(self):
+    def get_action_list(self, randomize_actions=False):
+        start_time = timer()
+
         pieces_to_play, locations_to_place, possible_moves_dict = self.get_all_possible_actions()
 
-        all_actions = []
+        # Move actions
+        move_actions = []
+
+        # Order Pieces so that Pieces with longer processing times are processed last
+        order_of_pieces = {
+            Piece.QUEEN_BEE: 0,
+            Piece.BEETLE: 1,
+            Piece.GRASSHOPPER: 2,
+            Piece.SPIDER: 3,
+            Piece.ANT: 4,
+        }
+
+        for piece_location, move_locations in sorted(
+                possible_moves_dict.items(),
+                key=lambda item: order_of_pieces[self.pieces[item[0]].name]
+        ):
+            for new_location in move_locations:
+                move_actions.append((
+                    HiveGameBoard.MOVE_PIECE,
+                    piece_location,
+                    new_location
+                ))
+
         # Place actions
-        for piece_type, amount_of_type in pieces_to_play.items():
+        place_actions = []
+        for piece_type, amount_of_type in sorted(
+                pieces_to_play.items(),
+                key=lambda item: order_of_pieces[item[0]]
+        ):
             if amount_of_type:
                 for possible_location in locations_to_place:
-                    all_actions.append((
+                    place_actions.append((
                         HiveGameBoard.PLACE_PIECE,
                         possible_location,
                         piece_type
                     ))
 
-        # Move actions
-        for piece_location, move_locations in possible_moves_dict.items():
-            for new_location in move_locations:
-                all_actions.append([
-                    HiveGameBoard.MOVE_PIECE,
-                    piece_location,
-                    new_location
-                ])
+        if randomize_actions:
+            random.shuffle(move_actions)
+            random.shuffle(place_actions)
 
+        all_actions = move_actions + place_actions
+
+        if not all_actions:
+            return [(HiveGameBoard.SKIP_TURN, None, None)]
+
+        BoardManager().getting_actions_times.append(timer() - start_time)
         return all_actions
 
     def get_all_possible_actions(self):
@@ -275,15 +422,15 @@ class HiveGameBoard:
 
         # Place the piece
         if piece_type == Piece.ANT:
-            Ant(location[0], location[1], is_white=self.is_white_turn())
+            Ant(self, location[0], location[1], is_white=self.is_white_turn())
         elif piece_type == Piece.BEETLE:
-            Beetle(location[0], location[1], is_white=self.is_white_turn())
+            Beetle(self, location[0], location[1], is_white=self.is_white_turn())
         elif piece_type == Piece.GRASSHOPPER:
-            Grasshopper(location[0], location[1], is_white=self.is_white_turn())
+            Grasshopper(self, location[0], location[1], is_white=self.is_white_turn())
         elif piece_type == Piece.QUEEN_BEE:
-            QueenBee(location[0], location[1], is_white=self.is_white_turn())
+            QueenBee(self, location[0], location[1], is_white=self.is_white_turn())
         elif piece_type == Piece.SPIDER:
-            Spider(location[0], location[1], is_white=self.is_white_turn())
+            Spider(self, location[0], location[1], is_white=self.is_white_turn())
 
         # Reduce piece counts
         if self.is_white_turn():
@@ -309,40 +456,37 @@ class HiveGameBoard:
             - The specified Piece cannot move based on the "One Hive" rule.
             - The new location is not within the Piece's list of possible moves.
         """
-        if piece_location == new_location:
-            return
+        if piece_location != new_location:
+            # Ensure the move is legal
+            NO_QUEEN_BEE_MOVE_ERR = 'Illegal action. You must place your Queen Bee before you can perform a move action.'
+            WHITE_MOVE_ERR = "Illegal action. It is white's turn, but a move for black was attempted."
+            BLACK_MOVE_ERR = "Illegal action. It is black's turn, but a move for white was attempted."
+            ONE_HIVE_ERR = f'Illegal action. Piece at {piece_location} cannot move based on the "One Hive" rule.'
+            INVALID_MOVE_ERR = f'Illegal action. Piece at {piece_location} cannot move to {new_location}.'
+            if self.is_white_turn():
+                if self.white_queen_location is None:
+                    raise RuntimeError(NO_QUEEN_BEE_MOVE_ERR)
+                elif not self.pieces[piece_location].is_white:
+                    raise RuntimeError(WHITE_MOVE_ERR)
+                elif piece_location not in self.white_possible_moves:
+                    raise RuntimeError(ONE_HIVE_ERR)
+                elif new_location not in self.white_possible_moves[piece_location]:
+                    raise RuntimeError(INVALID_MOVE_ERR)
+            else:
+                if self.black_queen_location is None:
+                    raise RuntimeError(NO_QUEEN_BEE_MOVE_ERR)
+                elif self.pieces[piece_location].is_white:
+                    raise RuntimeError(BLACK_MOVE_ERR)
+                elif piece_location not in self.black_possible_moves:
+                    raise RuntimeError(ONE_HIVE_ERR)
+                elif new_location not in self.black_possible_moves[piece_location]:
+                    raise RuntimeError(INVALID_MOVE_ERR)
 
-        # Ensure the move is legal
-        NO_QUEEN_BEE_MOVE_ERR = 'Illegal action. You must place your Queen Bee before you can perform a move action.'
-        WHITE_MOVE_ERR = "Illegal action. It is white's turn, but a move for black was attempted."
-        BLACK_MOVE_ERR = "Illegal action. It is black's turn, but a move for white was attempted."
-        ONE_HIVE_ERR = 'Illegal action. This piece cannot move based on the "One Hive" rule.'
-        INVALID_MOVE_ERR = 'Illegal action. This piece cannot move to the specified location.'
-        if self.is_white_turn():
-            if self.white_queen_location is None:
-                raise RuntimeError(NO_QUEEN_BEE_MOVE_ERR)
-            elif not self.pieces[piece_location].is_white:
-                raise RuntimeError(WHITE_MOVE_ERR)
-            elif piece_location not in self.white_possible_moves:
-                raise RuntimeError(ONE_HIVE_ERR)
-            elif new_location not in self.white_possible_moves[piece_location]:
-                raise RuntimeError(INVALID_MOVE_ERR)
-        else:
-            if self.black_queen_location is None:
-                raise RuntimeError(NO_QUEEN_BEE_MOVE_ERR)
-            elif self.pieces[piece_location].is_white:
-                raise RuntimeError(BLACK_MOVE_ERR)
-            elif piece_location not in self.black_possible_moves:
-                raise RuntimeError(ONE_HIVE_ERR)
-            elif new_location not in self.black_possible_moves[piece_location]:
-                raise RuntimeError(INVALID_MOVE_ERR)
-
-        self.pieces[piece_location].move_to(new_location)
+            self.pieces[piece_location].move_to(new_location)
 
         self.update_spaces()
         self.turn_number += 1
 
-    # TODO: Documentation
     def update_spaces(self):
         """
         Updates all spaces on the game board requiring an update. This should only be called at the end of a turn.
@@ -350,7 +494,8 @@ class HiveGameBoard:
         # TODO: [Efficiency] Add to these sets directly instead of having to use an intersection
         empty_spaces_requiring_updates = self.spaces_requiring_updates.intersection(self.empty_spaces.keys())
         for empty_space_location in empty_spaces_requiring_updates:
-            self.empty_spaces[empty_space_location].update()
+            if empty_space_location in self.empty_spaces:
+                self.empty_spaces[empty_space_location].update()
 
         self.update_piece_movement()
 
@@ -359,15 +504,24 @@ class HiveGameBoard:
             self.pieces[piece_location].update()
         self.spaces_requiring_updates.clear()
 
+        # Log the current state in the list of board hashes.
+        # state_hash = hash(self)
+        # if state_hash in self.previous_states:
+        #     self.previous_states[state_hash] += 1
+        #     if self.previous_states[state_hash] >= 3:
+        #         self.draw_by_repetition = True
+        # else:
+        #     self.previous_states[state_hash] = 1
+
     def update_piece_movement(self):
         """
         Updates the movement for certain Pieces. This involves updating Ant movement prevention sets, along with
         updating movement rules for all Pieces based on the "One Hive" rule.
         """
         # Ant movement specific
-        for location in self.ant_mvt_preventions_to_add:
+        while self.ant_mvt_preventions_to_add:
+            location = self.ant_mvt_preventions_to_add.pop()
             self.add_to_ant_movement_prevention_set(location)
-        self.ant_mvt_preventions_to_add.clear()
 
         # Determine which pieces can move under the OneHive rule
         if self.turn_number <= 2:
@@ -450,8 +604,17 @@ class HiveGameBoard:
             Set of spaces the algorithm has seen already.
             Default is an empty set.
         """
+
+        if current_space in self.ant_mvt_preventions_to_add:
+            self.ant_mvt_preventions_to_add.remove(current_space)
+
+        # Return codes
+        SUCCESS = 0
+        NO_EMPTY_SPACE = -1
+        CLEARED_SET = -2
+
         if current_space not in self.empty_spaces:
-            return
+            return NO_EMPTY_SPACE
         if visited_spaces is None:
             visited_spaces = set()
         if set_index is None:
@@ -460,14 +623,23 @@ class HiveGameBoard:
 
         # If the edge of the board is ever reached, this should no longer be a set
         if self.empty_spaces[current_space].get_total_num_connections() < 6:
-            self.ant_mvt_prevention_sets[set_index].clear()
-            return
+            self.clear_ant_movement_prevention_set(set_index)
+            return CLEARED_SET
 
         self.ant_mvt_prevention_sets[set_index].add(current_space)
         visited_spaces.add(current_space)
 
-        for connected_space in self.empty_spaces[current_space].get_queen_bee_moves().difference(visited_spaces):
-            self.add_to_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
+        current_empty_space = self.empty_spaces[current_space]
+        spaces_to_search = current_empty_space.connected_empty_spaces.difference(
+            current_empty_space.sliding_prevented_to.keys(),
+            visited_spaces
+        )
+        for connected_space in spaces_to_search:
+            result = self.add_to_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
+            if result == CLEARED_SET:
+                return result
+
+        return SUCCESS
 
     # TODO: Documentation
     def remove_from_ant_movement_prevention_set(self, current_space, set_index, visited_spaces=None):
@@ -483,15 +655,28 @@ class HiveGameBoard:
             Set of spaces the algorithm has seen already.
             Default is an empty set.
         """
+
+        # Return codes
+        SUCCESS = 0
+        NO_EMPTY_SPACE = -1
+        CLEARED_SET = -2
+
         if current_space not in self.empty_spaces or current_space not in self.ant_mvt_prevention_sets[set_index]:
-            return
+            return NO_EMPTY_SPACE
         if visited_spaces is None:
             visited_spaces = set()
-        self.ant_mvt_prevention_sets[set_index].remove(current_space)
         visited_spaces.add(current_space)
 
+        self.ant_mvt_prevention_sets[set_index].remove(current_space)
+        if not self.ant_mvt_prevention_sets[set_index]:
+            self.clear_ant_movement_prevention_set(set_index)
+            return CLEARED_SET
+
         for connected_space in self.empty_spaces[current_space].get_queen_bee_moves().difference(visited_spaces):
-            self.remove_from_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
+            result = self.remove_from_ant_movement_prevention_set(connected_space, set_index, visited_spaces)
+            if result == CLEARED_SET:
+                return result
+        return SUCCESS
 
     def union_ant_movement_prevention_sets(self, set_index1, set_index2):
         """
@@ -528,7 +713,8 @@ class HiveGameBoard:
         :param set_index: int
             Index of the set to remove from the list
         """
-        del self.ant_mvt_prevention_sets[set_index]
+        if self.ant_mvt_prevention_sets:
+            self.ant_mvt_prevention_sets.pop(set_index)
 
     def empty_space_in_ant_movement_prevention_set(self, space_location):
         """
@@ -602,8 +788,161 @@ class HiveGameBoard:
         else:
             return None
 
+    # TODO: Documentation
+    def evaluate_state(self, print_utilities=False):
+
+        # Evaluate if this is an end-game state:
+        winner = self.determine_winner()
+        if winner == self.WHITE_WINNER:
+            return 100000
+        elif winner == self.BLACK_WINNER:
+            return -100000
+        elif winner == self.DRAW:
+            return 0
+
+        # Otherwise, evaluate a utility function
+        # TODO: Clean this up. It looks pretty messy and is hard to follow
+
+        num_black_around_white_qb = 0
+        num_white_movable_around_white_qb = 0
+        num_white_immovable_around_white_qb = 0
+
+        num_white_around_black_qb = 0
+        num_black_movable_around_black_qb = 0
+        num_black_immovable_around_black_qb = 0
+
+        total_white_dist_from_black_qb = 0
+        total_black_dist_from_white_qb = 0
+        num_white_pieces = 0
+        num_black_pieces = 0
+
+        num_white_can_move_to_black_qb = 0
+        num_black_can_move_to_white_qb = 0
+
+        black_beetle_on_white_qb = 0
+        white_beetle_on_black_qb = 0
+
+        if self.white_queen_location is not None and self.black_queen_location is not None:
+            white_queen_bee = self.pieces[self.white_queen_location]
+            black_queen_bee = self.pieces[self.black_queen_location]
+
+            pieces_around_white_qb = white_queen_bee.connected_pieces
+            pieces_around_black_qb = black_queen_bee.connected_pieces
+
+            # If the name != QUEEN_BEE, white_queen_bee or black_queen_bee are actually Beetles
+            if white_queen_bee.name != Piece.QUEEN_BEE and not white_queen_bee.is_white:
+                black_beetle_on_white_qb = 1
+            if black_queen_bee.name != Piece.QUEEN_BEE and black_queen_bee.is_white:
+                white_beetle_on_black_qb = 1
+
+            total_around_white_qb = len(pieces_around_white_qb)
+            total_around_black_qb = len(pieces_around_black_qb)
+
+            for piece_location, piece in self.pieces.items():
+                if piece.is_white:
+                    dist = abs(piece_location[0] - self.black_queen_location[0]) + \
+                           abs(piece_location[1] - self.black_queen_location[1])
+                    total_white_dist_from_black_qb += dist
+                    num_white_pieces += 1
+
+                    if piece_location in pieces_around_black_qb:
+                        num_white_around_black_qb += 1
+
+                    if piece_location in pieces_around_white_qb:
+                        if piece_location in self.white_possible_moves:
+                            num_white_movable_around_white_qb += 1
+                        else:
+                            num_white_immovable_around_white_qb += 1
+
+                    if piece_location not in black_queen_bee.get_all_surrounding_locations() \
+                            and piece_location in self.white_possible_moves \
+                            and not self.white_possible_moves[piece_location].isdisjoint(black_queen_bee.connected_empty_spaces):
+                        num_white_can_move_to_black_qb += 1
+                else:
+                    dist = abs(piece_location[0] - self.white_queen_location[0]) + \
+                           abs(piece_location[1] - self.white_queen_location[1])
+                    total_black_dist_from_white_qb += dist
+                    num_black_pieces += 1
+
+                    if piece_location in pieces_around_white_qb:
+                        num_black_around_white_qb += 1
+
+                    if piece_location in pieces_around_black_qb:
+                        if piece_location in self.black_possible_moves:
+                            num_black_movable_around_black_qb += 1
+                        else:
+                            num_black_immovable_around_black_qb += 1
+
+                    if piece_location not in white_queen_bee.get_all_surrounding_locations() \
+                            and piece_location in self.black_possible_moves \
+                            and not self.black_possible_moves[piece_location].isdisjoint(white_queen_bee.connected_empty_spaces):
+                        num_black_can_move_to_white_qb += 1
+
+            empty_spaces_around_black_qb = 6 - total_around_black_qb
+            empty_spaces_around_white_qb = 6 - total_around_white_qb
+            if num_white_can_move_to_black_qb > empty_spaces_around_black_qb:
+                num_white_can_move_to_black_qb = empty_spaces_around_black_qb
+            if num_black_can_move_to_white_qb > empty_spaces_around_white_qb:
+                num_black_can_move_to_white_qb = empty_spaces_around_white_qb
+
+        utilities = [
+            # White utilities (positive)
+            (num_white_around_black_qb + num_black_immovable_around_black_qb + white_beetle_on_black_qb) ** 1.2,
+            num_black_movable_around_black_qb,
+            num_white_can_move_to_black_qb,
+
+            self.num_white_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.GRASSHOPPER],  # if (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.QUEEN_BEE],  # and (self.turn_number + 1) // 2 >= 5 else 0,
+            self.num_white_free_pieces[Piece.SPIDER],  # if (self.turn_number + 1) // 2 >= 5 else 0,
+
+            # Black utilities (negative)
+            (num_black_around_white_qb + num_white_immovable_around_white_qb + black_beetle_on_white_qb) ** 1.2,
+            num_white_movable_around_white_qb,
+            num_black_can_move_to_white_qb,
+
+            self.num_black_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 > 2 else 0,
+            self.num_black_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 > 2 else 0,
+            self.num_black_free_pieces[Piece.GRASSHOPPER],  # if (self.turn_number + 1) // 2 > 2 else 0,
+            self.num_black_free_pieces[Piece.QUEEN_BEE],  # and (self.turn_number + 1) // 2 > 4 else 0,
+            self.num_black_free_pieces[Piece.SPIDER],  # if (self.turn_number + 1) // 2 > 2 else 0,
+        ]
+
+        value_of_piece_around_qb = 25 if (self.turn_number + 1) // 2 > 4 else 0
+        free_piece_multiplier = 1 if (self.turn_number + 1) // 2 <= 4 else 0
+        white_values = np.array([
+            # Multiplied by the number of white pieces around the black queen bee
+            value_of_piece_around_qb,
+            # Multiplied by the number of black pieces around the black queen bee that can move
+            value_of_piece_around_qb * 0.5,
+            # Multiplied by the number of white pieces that can move to locations around the black queen bee
+            value_of_piece_around_qb * 0.5,
+
+            free_piece_multiplier,  # Multiplied by number of free white ants
+            free_piece_multiplier,  # Multiplied by number of free white beetles
+            free_piece_multiplier,  # Multiplied by number of free white grasshoppers
+            # Multiplied by number of free white queen bees
+            value_of_piece_around_qb * 1.1 if (self.turn_number + 1) // 2 > 4 else free_piece_multiplier,
+            free_piece_multiplier,  # Multiplied by number of free white spiders
+        ])
+        black_values = -white_values
+        values = np.concatenate((white_values, black_values))
+
+        evaluation = sum([utility * value for utility, value in zip(utilities, values)])
+
+        if print_utilities:
+            print([utility * value for utility, value in zip(utilities, values)])
+
+        return round(evaluation, 2)
+
     # TODO: [UI] This is a temporary solution. Do not use this in the final product...
-    def print_board(self):
+    def print_board(self, hex_board=True):
+
+        if hex_board:
+            self.print_hex_board()
+            return
+
         if not self.pieces:
             return
 
@@ -616,38 +955,181 @@ class HiveGameBoard:
         max_y = piece_coords[-1][1]
 
         board_str = ''
-        for y in range(0, max_y - min_y + 1):
-            for x in range(0, max_x - min_x + 1):
-                # Actual points are (x + min_x, y + min_y)
-                if (x + min_x, y + min_y) in self.pieces:
-                    current_piece = self.pieces[(x + min_x, y + min_y)]
-                    piece_char = current_piece.name[:1]
+        for y in range(min_y, max_y + 1):
+            for x in range(min_x, max_x + 1):
+                if (x, y) in self.pieces:
+                    current_piece = self.pieces[(x, y)]
+                    if current_piece.name == Piece.BEETLE and current_piece.stacked_piece_obj is not None:
+                        piece_char = 'b'
+                    else:
+                        piece_char = current_piece.name[:1]
                     if not current_piece.is_white:
                         piece_char = '(' + piece_char + ')'
                     else:
                         piece_char = ' ' + piece_char + ' '
-                elif (x + min_x, y + min_y) in self.empty_spaces:
+                elif (x, y) in self.empty_spaces:
                     piece_char = ' _ '
                 else:
                     piece_char = '   '
-                if (x + min_x, y + min_y) == (0, 0):
+                if (x, y) == (0, 0):
                     board_str += '*{}*|'.format(piece_char)
                 else:
                     board_str += ' {} |'.format(piece_char)
             board_str += '\n'
         print(board_str)
 
+    def print_hex_board(self):
+        self.ui_id_to_coords.clear()
+        self.ui_space_id = 1
+
+        # Code based off of https://inventwithpython.com/bigbookpython/project35.html
+
+        # Set up the constants:
+        # TODO: Don't hardcode these values.
+        #       I will need to figure out a way to calculate these values such that the entire board can be displayed
+        #       with a minimal amount of additional output
+
+        min_x = -11
+        min_y = 0
+
+        X_REPEAT = 12  # How many times to tessellate horizontally.
+        Y_REPEAT = 12  # How many times to tessellate vertically.
+
+        for y in range(Y_REPEAT):
+            # Display the top half of the hexagon
+            if y == 0:
+                for x in range(X_REPEAT):
+                    print(r'  _____       ', end='')
+                print()
+
+            for x in range(X_REPEAT):
+                if x == 0:
+                    base_str0 = ' '
+                else:
+                    base_str0 = ''
+
+                x_coord = x + y + min_x
+                y_coord = y - x + min_y
+                if (x_coord, y_coord) in self.pieces:
+                    if self.pieces[(x_coord, y_coord)].is_white:
+                        base_str1 = '/#####\\'
+                    else:
+                        base_str1 = '/.....\\'
+                else:
+                    base_str1 = '/     \\'
+                y_coord -= 1
+                if (x_coord, y_coord) in self.pieces:
+                    if self.pieces[(x_coord, y_coord)].is_white:
+                        base_str2 = r'#######'
+                    else:
+                        base_str2 = r'.......'
+                else:
+                    base_str2 = r'       '
+
+                print(f'{base_str0}{base_str1}{base_str2}', end='')
+            print()
+
+            for x in range(X_REPEAT):
+                x_coord = x + y + min_x
+                y_coord = y - x + min_y
+                if x < X_REPEAT - 1:
+                    if (x_coord, y_coord - 1) in self.pieces:
+                        if self.pieces[(x_coord, y_coord - 1)].is_white:
+                            base_str2 = r'#####'
+                        else:
+                            base_str2 = r'.....'
+                    else:
+                        base_str2 = r'_____'
+                    print(rf'/{self.get_print_char(x_coord, y_coord)}\{base_str2}', end='')
+                else:
+                    print(rf'/{self.get_print_char(x_coord, y_coord)}\ ', end='')
+            print()
+
+            # Display the bottom half of the hexagon:
+            for x in range(X_REPEAT):
+                x_coord = x + y + min_x
+                y_coord = y - x + min_y
+                if (x_coord, y_coord) in self.pieces:
+                    if self.pieces[(x_coord, y_coord)].is_white:
+                        base_str1 = r'\#######/'
+                    else:
+                        base_str1 = r'\......./'
+                else:
+                    base_str1 = r'\       /'
+
+                x_coord += 1
+                if (x_coord, y_coord) in self.pieces:
+                    if self.pieces[(x_coord, y_coord)].is_white:
+                        base_str2 = r'#####'
+                    else:
+                        base_str2 = r'.....'
+                else:
+                    base_str2 = r'     '
+
+                print(f'{base_str1}{base_str2}', end='')
+            print()
+
+            for x in range(X_REPEAT):
+                x_coord = x + y + min_x
+                y_coord = y - x + min_y
+                if (x_coord, y_coord) in self.pieces:
+                    if self.pieces[(x_coord, y_coord)].is_white:
+                        base_str = r'\#####/'
+                    else:
+                        base_str = r'\...../'
+                else:
+                    base_str = r'\_____/'
+
+                x_coord += 1
+                if x == 0:
+                    print(rf' {base_str}{self.get_print_char(x_coord, y_coord)}', end='')
+                elif x < X_REPEAT - 1:
+                    print(rf'{base_str}{self.get_print_char(x_coord, y_coord)}', end='')
+                else:
+                    print(rf'{base_str} ', end='')
+            print()
+
+    def get_print_char(self, x, y):
+        if (x, y) in self.pieces:
+            current_piece = self.pieces[(x, y)]
+            if current_piece.name == Piece.BEETLE and current_piece.stacked_piece_obj is not None:
+                char_around_piece = '*'
+            else:
+                char_around_piece = ' '
+            piece_char = current_piece.name[:1]
+            if current_piece.is_white:
+                piece_char = f'#{char_around_piece}{piece_char}{self.ui_space_id:<2n}{char_around_piece}#'
+            else:
+                piece_char = f'.{char_around_piece}{piece_char}{self.ui_space_id:<2n}{char_around_piece}.'
+            self.ui_id_to_coords[self.ui_space_id] = (x, y)
+            self.ui_coords_to_id[(x, y)] = self.ui_space_id
+            self.ui_space_id += 1
+        elif (x, y) in self.empty_spaces:
+            piece_char = f'  {self.ui_space_id:2}   '
+            self.ui_id_to_coords[self.ui_space_id] = (x, y)
+            self.ui_coords_to_id[(x, y)] = self.ui_space_id
+            self.ui_space_id += 1
+        else:
+            piece_char = '       '
+        return piece_char
+
+    def __eq__(self, other):
+        return isinstance(other, HiveGameBoard) and self.pieces == other.pieces
+
     def __str__(self):
         # Used to print the board state
-        return_str = ''
+        return_str = f'turn_number: {self.turn_number}\n'
         return_str += 'white_pieces_to_place: {}\n'.format(self.white_pieces_to_place)
         return_str += 'black_pieces_to_place: {}\n'.format(self.black_pieces_to_place)
         return_str += 'white_locations_to_place: {}\n'.format(self.white_locations_to_place)
         return_str += 'black_locations_to_place: {}\n'.format(self.black_locations_to_place)
         return_str += 'white_possible_moves: {}\n'.format(self.white_possible_moves)
         return_str += 'black_possible_moves: {}\n'.format(self.black_possible_moves)
+        return_str += f'num_white_free_pieces: {self.num_white_free_pieces}\n'
+        return_str += f'num_black_free_pieces: {self.num_black_free_pieces}\n'
         return_str += 'white_queen_location: {}\n'.format(self.white_queen_location)
         return_str += 'black_queen_location: {}\n'.format(self.black_queen_location)
+        return_str += f'ant_mvt_prevention_sets: {self.ant_mvt_prevention_sets}\n'
         return_str += 'pieces: {}\n'.format(
             [(location, self.pieces[location].name, 'White' if self.pieces[location].is_white else 'Black') for location
              in self.pieces])
