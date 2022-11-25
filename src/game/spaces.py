@@ -1,3 +1,4 @@
+import src.utils as utils
 from abc import abstractmethod
 
 
@@ -233,8 +234,9 @@ class HexSpace:
         :param location: (x, y)
             Location of the EmptySpace.
         """
-        self.connected_empty_spaces.remove(location)
-        self.prepare_for_update()
+        if location in self.connected_empty_spaces:
+            self.connected_empty_spaces.remove(location)
+            self.prepare_for_update()
 
 
 class EmptySpace(HexSpace):
@@ -336,8 +338,11 @@ class EmptySpace(HexSpace):
         - Update Spider paths
         """
         if len(self.connected_pieces) == 0:
-            self.remove()
-            return
+            if self.get_total_num_connections() < 6:
+                self.remove()
+                return
+            else:
+                self.board.disconnected_empty_spaces.add(self.location)
 
         super().update()
         self.update_placement_options()
@@ -405,6 +410,20 @@ class EmptySpace(HexSpace):
             self.board.ant_mvt_prevention_sets[ant_mvt_prevention_index].remove(self.location)
             if not self.board.ant_mvt_prevention_sets[ant_mvt_prevention_index]:
                 self.board.clear_ant_movement_prevention_set(ant_mvt_prevention_index)
+        # Check if an empty space was removed along a line of connected pieces
+        if len(self.connected_pieces) == 2:
+            # These are the possible configurations for a line of pieces
+            x = self.location[0]
+            y = self.location[1]
+            bridge_configurations = [
+                {(x - 1, y - 1), (x + 1, y + 1)},
+                {(x - 1, y), (x + 1, y)},
+                {(x, y - 1), (x, y + 1)}
+            ]
+            # If a line of pieces was found, all connected empty spaces will need to be checked
+            if self.connected_pieces in bridge_configurations:
+                for space_location in self.connected_empty_spaces:
+                    self.board.ant_mvt_preventions_to_add.add(space_location)
         for ant_location in self.board.ant_locations:
             self.board.pieces[ant_location].prepare_for_update()
 
@@ -419,7 +438,7 @@ class EmptySpace(HexSpace):
         :return: bool
             True if white can place a piece here; False otherwise
         """
-        return not self.num_black_connected
+        return not self.num_black_connected and self.num_white_connected
 
     def black_can_place(self):
         """
@@ -428,7 +447,7 @@ class EmptySpace(HexSpace):
         :return: bool
             True if black can place a piece here; False otherwise
         """
-        return not self.num_white_connected
+        return not self.num_white_connected and self.num_black_connected
 
     def add_connection_to_piece(self, location):
         """
@@ -438,6 +457,10 @@ class EmptySpace(HexSpace):
             Location of the Piece.
         """
         super().add_connection_to_piece(location)
+
+        if self.location in self.board.disconnected_empty_spaces:
+            self.board.disconnected_empty_spaces.remove(self.location)
+
         if self.board.pieces[location].is_white:
             self.num_white_connected += 1
         else:
@@ -559,7 +582,7 @@ class Piece(HexSpace):
                 # The limited space is no longer blocked by this piece
                 limited_space.remove_sliding_prevention(loc, self.location)
 
-                # limited_space_loc and loc are a piar of spaces prevented from sliding
+                # limited_space_loc and loc are a pair of spaces prevented from sliding
                 if limited_space_loc in self.board.empty_spaces and \
                         loc in self.board.empty_spaces:
                     space1_prevention_index = self.board.empty_space_in_ant_movement_prevention_set(
@@ -694,10 +717,10 @@ class Piece(HexSpace):
         space2 = all_spaces[space2_loc]
 
         # Mark that this Piece and the related Piece are preventing sliding for the specified spaces
-        self._helper_add_to_dict_set(self.preventing_sliding_for, space1_loc, space2_loc)
-        self._helper_add_to_dict_set(self.preventing_sliding_for, space2_loc, space1_loc)
-        self._helper_add_to_dict_set(other_piece.preventing_sliding_for, space1_loc, space2_loc)
-        self._helper_add_to_dict_set(other_piece.preventing_sliding_for, space2_loc, space1_loc)
+        utils.add_to_dict_set(self.preventing_sliding_for, space1_loc, space2_loc)
+        utils.add_to_dict_set(self.preventing_sliding_for, space2_loc, space1_loc)
+        utils.add_to_dict_set(other_piece.preventing_sliding_for, space1_loc, space2_loc)
+        utils.add_to_dict_set(other_piece.preventing_sliding_for, space2_loc, space1_loc)
 
         # Spaces add the new sliding limitations
         space1.add_sliding_prevention(space2_loc, self.location)
@@ -732,20 +755,6 @@ class Piece(HexSpace):
                 self.board.remove_from_ant_movement_prevention_set(space1_loc, space1_prevention_index)
                 self.board.add_to_ant_movement_prevention_set(space1_loc)
 
-    @staticmethod
-    def _helper_add_to_dict_set(dictionary, key, value):
-        """
-        This is a helper function used to add values to sets stored within a dictionary.
-
-        :param dictionary:
-        :param key:
-        :param value:
-        """
-        if key in dictionary:
-            dictionary[key].add(value)
-        else:
-            dictionary[key] = {value}
-
     def update_one_hive_rule(self, self_is_placing=True):
         """
         Updates movement rules based on the "One Hive" rule.
@@ -760,7 +769,6 @@ class Piece(HexSpace):
             if self_is_placing:
                 self.board.pieces[list(self.connected_pieces)[0]].lock()
             else:
-                # self.board.pieces[list(self.connected_pieces)[0]].unlock()
                 self.board.prepare_to_find_articulation_pts = True
                 return
             return

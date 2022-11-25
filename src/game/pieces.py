@@ -50,7 +50,7 @@ class Ant(Piece):
                 if len(empty_space.connected_pieces) == 1 and self.location in empty_space.connected_pieces:
                     moveset.remove(space_location)
 
-            self.possible_moves = moveset
+            self.possible_moves = moveset.difference(self.board.disconnected_empty_spaces)
         self.update_board_moves()
         return self.possible_moves
 
@@ -454,9 +454,18 @@ class Spider(Piece):
 
             self.previous_path_starts = set(self.path_roots.values())
         else:
+            # If a start path was removed, remove it
+            removed_starting_paths = self.previous_path_starts.difference(starts_to_paths)
+            for path_start in removed_starting_paths:
+                self.remove_spider_path(path_start)
+
+            # If there is a new start path, add it
+            new_starting_paths = starts_to_paths.difference(self.previous_path_starts, self.paths_to_add)
+            for path_start in new_starting_paths:
+                self.add_spider_path(path_start)
+
             # Add recorded paths to add during update
             for spider_path in self.paths_to_add:
-                # TODO: [Debugging] This line is not called during testing.
                 self.add_spider_path(
                     empty_space_location=spider_path.location,
                     previous_location=spider_path.previous_location,
@@ -464,18 +473,6 @@ class Spider(Piece):
                     path_id=spider_path.path_id,
                     visited=spider_path.visited.copy()
                 )
-
-            # Compare current path starts to previous path starts
-            new_starting_paths = starts_to_paths.difference(self.previous_path_starts)
-            removed_starting_paths = self.previous_path_starts.difference(starts_to_paths)
-
-            # If a start path was removed, remove it
-            for path_start in removed_starting_paths:
-                self.remove_spider_path(path_start)
-
-            # If there is a new start path, add it
-            for path_start in new_starting_paths:
-                self.add_spider_path(path_start)
 
         self.paths_to_add.clear()
         self.previous_path_starts = starts_to_paths

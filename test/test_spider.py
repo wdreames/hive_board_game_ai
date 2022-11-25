@@ -1,3 +1,5 @@
+import os
+import pickle
 import unittest
 import src.game.board as board
 import src.game.spaces as spaces
@@ -284,6 +286,30 @@ class TestSpiderBoard2Move3(unittest.TestCase):
         actual_possible_moves = self.game_board.pieces[(2, 0)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
+
+
+class TestSpiderBoard3(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.manager = board.BoardManager(new_manager=True)
+        with open(os.path.join('test', 'data', 'spider_board_3.hv'), 'rb') as file:
+            game_state = pickle.load(file)
+            cls.manager.current_board = game_state
+
+    # Ensure that the following does not cause an error
+    def test_spider1(self):
+        # The pickle of this object was made before this attribute was added. Adding it here.
+        self.manager.current_board.disconnected_empty_spaces = set()
+
+        self.manager.perform_action((board.HiveGameBoard.PLACE_PIECE, (3, 2), spaces.Piece.GRASSHOPPER))
+        self.manager.perform_action((board.HiveGameBoard.MOVE_PIECE, (-3, -2), (0, -1)))
+        self.manager.perform_action((board.HiveGameBoard.MOVE_PIECE, (0, 2), (1, -2)))
+
+        self.manager.get_successor(('Move Piece', (0, 1), (0, -2)))
+        self.manager.get_predecessor()
+
+        self.manager.perform_action((board.HiveGameBoard.MOVE_PIECE, (0, -1), (0, -2)))
 
 
 class TestSpiderOverlappingPaths(unittest.TestCase):
