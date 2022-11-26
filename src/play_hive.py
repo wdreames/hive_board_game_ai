@@ -13,6 +13,7 @@ def set_player_arguments():
     if arguments['load']:
         board.BoardManager().load_state(arguments['load'])
     if arguments['size']:
+        # TODO: Add a way to change board size
         pass
 
 

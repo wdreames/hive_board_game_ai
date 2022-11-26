@@ -41,6 +41,7 @@ class Agent:
         return f'{self.name} ({"White" if self.is_white else "Black"})'
 
 
+# TODO: Rename to DebugPlayer
 class Player(Agent):
 
     def __init__(self, is_white=True, board_manager=None):
@@ -61,7 +62,8 @@ class Player(Agent):
         )
 
 
-class HexPlayer(Player):
+# TODO: Rename to Player
+class HexPlayer(Agent):
 
     def __init__(self, is_white=True, board_manager=None):
         super().__init__(is_white, board_manager)
@@ -175,7 +177,6 @@ class RandomActionAI(Agent):
         return actions[rand_index]
 
 
-# TODO: This breaks on move 1
 class BestNextMoveAI(Agent):
 
     def __init__(self, is_white=True, board_manager=None, winning_value=50000):
@@ -252,9 +253,6 @@ class MinimaxAI(Agent):
     def get_action_selection(self):
         actions = self.board_manager.get_action_list(randomize_actions=True)
 
-        if len(actions) == 1:
-            return actions.pop()
-
         # Opening moves
         action_number = (self.board_manager.get_board().turn_number + 1) // 2
         if action_number <= 2:
@@ -271,7 +269,11 @@ class MinimaxAI(Agent):
                 if action[2] not in [spaces.Piece.BEETLE, spaces.Piece.SPIDER] and \
                         action[1] in possible_locations:
                     better_action_list.append(action)
-            actions = better_action_list
+            if better_action_list:
+                actions = better_action_list
+
+        if len(actions) == 1:
+            return actions.pop()
 
         start_time = timer()
         action_evaluations = dict()
@@ -312,7 +314,7 @@ class MinimaxAI(Agent):
         best_value = action_evaluations[action_list[0]]
         best_actions = []
         for action in action_list:
-            if action_evaluations[action[0]] >= best_value:
+            if action_evaluations[action] >= best_value:
                 best_actions.append(action)
             else:
                 break

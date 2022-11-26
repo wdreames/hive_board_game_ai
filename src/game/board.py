@@ -817,7 +817,9 @@ class HiveGameBoard:
         num_black_pieces = 0
 
         num_white_can_move_to_black_qb = 0
+        num_white_cannot_move_to_black_qb = 0
         num_black_can_move_to_white_qb = 0
+        num_black_cannot_move_to_white_qb = 0
 
         black_beetle_on_white_qb = 0
         white_beetle_on_black_qb = 0
@@ -855,9 +857,11 @@ class HiveGameBoard:
                             num_white_immovable_around_white_qb += 1
 
                     if piece_location not in black_queen_bee.get_all_surrounding_locations() \
-                            and piece_location in self.white_possible_moves \
-                            and not self.white_possible_moves[piece_location].isdisjoint(black_queen_bee.connected_empty_spaces):
-                        num_white_can_move_to_black_qb += 1
+                            and piece_location in self.white_possible_moves:
+                        if not self.white_possible_moves[piece_location].isdisjoint(black_queen_bee.connected_empty_spaces):
+                            num_white_can_move_to_black_qb += 1
+                        else:
+                            num_white_cannot_move_to_black_qb += 1
                 else:
                     dist = abs(piece_location[0] - self.white_queen_location[0]) + \
                            abs(piece_location[1] - self.white_queen_location[1])
@@ -874,22 +878,31 @@ class HiveGameBoard:
                             num_black_immovable_around_black_qb += 1
 
                     if piece_location not in white_queen_bee.get_all_surrounding_locations() \
-                            and piece_location in self.black_possible_moves \
-                            and not self.black_possible_moves[piece_location].isdisjoint(white_queen_bee.connected_empty_spaces):
-                        num_black_can_move_to_white_qb += 1
+                            and piece_location in self.black_possible_moves:
+                        if not self.black_possible_moves[piece_location].isdisjoint(white_queen_bee.connected_empty_spaces):
+                            num_black_can_move_to_white_qb += 1
+                        else:
+                            num_black_cannot_move_to_white_qb += 1
 
             empty_spaces_around_black_qb = 6 - total_around_black_qb
             empty_spaces_around_white_qb = 6 - total_around_white_qb
             if num_white_can_move_to_black_qb > empty_spaces_around_black_qb:
-                num_white_can_move_to_black_qb = empty_spaces_around_black_qb
+                difference = num_white_can_move_to_black_qb - empty_spaces_around_black_qb
+                num_white_can_move_to_black_qb -= difference
+                num_white_cannot_move_to_black_qb += difference
             if num_black_can_move_to_white_qb > empty_spaces_around_white_qb:
-                num_black_can_move_to_white_qb = empty_spaces_around_white_qb
+                difference = num_black_can_move_to_white_qb - empty_spaces_around_white_qb
+                num_black_can_move_to_white_qb -= difference
+                num_black_cannot_move_to_white_qb += difference
 
         utilities = [
             # White utilities (positive)
-            (num_white_around_black_qb + num_black_immovable_around_black_qb + white_beetle_on_black_qb) ** 1.2,
+            (num_white_around_black_qb + num_black_immovable_around_black_qb*0.8 + white_beetle_on_black_qb) ** 1.5,
             num_black_movable_around_black_qb,
             num_white_can_move_to_black_qb,
+            num_white_cannot_move_to_black_qb,
+
+            num_white_pieces,
 
             self.num_white_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 >= 5 else 0,
             self.num_white_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 >= 5 else 0,
@@ -898,9 +911,12 @@ class HiveGameBoard:
             self.num_white_free_pieces[Piece.SPIDER],  # if (self.turn_number + 1) // 2 >= 5 else 0,
 
             # Black utilities (negative)
-            (num_black_around_white_qb + num_white_immovable_around_white_qb + black_beetle_on_white_qb) ** 1.2,
+            (num_black_around_white_qb + num_white_immovable_around_white_qb*0.8 + black_beetle_on_white_qb) ** 1.5,
             num_white_movable_around_white_qb,
             num_black_can_move_to_white_qb,
+            num_black_cannot_move_to_white_qb,
+
+            num_black_pieces,
 
             self.num_black_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 > 2 else 0,
             self.num_black_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 > 2 else 0,
@@ -910,7 +926,7 @@ class HiveGameBoard:
         ]
 
         value_of_piece_around_qb = 25 if (self.turn_number + 1) // 2 > 4 else 0
-        free_piece_multiplier = 1 if (self.turn_number + 1) // 2 <= 4 else 0
+        free_piece_multiplier = 2.5  # if (self.turn_number + 1) // 2 <= 4 else 0
         white_values = np.array([
             # Multiplied by the number of white pieces around the black queen bee
             value_of_piece_around_qb,
@@ -918,6 +934,10 @@ class HiveGameBoard:
             value_of_piece_around_qb * 0.5,
             # Multiplied by the number of white pieces that can move to locations around the black queen bee
             value_of_piece_around_qb * 0.5,
+            # Multiplied by the number of white pieces that cannot move to locations around the black queen bee
+            value_of_piece_around_qb * -0.5,
+
+            -free_piece_multiplier,  # Multiplied by the total number of white pieces
 
             free_piece_multiplier,  # Multiplied by number of free white ants
             free_piece_multiplier,  # Multiplied by number of free white beetles
@@ -978,6 +998,7 @@ class HiveGameBoard:
             board_str += '\n'
         print(board_str)
 
+    # TODO: Rename this to print_board and give an option of debug=False.
     def print_hex_board(self):
         self.ui_id_to_coords.clear()
         self.ui_space_id = 1
@@ -986,8 +1007,6 @@ class HiveGameBoard:
 
         # Set up the constants:
         # TODO: Don't hardcode these values.
-        #       I will need to figure out a way to calculate these values such that the entire board can be displayed
-        #       with a minimal amount of additional output
 
         min_x = -11
         min_y = 0

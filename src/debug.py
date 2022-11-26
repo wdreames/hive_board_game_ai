@@ -532,6 +532,7 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), g
         board_manager.get_board().print_board(hex_board=False)
         board_manager.save_state('last_hive_error.hv')
         print(traceback.format_exc())
+        exit(1)
 
     end_of_game = timer()
 
@@ -650,7 +651,7 @@ if __name__ == '__main__':
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    num_games = 10
+    num_games = 5
     num_turns = 0
     num_white_wins = 0
     num_black_wins = 0
@@ -663,8 +664,8 @@ if __name__ == '__main__':
 
     for i in range(num_games):
         _, white_times, black_times, num_actions_per_turn, total_num_actions = play_game(
+            hex_player,
             minimax_ai1,
-            best_next_move_ai,
             graph_data_after_run=False,
             max_turns=50,
         )

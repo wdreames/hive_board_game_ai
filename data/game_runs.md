@@ -96,3 +96,23 @@ Sorted actions and updated eval function
 | AI Type     | Num Runs | Avg Time Per Turn | Avg Num Turns | Avg Num Actions on a Turn | Avg Num Actions Processed in a Game |
 |-------------|----------|-------------------|---------------|---------------------------|-------------------------------------|
 | minimax_ai1 | 9/10     | 1.037267          | 30.6          |                           | 6385                                |
+
+Negative points for immovable pieces; 0 points for movable ones.
+
+| AI Type     | Num Runs | Avg Time Per Turn | Avg Num Turns | Avg Num Actions on a Turn | Avg Num Actions Processed in a Game |
+|-------------|----------|-------------------|---------------|---------------------------|-------------------------------------|
+| minimax_ai1 | 5/5      | 0.671093          | 27.6          |                           | 3798                                |
+
+Immovable allied pieces around the allied QB hold 80% value.
+Also changed exponential value from 1.5 to 1.2
+
+| AI Type     | Num Runs | Avg Time Per Turn | Avg Num Turns | Avg Num Actions on a Turn | Avg Num Actions Processed in a Game |
+|-------------|----------|-------------------|---------------|---------------------------|-------------------------------------|
+| minimax_ai1 | 3/5      | 0.725731          | 37.8          |                           | 2744                                |
+
+Changed exponential value back from 1.2 to 1.5
+
+| AI Type     | Num Runs | Avg Time Per Turn | Avg Num Turns | Avg Num Actions on a Turn | Avg Num Actions Processed in a Game |
+|-------------|----------|-------------------|---------------|---------------------------|-------------------------------------|
+| minimax_ai1 | 5/5      | 0.681309          | 27.2          |                           | 3814                                |
+
