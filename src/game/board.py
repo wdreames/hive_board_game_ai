@@ -262,9 +262,13 @@ class HiveGameBoard:
 
         for piece_location, move_locations in sorted(
                 possible_moves_dict.items(),
-                key=lambda item: order_of_pieces[self.pieces[item[0]].name]
+                key=lambda item: (
+                    order_of_pieces[self.pieces[item[0]].name],
+                    item[0][0],
+                    item[0][1]
+                )
         ):
-            for new_location in move_locations:
+            for new_location in sorted(move_locations):
                 move_actions.append((
                     HiveGameBoard.MOVE_PIECE,
                     piece_location,
@@ -278,7 +282,7 @@ class HiveGameBoard:
                 key=lambda item: order_of_pieces[item[0]]
         ):
             if amount_of_type:
-                for possible_location in locations_to_place:
+                for possible_location in sorted(locations_to_place):
                     place_actions.append((
                         HiveGameBoard.PLACE_PIECE,
                         possible_location,
