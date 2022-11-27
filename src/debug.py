@@ -651,7 +651,7 @@ if __name__ == '__main__':
     expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    num_games = 5
+    num_games = 1
     num_turns = 0
     num_white_wins = 0
     num_black_wins = 0
@@ -666,8 +666,8 @@ if __name__ == '__main__':
         _, white_times, black_times, num_actions_per_turn, total_num_actions = play_game(
             hex_player,
             minimax_ai1,
-            graph_data_after_run=False,
-            max_turns=50,
+            graph_data_after_run=True,
+            # max_turns=50,
         )
 
         game_board = board.BoardManager().get_board()

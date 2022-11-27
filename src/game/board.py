@@ -902,7 +902,7 @@ class HiveGameBoard:
             num_white_can_move_to_black_qb,
             num_white_cannot_move_to_black_qb,
 
-            num_white_pieces,
+            num_white_pieces ** 1.1,
 
             self.num_white_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 >= 5 else 0,
             self.num_white_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 >= 5 else 0,
@@ -916,7 +916,7 @@ class HiveGameBoard:
             num_black_can_move_to_white_qb,
             num_black_cannot_move_to_white_qb,
 
-            num_black_pieces,
+            num_black_pieces ** 1.1,
 
             self.num_black_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 > 2 else 0,
             self.num_black_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 > 2 else 0,
@@ -931,11 +931,11 @@ class HiveGameBoard:
             # Multiplied by the number of white pieces around the black queen bee
             value_of_piece_around_qb,
             # Multiplied by the number of black pieces around the black queen bee that can move
-            value_of_piece_around_qb * 0.5,
+            value_of_piece_around_qb * 0.7,
             # Multiplied by the number of white pieces that can move to locations around the black queen bee
-            value_of_piece_around_qb * 0.5,
+            value_of_piece_around_qb * 0.7,
             # Multiplied by the number of white pieces that cannot move to locations around the black queen bee
-            value_of_piece_around_qb * -0.5,
+            value_of_piece_around_qb * -0.7,
 
             -free_piece_multiplier,  # Multiplied by the total number of white pieces
 

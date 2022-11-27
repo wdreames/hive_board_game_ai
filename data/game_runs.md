@@ -116,3 +116,17 @@ Changed exponential value back from 1.2 to 1.5
 |-------------|----------|-------------------|---------------|---------------------------|-------------------------------------|
 | minimax_ai1 | 5/5      | 0.681309          | 27.2          |                           | 3814                                |
 
+More discouragement of placing pieces
+
+| AI Type     | Num Runs | Avg Time Per Turn | Avg Num Turns | Avg Num Actions on a Turn | Avg Num Actions Processed in a Game |
+|-------------|----------|-------------------|---------------|---------------------------|-------------------------------------|
+| minimax_ai1 | 5/5      | 0.728307          | 32.2          |                           | 4871                                |
+
+I played against the same AI, and it was *significantly* more aggressive than before. I'm going to remove piece 
+discouragement for pieces that are around the queen bee now and see what happens.
+
+| AI Type     | Num Runs | Avg Time Per Turn | Avg Num Turns | Avg Num Actions on a Turn | Avg Num Actions Processed in a Game |
+|-------------|----------|-------------------|---------------|---------------------------|-------------------------------------|
+| minimax_ai1 | 5/5      | 0.669227          | 27.0          |                           | 3481                                |
+
+This seems to put way too much focus on surrounding the opponent's queen bee rather than on taking control of the board.
