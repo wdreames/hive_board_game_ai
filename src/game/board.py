@@ -254,9 +254,9 @@ class HiveGameBoard:
         # Order Pieces so that Pieces with longer processing times are processed last
         order_of_pieces = {
             Piece.QUEEN_BEE: 0,
-            Piece.BEETLE: 1,
+            Piece.SPIDER: 1,
             Piece.GRASSHOPPER: 2,
-            Piece.SPIDER: 3,
+            Piece.BEETLE: 3,
             Piece.ANT: 4,
         }
 
