@@ -281,8 +281,6 @@ class MinimaxAI(Agent):
             alpha = -self.winning_value
             beta = self.winning_value
 
-            print(actions)
-
             with tqdm(total=len(actions)) as pbar:
                 for i, action in enumerate(actions):
                     next_board_state = self.board_manager.get_successor(action)
@@ -307,7 +305,7 @@ class MinimaxAI(Agent):
 
                     pbar.update()
 
-            # Sort the action list based on the evaluations found during this iteration
+            # Sort the action list based on the evaluations found during this iteration (high to low)
             actions = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
 
             # If every action is a losing move, return a random action.
@@ -375,6 +373,7 @@ class MinimaxAI(Agent):
             alpha = max(value, alpha)
             action_evaluations[action] = value
 
+        # Sort high to low evaluations
         sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
         self.sorted_action_lists[action_list] = sorted_action_list
 
@@ -420,7 +419,8 @@ class MinimaxAI(Agent):
             beta = min(value, beta)
             action_evaluations[action] = value
 
-        sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
+        # Sort low to high evaluations
+        sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda x: x[1])]
         self.sorted_action_lists[action_list] = sorted_action_list
 
         return value
