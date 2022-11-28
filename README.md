@@ -3,9 +3,12 @@
 William Reames\
 December 2nd, 2022
 
-This is the capstone for my BS in Computer Science degree from Christopher Newport University.
+This program allows a player to play the game, *Hive*, against an AI developed 
+using a minimax algorithm. The player has options to play against another player,
+a random AI, an easy AI, a medium AI, or a hard AI. Instructions detailing how
+to install and play the game can be found below.
 
-The goal of this project was to create an AI for the board game, *Hive*. More information about the board game can be found [here](https://boardgamegeek.com/boardgame/2655/hive)
+More information about Hive can be found [here](https://boardgamegeek.com/boardgame/2655/hive).
 
 ## Installation Prerequisites:
 2. Install Python (https://www.python.org/downloads/)
