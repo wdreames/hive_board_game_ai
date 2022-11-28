@@ -218,6 +218,8 @@ class MinimaxAI(Agent):
         self.winning_value = winning_value
         self.start_location = None
         self.sorted_action_lists = dict()
+        self.maximizing = 'max'
+        self.minimizing = 'min'
 
     def get_opening_move(self, actions, action_number):
         if action_number == 1:
@@ -251,7 +253,13 @@ class MinimaxAI(Agent):
         return random_action[0], random_action[1], random_piece
 
     def get_action_selection(self):
-        actions = self.board_manager.get_action_list()
+        # Check if we have seen this list of actions before
+        action_list = tuple(self.board_manager.get_action_list())
+        if (action_list, self.maximizing) in self.sorted_action_lists:
+            actions = self.sorted_action_lists[(action_list, self.maximizing)]
+        else:
+            actions = action_list
+        actions = list(actions)
 
         # Opening moves
         action_number = (self.board_manager.get_board().turn_number + 1) // 2
@@ -272,15 +280,18 @@ class MinimaxAI(Agent):
             if better_action_list:
                 actions = better_action_list
 
+        # If there is only one move, play it
         if len(actions) == 1:
             return actions.pop()
 
+        # Run iterative deepening
         start_time = timer()
         action_evaluations = dict()
         for d in range(self.max_depth):
             alpha = -self.winning_value
             beta = self.winning_value
 
+            # Check all the actions with maximum depth, d
             with tqdm(total=len(actions)) as pbar:
                 for i, action in enumerate(actions):
                     next_board_state = self.board_manager.get_successor(action)
@@ -307,6 +318,7 @@ class MinimaxAI(Agent):
 
             # Sort the action list based on the evaluations found during this iteration (high to low)
             actions = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
+            self.sorted_action_lists[(action_list, self.maximizing)] = actions
 
             # If every action is a losing move, return a random action.
             if action_evaluations[actions[0]] <= -self.winning_value:
@@ -340,17 +352,11 @@ class MinimaxAI(Agent):
         elif depth <= 0:
             return self.get_evaluation()
 
-        used_sorted = 0
-        total_checked = 0
         action_list = tuple(board_state.get_action_list())
-        if action_list in self.sorted_action_lists:
-            actions = self.sorted_action_lists[action_list]
-            used_sorted += 1
+        if (action_list, self.maximizing) in self.sorted_action_lists:
+            actions = self.sorted_action_lists[(action_list, self.maximizing)]
         else:
             actions = action_list
-        total_checked += 1
-
-        # print(f'Max: used sorted {used_sorted/total_checked*100:0.1f}% of the time')
 
         value = -float("inf")
         action_evaluations = dict()
@@ -375,7 +381,7 @@ class MinimaxAI(Agent):
 
         # Sort high to low evaluations
         sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
-        self.sorted_action_lists[action_list] = sorted_action_list
+        self.sorted_action_lists[(action_list, self.maximizing)] = sorted_action_list
 
         return value
 
@@ -385,18 +391,11 @@ class MinimaxAI(Agent):
         elif self.find_win(board_state, white_to_move=not self.is_white):
             return -self.winning_value
 
-        used_sorted = 0
-        total_checked = 0
         action_list = tuple(board_state.get_action_list())
-        if action_list in self.sorted_action_lists:
-            actions = self.sorted_action_lists[action_list]
-            used_sorted += 1
+        if (action_list, self.minimizing) in self.sorted_action_lists:
+            actions = self.sorted_action_lists[(action_list, self.minimizing)]
         else:
             actions = action_list
-        total_checked += 1
-
-        # if depth > 1:
-        #     print(f'Min: used sorted {used_sorted/total_checked*100:0.1f}% of the time')
 
         value = float("inf")
         action_evaluations = dict()
@@ -421,7 +420,7 @@ class MinimaxAI(Agent):
 
         # Sort low to high evaluations
         sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda x: x[1])]
-        self.sorted_action_lists[action_list] = sorted_action_list
+        self.sorted_action_lists[(action_list, self.minimizing)] = sorted_action_list
 
         return value
 
