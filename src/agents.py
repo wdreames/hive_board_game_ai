@@ -255,11 +255,12 @@ class MinimaxAI(Agent):
     def get_action_selection(self):
         # Check if we have seen this list of actions before
         action_list = tuple(self.board_manager.get_action_list())
-        if (action_list, self.maximizing) in self.sorted_action_lists:
-            actions = self.sorted_action_lists[(action_list, self.maximizing)]
+        if action_list in self.sorted_action_lists:
+            actions, max_or_min = self.sorted_action_lists[action_list]
+            if max_or_min != self.maximizing:
+                actions.reverse()
         else:
-            actions = action_list
-        actions = list(actions)
+            actions = list(action_list)
 
         # Opening moves
         action_number = (self.board_manager.get_board().turn_number + 1) // 2
@@ -318,7 +319,7 @@ class MinimaxAI(Agent):
 
             # Sort the action list based on the evaluations found during this iteration (high to low)
             actions = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
-            self.sorted_action_lists[(action_list, self.maximizing)] = actions
+            self.sorted_action_lists[action_list] = actions, self.maximizing
 
             # If every action is a losing move, return a random action.
             if action_evaluations[actions[0]] <= -self.winning_value:
@@ -352,9 +353,12 @@ class MinimaxAI(Agent):
         elif depth <= 0:
             return self.get_evaluation()
 
+        # Check if we have seen this list of actions before
         action_list = tuple(board_state.get_action_list())
-        if (action_list, self.maximizing) in self.sorted_action_lists:
-            actions = self.sorted_action_lists[(action_list, self.maximizing)]
+        if action_list in self.sorted_action_lists:
+            actions, max_or_min = self.sorted_action_lists[action_list]
+            if max_or_min != self.maximizing:
+                actions.reverse()
         else:
             actions = action_list
 
@@ -381,7 +385,7 @@ class MinimaxAI(Agent):
 
         # Sort high to low evaluations
         sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
-        self.sorted_action_lists[(action_list, self.maximizing)] = sorted_action_list
+        self.sorted_action_lists[action_list] = sorted_action_list, self.maximizing
 
         return value
 
@@ -391,9 +395,12 @@ class MinimaxAI(Agent):
         elif self.find_win(board_state, white_to_move=not self.is_white):
             return -self.winning_value
 
+        # Check if we have seen this list of actions before
         action_list = tuple(board_state.get_action_list())
-        if (action_list, self.minimizing) in self.sorted_action_lists:
-            actions = self.sorted_action_lists[(action_list, self.minimizing)]
+        if action_list in self.sorted_action_lists:
+            actions, max_or_min = self.sorted_action_lists[action_list]
+            if max_or_min != self.minimizing:
+                actions.reverse()
         else:
             actions = action_list
 
@@ -420,7 +427,7 @@ class MinimaxAI(Agent):
 
         # Sort low to high evaluations
         sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda x: x[1])]
-        self.sorted_action_lists[(action_list, self.minimizing)] = sorted_action_list
+        self.sorted_action_lists[action_list] = sorted_action_list, self.minimizing
 
         return value
 
