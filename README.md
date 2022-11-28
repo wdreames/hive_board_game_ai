@@ -44,4 +44,4 @@ After completing the steps above, run the following commands from within the `hi
 1. `# source ./env/bin/activate`
 2. `# ./play_hive.sh`
 
-Run `# ./play_hive.sh --help` to learn how to load previously saved games or change the size of the board to fit your screen.
+Run `# ./play_hive.sh --help` to learn about additional commands.

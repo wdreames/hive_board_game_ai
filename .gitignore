@@ -391,4 +391,6 @@ fabric.properties
 
 # Ignore coverage results
 .coverage
+
+# Ignore data folder
 data
