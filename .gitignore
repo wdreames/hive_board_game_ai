@@ -314,3 +314,4 @@ cython_debug/
 # Ignore coverage results
 .coverage
 data/*.hv
+data/*.md
