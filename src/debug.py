@@ -532,7 +532,6 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), g
         board_manager.get_board().print_board(hex_board=False)
         board_manager.save_state('last_hive_error.hv')
         print(traceback.format_exc())
-        exit(1)
 
     end_of_game = timer()
 
@@ -621,8 +620,16 @@ def test_undo():
 
 def test_load_last_game():
     manager = board.BoardManager(new_manager=True)
-    manager.load_state('last_hive_game.hv')
+    manager.load_state('didnt_see_win_b4_last_move.hv')
     manager.get_board().print_board(hex_board=False)
+
+    # manager.perform_action((board.HiveGameBoard.SKIP_TURN, None, None))
+    # manager.perform_action((board.HiveGameBoard.MOVE_PIECE, (0, -1), (0, 0)))
+    # manager.perform_action((board.HiveGameBoard.SKIP_TURN, None, None))
+    #
+    # manager.save_state('didnt_see_win_b4_last_move.hv')
+    #
+    # exit(0)
 
 
 if __name__ == '__main__':
@@ -643,15 +650,15 @@ if __name__ == '__main__':
     random_ai = agents.RandomActionAI()
     best_next_move_ai = agents.BestNextMoveAI()
     minimax_ai1 = agents.MinimaxAI(max_depth=1)
-    minimax_ai2 = agents.MinimaxAI(max_depth=2, max_time=10)
+    minimax_ai2 = agents.MinimaxAI(max_depth=2)
     minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=120)
     minimax_ai4 = agents.MinimaxAI(max_depth=4, max_time=10)
     minimax_ai8 = agents.MinimaxAI(max_depth=8, max_time=10)
     expectimax_ai1 = agents.ExpectimaxAI(max_depth=1, max_time=30)
-    expectimax_ai2 = agents.ExpectimaxAI(max_depth=2)
+    expectimax_ai2 = agents.ExpectimaxAI(max_depth=2, max_time=10)
     expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
 
-    num_games = 5
+    num_games = 1
     num_turns = 0
     num_white_wins = 0
     num_black_wins = 0
@@ -664,10 +671,10 @@ if __name__ == '__main__':
 
     for i in range(num_games):
         _, white_times, black_times, num_actions_per_turn, total_num_actions = play_game(
-            hex_player,
-            minimax_ai1,
+            random_ai,
+            minimax_ai2,
             graph_data_after_run=False,
-            max_turns=50,
+            # max_turns=50,
         )
 
         game_board = board.BoardManager().get_board()

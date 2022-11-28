@@ -76,7 +76,7 @@ class HexPlayer(Agent):
         ui_id_to_coords = self.board_manager.get_board().ui_id_to_coords
         ui_coords_to_id = self.board_manager.get_board().ui_coords_to_id
 
-        has_legal_placements = pieces_to_play and locations_to_place
+        has_legal_placements = locations_to_place and sum([amount for amount in pieces_to_play.values()]) > 0
         has_legal_movements = len(possible_moves_dict) > 0
 
         cancel_action = 'Cancel action'
@@ -218,6 +218,8 @@ class MinimaxAI(Agent):
         self.winning_value = winning_value
         self.start_location = None
         self.sorted_action_lists = dict()
+        self.maximizing = 'max'
+        self.minimizing = 'min'
 
     def get_opening_move(self, actions, action_number):
         if action_number == 1:
@@ -251,7 +253,14 @@ class MinimaxAI(Agent):
         return random_action[0], random_action[1], random_piece
 
     def get_action_selection(self):
-        actions = self.board_manager.get_action_list(randomize_actions=True)
+        # Check if we have seen this list of actions before
+        action_list = tuple(self.board_manager.get_action_list())
+        if action_list in self.sorted_action_lists:
+            actions, max_or_min = self.sorted_action_lists[action_list]
+            if max_or_min != self.maximizing:
+                actions.reverse()
+        else:
+            actions = list(action_list)
 
         # Opening moves
         action_number = (self.board_manager.get_board().turn_number + 1) // 2
@@ -272,45 +281,59 @@ class MinimaxAI(Agent):
             if better_action_list:
                 actions = better_action_list
 
+        # If there is only one move, play it
         if len(actions) == 1:
             return actions.pop()
 
+        # Run iterative deepening
         start_time = timer()
         action_evaluations = dict()
         for d in range(self.max_depth):
             alpha = -self.winning_value
             beta = self.winning_value
 
+            # Check all the actions with maximum depth, d
             with tqdm(total=len(actions)) as pbar:
                 for i, action in enumerate(actions):
                     next_board_state = self.board_manager.get_successor(action)
                     action_eval = self.min_value(next_board_state, alpha, beta, (d * 2) + 1, start_time)
                     self.board_manager.get_predecessor()
 
+                    # Check if time has run out
+                    if action_eval is None and action not in action_evaluations:
+                        action_evaluations[action] = -self.winning_value
+                    if action_eval is None or timer() - start_time >= self.max_time:
+                        # Return the best action that was found
+                        actions = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
+                        return self._select_best_from_actions(actions, action_evaluations)
+
+                    # If a winning move was found, play it
                     if action_eval >= self.winning_value:
                         return action
 
+                    # Store evaluation
                     action_evaluations[action] = action_eval
                     alpha = max(alpha, action_eval)
 
                     pbar.update()
 
-                    if timer() - start_time >= self.max_time:
-                        # Return the best action that was found
-                        actions = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
-                        return self._select_best_from_actions(actions, action_evaluations)
-
-            # Sort the action list based on the evaluations found during this iteration
+            # Sort the action list based on the evaluations found during this iteration (high to low)
             actions = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
+            self.sorted_action_lists[action_list] = actions, self.maximizing
 
             # If every action is a losing move, return a random action.
             if action_evaluations[actions[0]] <= -self.winning_value:
                 return random.choice(actions)
 
+            # If a forced win was found, exit the loop to return the best move
+            if action_evaluations[actions[0]] >= self.winning_value - 1:
+                break
+
         return self._select_best_from_actions(actions, action_evaluations)
 
     @staticmethod
     def _select_best_from_actions(action_list, action_evaluations):
+        # Assumes action_list is already sorted based on evaluations high to low
         best_value = action_evaluations[action_list[0]]
         best_actions = []
         for action in action_list:
@@ -322,60 +345,89 @@ class MinimaxAI(Agent):
         return random.choice(best_actions)
 
     def max_value(self, board_state, alpha, beta, depth, start_time):
-        if depth <= 0 or board_state.determine_winner() is not None:
+        if board_state.determine_winner() is not None:
             return self.get_evaluation()
-        if self.find_win(board_state, white_to_move=self.is_white):
-            return self.winning_value
+        elif self.find_win(board_state, white_to_move=self.is_white):
+            # Found a forced win, but returning (winning_value - 1) in case there is a faster win
+            return self.winning_value - 1
+        elif depth <= 0:
+            return self.get_evaluation()
 
+        # Check if we have seen this list of actions before
         action_list = tuple(board_state.get_action_list())
         if action_list in self.sorted_action_lists:
-            actions = self.sorted_action_lists[action_list]
+            actions, max_or_min = self.sorted_action_lists[action_list]
+            if max_or_min != self.maximizing:
+                actions.reverse()
         else:
             actions = action_list
 
         value = -float("inf")
         action_evaluations = dict()
         for action in actions:
+            # Get the evaluation of the next action
             next_board_state = self.board_manager.get_successor(action)
-            value = max(value, self.min_value(next_board_state, alpha, beta, depth - 1, start_time))
+            min_val = self.min_value(next_board_state, alpha, beta, depth - 1, start_time)
             self.board_manager.get_predecessor()
 
-            if value >= beta or timer() - start_time >= self.max_time:
+            # Check if time has run out
+            if min_val is None or timer() - start_time >= self.max_time:
+                return None
+
+            # Set the maximum so far
+            value = max(value, min_val)
+
+            if value >= beta:
                 return value
+
             alpha = max(value, alpha)
             action_evaluations[action] = value
 
+        # Sort high to low evaluations
         sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
-        self.sorted_action_lists[action_list] = sorted_action_list
+        self.sorted_action_lists[action_list] = sorted_action_list, self.maximizing
 
         return value
 
     def min_value(self, board_state, alpha, beta, depth, start_time):
         if board_state.determine_winner() is not None:
             return self.get_evaluation()
-        if self.find_win(board_state, white_to_move=not self.is_white):
+        elif self.find_win(board_state, white_to_move=not self.is_white):
             return -self.winning_value
 
+        # Check if we have seen this list of actions before
         action_list = tuple(board_state.get_action_list())
         if action_list in self.sorted_action_lists:
-            actions = self.sorted_action_lists[action_list]
+            actions, max_or_min = self.sorted_action_lists[action_list]
+            if max_or_min != self.minimizing:
+                actions.reverse()
         else:
             actions = action_list
 
         value = float("inf")
         action_evaluations = dict()
         for action in actions:
+            # Get the evaluation of the next action
             next_board_state = self.board_manager.get_successor(action)
-            value = min(value, self.max_value(next_board_state, alpha, beta, depth - 1, start_time))
+            max_val = self.max_value(next_board_state, alpha, beta, depth - 1, start_time)
             self.board_manager.get_predecessor()
 
-            if value <= alpha or timer() - start_time >= self.max_time:
+            # Check if time has run out
+            if max_val is None or timer() - start_time >= self.max_time:
+                return None
+
+            # Set the maximum so far
+            value = min(value, max_val)
+
+            if value <= alpha:
                 return value
+
             beta = min(value, beta)
             action_evaluations[action] = value
 
-        sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
-        self.sorted_action_lists[action_list] = sorted_action_list
+        # Sort low to high evaluations
+        sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda x: x[1])]
+        self.sorted_action_lists[action_list] = sorted_action_list, self.minimizing
 
         return value
 

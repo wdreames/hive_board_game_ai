@@ -254,17 +254,21 @@ class HiveGameBoard:
         # Order Pieces so that Pieces with longer processing times are processed last
         order_of_pieces = {
             Piece.QUEEN_BEE: 0,
-            Piece.BEETLE: 1,
+            Piece.SPIDER: 1,
             Piece.GRASSHOPPER: 2,
-            Piece.SPIDER: 3,
+            Piece.BEETLE: 3,
             Piece.ANT: 4,
         }
 
         for piece_location, move_locations in sorted(
                 possible_moves_dict.items(),
-                key=lambda item: order_of_pieces[self.pieces[item[0]].name]
+                key=lambda item: (
+                    order_of_pieces[self.pieces[item[0]].name],
+                    item[0][0],
+                    item[0][1]
+                )
         ):
-            for new_location in move_locations:
+            for new_location in sorted(move_locations):
                 move_actions.append((
                     HiveGameBoard.MOVE_PIECE,
                     piece_location,
@@ -278,7 +282,7 @@ class HiveGameBoard:
                 key=lambda item: order_of_pieces[item[0]]
         ):
             if amount_of_type:
-                for possible_location in locations_to_place:
+                for possible_location in sorted(locations_to_place):
                     place_actions.append((
                         HiveGameBoard.PLACE_PIECE,
                         possible_location,
@@ -902,7 +906,7 @@ class HiveGameBoard:
             num_white_can_move_to_black_qb,
             num_white_cannot_move_to_black_qb,
 
-            num_white_pieces,
+            num_white_pieces ** 1.1,
 
             self.num_white_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 >= 5 else 0,
             self.num_white_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 >= 5 else 0,
@@ -916,7 +920,7 @@ class HiveGameBoard:
             num_black_can_move_to_white_qb,
             num_black_cannot_move_to_white_qb,
 
-            num_black_pieces,
+            num_black_pieces ** 1.1,
 
             self.num_black_free_pieces[Piece.ANT],  # if (self.turn_number + 1) // 2 > 2 else 0,
             self.num_black_free_pieces[Piece.BEETLE],  # if (self.turn_number + 1) // 2 > 2 else 0,
@@ -931,11 +935,11 @@ class HiveGameBoard:
             # Multiplied by the number of white pieces around the black queen bee
             value_of_piece_around_qb,
             # Multiplied by the number of black pieces around the black queen bee that can move
-            value_of_piece_around_qb * 0.5,
+            value_of_piece_around_qb * 0.7,
             # Multiplied by the number of white pieces that can move to locations around the black queen bee
-            value_of_piece_around_qb * 0.5,
+            value_of_piece_around_qb * 0.7,
             # Multiplied by the number of white pieces that cannot move to locations around the black queen bee
-            value_of_piece_around_qb * -0.5,
+            value_of_piece_around_qb * -0.7,
 
             -free_piece_multiplier,  # Multiplied by the total number of white pieces
 

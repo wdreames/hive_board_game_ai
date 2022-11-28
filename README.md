@@ -1,11 +1,14 @@
-# WIP: Hive Board Game AI
+# Hive Board Game AI
 
 William Reames\
 December 2nd, 2022
 
-This is the capstone for my BS in Computer Science degree from Christopher Newport University. This is still a work in progress
+This program allows a player to play the game, *Hive*, against an AI developed 
+using a minimax algorithm. The player has options to play against another player,
+a random AI, an easy AI, a medium AI, or a hard AI. Instructions detailing how
+to install and play the game can be found below.
 
-The goal of this project is to create an AI for the board game, *Hive*. More information about the board game can be found [here](https://boardgamegeek.com/boardgame/2655/hive)
+More information about Hive can be found [here](https://boardgamegeek.com/boardgame/2655/hive).
 
 ## Installation Prerequisites:
 2. Install Python (https://www.python.org/downloads/)
@@ -44,9 +47,4 @@ After completing the steps above, run the following commands from within the `hi
 1. `# source ./env/bin/activate`
 2. `# ./play_hive.sh`
 
-\
-Run `# ./play_hive.sh --help` to learn how to load previously saved games or change the size of the board to fit your screen.
-
-## Documentation
-
-Documentation describing how I implemented the game and the AI can be found [here](documentation.md).
+Run `# ./play_hive.sh --help` to learn about additional commands.
