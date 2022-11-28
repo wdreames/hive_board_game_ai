@@ -3,9 +3,9 @@
 William Reames\
 December 2nd, 2022
 
-This is the capstone for my BS in Computer Science degree from Christopher Newport University. This is still a work in progress
+This is the capstone for my BS in Computer Science degree from Christopher Newport University.
 
-The goal of this project is to create an AI for the board game, *Hive*. More information about the board game can be found [here](https://boardgamegeek.com/boardgame/2655/hive)
+The goal of this project was to create an AI for the board game, *Hive*. More information about the board game can be found [here](https://boardgamegeek.com/boardgame/2655/hive)
 
 ## Installation Prerequisites:
 2. Install Python (https://www.python.org/downloads/)
