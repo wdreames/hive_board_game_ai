@@ -532,7 +532,6 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), g
         board_manager.get_board().print_board(hex_board=False)
         board_manager.save_state('last_hive_error.hv')
         print(traceback.format_exc())
-        exit(1)
 
     end_of_game = timer()
 
