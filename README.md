@@ -1,4 +1,4 @@
-# WIP: Hive Board Game AI
+# Hive Board Game AI
 
 William Reames\
 December 2nd, 2022
@@ -44,9 +44,4 @@ After completing the steps above, run the following commands from within the `hi
 1. `# source ./env/bin/activate`
 2. `# ./play_hive.sh`
 
-\
 Run `# ./play_hive.sh --help` to learn how to load previously saved games or change the size of the board to fit your screen.
-
-## Documentation
-
-Documentation describing how I implemented the game and the AI can be found [here](documentation.md).
