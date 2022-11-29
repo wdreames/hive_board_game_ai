@@ -632,7 +632,34 @@ def test_load_last_game():
     # exit(0)
 
 
+def make_sample_game():
+    import src.game.pieces as pieces
+    manager = board.BoardManager(new_manager=True)
+    game_board = manager.get_board()
+
+    pieces.Spider(game_board, 0, 0, True)
+    pieces.QueenBee(game_board, 0, 1, False)
+    pieces.Spider(game_board, 1, 2, False)
+    pieces.Grasshopper(game_board, 1, 0, True)
+    pieces.QueenBee(game_board, -1, -1, True)
+    pieces.Ant(game_board, -1, 0, True)
+    pieces.Beetle(game_board, -1, 0, False)
+    pieces.Beetle(game_board, -2, 0, True)
+    pieces.Ant(game_board, -3, 0, True)
+    pieces.Spider(game_board, -4, -1, True)
+    pieces.Grasshopper(game_board, -3, -1, False)
+    pieces.Spider(game_board, -2, -1, False)
+    pieces.Ant(game_board, -2, -2, False)
+    pieces.Ant(game_board, 0, -1, False)
+    pieces.Grasshopper(game_board, 0, -2, True)
+
+    game_board.print_board()
+
+    exit(0)
+
+
 if __name__ == '__main__':
+    make_sample_game()
     # test_load_last_game()
     # exit(0)
     # test_sliding_rules()
