@@ -543,6 +543,10 @@ class Spider(Piece):
             visited = {previous_location}
         visited.add(empty_space_location)
 
+        # Ensure this location can be reached by the previous location
+        if empty_space_location not in self.get_starts_to_paths(previous_location, set()):
+            return
+
         # Add a link to the empty space
         empty_space.linked_spiders.add(self.location)
 
@@ -600,19 +604,15 @@ class Spider(Piece):
             ID of the path to be removed. If the ID is None, all paths at this EmptySpace are removed.
             Default is None.
         """
-        # Get data stored for this spider location
-        if empty_space_location not in self.paths:
-            return
-
-        # Get the path data at this location
-        # TODO: [Debugging] This is where the error is occurring. When the path is popped, it also pops all other
-        #       paths moving through that space.
-        # location_data = self.paths.get(empty_space_location)
+        # Remove this Spider from the EmptySpace's linked_spiders set
         if empty_space_location in self.board.empty_spaces:
             if self.location in self.board.empty_spaces[empty_space_location].linked_spiders:
                 self.board.empty_spaces[empty_space_location].linked_spiders.remove(self.location)
 
-        # Check each path stored at this location
+        if empty_space_location not in self.paths:
+            return
+
+        # Get the path data at this location
         if path_id is not None:
             if path_id not in self.paths[empty_space_location]:
                 return
@@ -624,6 +624,7 @@ class Spider(Piece):
             # Remove all path IDs at the location
             spider_paths = [spider_path for spider_path in self.paths.pop(empty_space_location).values()]
 
+        # Check each path stored at this location
         for spider_path in spider_paths:
             # If depth = 1, remove this from the dictionary of root nodes
             if spider_path.depth == 1:
@@ -652,19 +653,19 @@ class Spider(Piece):
             for next_path_location in spider_path.next_locations:
                 self.remove_spider_path(next_path_location, initial_call=False, path_id=spider_path.path_id)
 
-    def get_starts_to_paths(self, empty_space_location, visited):
+    def get_starts_to_paths(self, space_location, visited):
         """
         Determines directions a SpiderPath can continue moving towards
 
-        :param empty_space_location: (x, y)
+        :param space_location: (x, y)
             Location of the current node in the SpiderPath
         :param visited: set {(x, y)}
             Set of all previously visited locations along the path
         :return: set {(x, y)}
             Set of all locations this SpiderPath node can path towards
         """
-        unavailable_moves = self.get_cannot_path_to(empty_space_location).union(visited)
-        empty_space = self.board.empty_spaces[empty_space_location]
+        unavailable_moves = self.get_cannot_path_to(space_location).union(visited)
+        empty_space = self.board.get_all_spaces()[space_location]
         for prevented_location, piece_locations_preventing_mvt in empty_space.sliding_prevented_to.items():
             if self.location not in piece_locations_preventing_mvt:
                 unavailable_moves.add(prevented_location)
