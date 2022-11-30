@@ -111,7 +111,7 @@ class TestSpiderMoveOntoSelf(unittest.TestCase):
         game_board.place_piece(spider, (1, 3))  # Black
         game_board.place_piece(queen_bee, (-1, 2))  # White
 
-        game_board.print_board()
+        game_board.print_board(hex_board=False)
 
         cls.game_board = game_board
 
@@ -297,17 +297,21 @@ class TestSpiderBoard3(unittest.TestCase):
             game_state = pickle.load(file)
             cls.manager.current_board = game_state
 
+            # The pickle of this object was made before this attribute was added. Adding it here.
+            cls.manager.current_board.disconnected_empty_spaces = set()
+
+        cls.manager.get_board().print_board(hex_board=False)
+
     # Ensure that the following does not cause an error
     def test_spider1(self):
-        # The pickle of this object was made before this attribute was added. Adding it here.
-        self.manager.current_board.disconnected_empty_spaces = set()
-
         self.manager.perform_action((board.HiveGameBoard.PLACE_PIECE, (3, 2), spaces.Piece.GRASSHOPPER))
         self.manager.perform_action((board.HiveGameBoard.MOVE_PIECE, (-3, -2), (0, -1)))
         self.manager.perform_action((board.HiveGameBoard.MOVE_PIECE, (0, 2), (1, -2)))
 
         self.manager.get_successor(('Move Piece', (0, 1), (0, -2)))
         self.manager.get_predecessor()
+
+        self.manager.get_board().print_board(hex_board=False)
 
         self.manager.perform_action((board.HiveGameBoard.MOVE_PIECE, (0, -1), (0, -2)))
 
@@ -404,6 +408,72 @@ class TestSpiderOverlappingPaths(unittest.TestCase):
         actual_possible_moves = game_board.pieces[(-3, -1)].possible_moves
 
         self.assertEqual(expected_possible_moves, actual_possible_moves)
+
+
+class TestSpiderBoard4(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.manager = board.BoardManager(new_manager=True)
+        with open(os.path.join('test', 'data', 'spider_board_4.hv'), 'rb') as file:
+            game_state = pickle.load(file)
+            cls.manager.current_board = game_state
+
+        cls.manager.get_board().print_board(hex_board=False)
+
+    # Ensure that the following does not cause an error
+    def test_spider1(self):
+        game_board = board.BoardManager().get_board()
+
+        actions_leading_to_state = [
+            ('Move Piece', (1, 0), (-1, 5)),
+            ('Move Piece', (5, 9), (3, 2)),
+            ('Move Piece', (-2, -2), (0, 1)),
+            ('Move Piece', (3, 5), (0, 2)),
+            ('Move Piece', (0, 1), (-1, 3)),
+            ('Move Piece', (3, 2), (2, 7)),
+            ('Move Piece', (-1, 5), (1, 7)),
+            ('Move Piece', (2, 2), (1, 1)),
+            ('Move Piece', (2, 4), (-2, -3)),
+            ('Move Piece', (1, 1), (0, 0)),
+            ('Move Piece', (0, -1), (0, -2)),
+            ('Move Piece', (-1, 4), (-1, 3)),
+            ('Move Piece', (1, 7), (5, 9)),
+            ('Move Piece', (0, 0), (1, 1)),
+            ('Move Piece', (-2, -3), (-1, -3)),
+            ('Move Piece', (2, 7), (4, 7)),
+            ('Move Piece', (-1, -3), (-1, -1)),
+            ('Move Piece', (4, 7), (3, 2)),
+            ('Move Piece', (5, 9), (2, 5)),
+            ('Move Piece', (-1, 3), (-1, 2)),
+            ('Move Piece', (-1, -1), (-1, 1)),
+            ('Move Piece', (3, 2), (-1, 0)),
+            ('Move Piece', (2, 5), (4, 10)),
+            ('Move Piece', (-1, 0), (0, 5)),
+            ('Move Piece', (4, 10), (2, 8)),
+            ('Move Piece', (0, 5), (1, 0)),
+            ('Move Piece', (0, 0), (-1, -1)),
+            ('Move Piece', (1, 1), (0, 1)),
+            ('Move Piece', (-1, 1), (5, 10)),
+            ('Move Piece', (1, 3), (-2, 3)),
+            ('Move Piece', (2, 8), (-2, 4)),
+            # ('Move Piece', (2, 3), (-2, -1)),
+        ]
+        actions_leading_to_state.reverse()
+
+        # Undo moves back to a state that should be error-free
+        for action in actions_leading_to_state:
+            game_board.undo_action(action)
+
+        # Redo moves to determine what caused this error
+        actions_leading_to_state.reverse()
+        for action in actions_leading_to_state:
+            game_board.perform_action(action)
+
+        game_board.print_board(hex_board=False)
+
+        # Action with the potential to raise an error
+        game_board.perform_action(('Move Piece', (2, 3), (-2, -1)))
 
 
 if __name__ == '__main__':
