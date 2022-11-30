@@ -71,6 +71,8 @@ class HexPlayer(Agent):
 
     # TODO: Refactor this function. It's really messy...
     def get_action_selection(self):
+        print()
+
         pieces_to_play, locations_to_place, possible_moves_dict = self.board_manager.get_board().get_all_possible_actions()
         ui_id_to_coords = self.board_manager.get_board().ui_id_to_coords
         ui_coords_to_id = self.board_manager.get_board().ui_coords_to_id
