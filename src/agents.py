@@ -69,8 +69,7 @@ class HexPlayer(Agent):
         super().__init__(is_white, board_manager)
         self.name = 'Player'
 
-    # TODO: Allow the player to cancel an action after selecting it but before it is performed.
-    # TODO: Possibly allow the player to undo actions?
+    # TODO: Refactor this function. It's really messy...
     def get_action_selection(self):
         pieces_to_play, locations_to_place, possible_moves_dict = self.board_manager.get_board().get_all_possible_actions()
         ui_id_to_coords = self.board_manager.get_board().ui_id_to_coords
@@ -173,7 +172,7 @@ class HexPlayer(Agent):
             new_location_number = utils.make_choice(
                 f'Where would you like to move the piece at {location_number}',
                 'Select a space on the board (represented by number ID):',
-                sorted(new_locations)
+                new_locations
             )
             if new_location_number == cancel_action:
                 return self.get_action_selection()
