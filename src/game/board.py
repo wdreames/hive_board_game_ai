@@ -37,6 +37,9 @@ class BoardManager:
 
         return cls.instance
 
+    def set_board_size(self, board_size):
+        self.current_board.board_size = board_size
+
     def reset_board(self):
         # For every action in self.successor_actions, undo that action
         while self.successor_actions:
@@ -92,7 +95,7 @@ class HiveGameBoard:
     BLACK_WINNER = 'Black'
     DRAW = 'Draw'
 
-    def __init__(self):
+    def __init__(self, board_size=12):
         """
         Method used to get an instance of the game board. A singleton design pattern is used here so the class is
         only initialized the first time it is called.
@@ -159,6 +162,9 @@ class HiveGameBoard:
         self.ui_id_to_coords = dict()
         self.ui_coords_to_id = dict()
         self.ui_space_id = 1
+
+        # Used to determine the size of the board to print to the UI
+        self.board_size = board_size
 
         # Create board with one empty square
         EmptySpace(self, 0, 0)
@@ -960,7 +966,6 @@ class HiveGameBoard:
 
         return round(evaluation, 2)
 
-    # TODO: [UI] This is a temporary solution. Do not use this in the final product...
     def print_board(self, hex_board=True):
 
         if hex_board:
@@ -1010,13 +1015,10 @@ class HiveGameBoard:
         # Code based off of https://inventwithpython.com/bigbookpython/project35.html
 
         # Set up the constants:
-        # TODO: Don't hardcode these values.
-
-        min_x = -11
+        min_x = -self.board_size + 1
         min_y = 0
-
-        X_REPEAT = 12  # How many times to tessellate horizontally.
-        Y_REPEAT = 12  # How many times to tessellate vertically.
+        X_REPEAT = self.board_size  # How many times to tessellate horizontally.
+        Y_REPEAT = self.board_size  # How many times to tessellate vertically.
 
         for y in range(Y_REPEAT):
             # Display the top half of the hexagon

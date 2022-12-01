@@ -141,7 +141,7 @@ def check_for_errors(word_to_find=None, words_to_ignore=None, max_num_runs=25, m
     while num_runs < max_num_runs:
         try:
             board.BoardManager(new_manager=True)
-            play_game(random_ai, random_ai, max_turns=max_actions)
+            play_game(agents.RandomActionAI(), agents.RandomActionAI(), max_turns=max_actions, debug_output=True)
         except Exception:
             err_output = traceback.format_exc()
             if word_to_find is None and words_to_ignore is None:
@@ -213,7 +213,8 @@ def graph_data(evaluations_during_game, times_taken, num_actions_per_turn, playe
     plt.show()
 
 
-def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), graph_data_after_run=False):
+def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), graph_data_after_run=False,
+              debug_output=False):
     board_manager = board.BoardManager()  # new_manager=True)
 
     if player1 == player2:
@@ -233,10 +234,11 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), g
             if time_check - start_of_game > max_time:
                 break
 
-            board_manager.get_board().print_board()
-            print(f'Current player: {"White" if board_manager.get_board().is_white_turn() else "Black"}')
-            print(f'Evaluation: {board_manager.get_board().evaluate_state()}')
-            print(f'Turn Number: {board_manager.get_board().turn_number}')
+            if not debug_output:
+                board_manager.get_board().print_board()
+                print(f'Current player: {"White" if board_manager.get_board().is_white_turn() else "Black"}')
+                print(f'Evaluation: {board_manager.get_board().evaluate_state()}')
+                print(f'Turn Number: {board_manager.get_board().turn_number}')
 
             start_of_action_decision = timer()
             if board_manager.get_board().is_white_turn():
@@ -246,15 +248,19 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), g
                 chosen_action = player2.get_action()
                 agent_evaluation = player2.get_evaluation()
             end_of_action_decision = timer()
-            print(f'Took {end_of_action_decision - start_of_action_decision} seconds to decide which action to take.')
+            if not debug_output:
+                print(f'Took {end_of_action_decision - start_of_action_decision} seconds to decide which action to take.')
             times_taken.append(end_of_action_decision - start_of_action_decision)
             num_actions_per_turn.append(len(board_manager.get_action_list()))
 
             evaluations_during_game.append(board_manager.get_board().evaluate_state())
 
-            perform_action_str = f'Agent eval before action: {agent_evaluation:0.2f} Performing action: {chosen_action}'
-            print(perform_action_str)
-            print('=' * len(perform_action_str))
+            if not debug_output:
+                perform_action_str = f'Agent eval before action: {agent_evaluation:0.2f} Performing action: {chosen_action}'
+                print(perform_action_str)
+                print('=' * len(perform_action_str))
+            else:
+                print(f'{chosen_action},')
             board_manager.perform_action(chosen_action)
     except KeyboardInterrupt:
         pass
@@ -263,53 +269,55 @@ def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), g
         board_manager.save_state('last_hive_error.hv')
         print(traceback.format_exc())
 
-    end_of_game = timer()
+    if not debug_output:
+        end_of_game = timer()
 
-    board_manager.get_board().print_board()
-    print(f'Winner: {board_manager.get_board().determine_winner()}')
-    print(f'Total number of actions: {board_manager.get_board().turn_number}')
-    print(f'Total game time: {end_of_game - start_of_game}')
-    print(f'Average time per action: {(end_of_game - start_of_game)/board_manager.get_board().turn_number}')
+        board_manager.get_board().print_board()
+        print(f'Winner: {board_manager.get_board().determine_winner()}')
+        print(f'Total number of actions: {board_manager.get_board().turn_number}')
+        print(f'Total game time: {end_of_game - start_of_game}')
+        print(f'Average time per action: {(end_of_game - start_of_game)/board_manager.get_board().turn_number}')
 
-    white_times_taken = times_taken[::2]
-    black_times_taken = times_taken[1::2]
+        white_times_taken = times_taken[::2]
+        black_times_taken = times_taken[1::2]
 
-    print(f'Average Time Taken by White: {sum(white_times_taken) / len(white_times_taken)}')
-    print(f'Average Time Taken by Black: {sum(black_times_taken) / len(black_times_taken)}')
-    print()
+        print(f'Average Time Taken by White: {sum(white_times_taken) / len(white_times_taken)}')
+        print(f'Average Time Taken by Black: {sum(black_times_taken) / len(black_times_taken)}')
+        print()
 
-    print('Number of actions for each object:')
-    total_num_actions = 0
-    for piece_type, action_times in board_manager.object_action_times.items():
-        print(f'{piece_type:15} Total Number of Actions:   {len(action_times):n}')
-        total_num_actions += len(action_times)
+        print('Number of actions for each object:')
+        total_num_actions = 0
+        for piece_type, action_times in board_manager.object_action_times.items():
+            print(f'{piece_type:15} Total Number of Actions:   {len(action_times):n}')
+            total_num_actions += len(action_times)
 
-    print('Average times for each object action:')
-    for piece_type, action_times in board_manager.object_action_times.items():
-        print(f'{piece_type:15} Average Time:   {sum(action_times) / len(action_times):.6f}')
+        print('Average times for each object action:')
+        for piece_type, action_times in board_manager.object_action_times.items():
+            print(f'{piece_type:15} Average Time:   {sum(action_times) / len(action_times):.6f}')
 
-    print('Total times for each object action:')
-    total_action_times = 0
-    for piece_type, action_times in board_manager.object_action_times.items():
-        print(f'{piece_type:15} Total Time:      {sum(action_times):.6f}')
-        total_action_times += sum(action_times)
+        print('Total times for each object action:')
+        total_action_times = 0
+        for piece_type, action_times in board_manager.object_action_times.items():
+            print(f'{piece_type:15} Total Time:      {sum(action_times):.6f}')
+            total_action_times += sum(action_times)
 
-    print()
-    print(f'Total number of actions:    {total_num_actions:n}')
-    print(f'Average across all actions: {total_action_times/total_num_actions:.6f}')
-    print(f'Total action times:         {total_action_times:.6f}')
+        print()
+        print(f'Total number of actions:    {total_num_actions:n}')
+        print(f'Average across all actions: {total_action_times/total_num_actions:.6f}')
+        print(f'Total action times:         {total_action_times:.6f}')
 
-    print(f'\nAverage time taken to undo an action: {sum(board_manager.cloning_times)/len(board_manager.cloning_times)}')
-    print(f'Total time taken to undo actions: {sum(board_manager.cloning_times)}')
+        if board_manager.cloning_times:
+            print(f'\nAverage time taken to undo an action: {sum(board_manager.cloning_times)/len(board_manager.cloning_times)}')
+        print(f'Total time taken to undo actions: {sum(board_manager.cloning_times)}')
 
-    print(f'\nAverage time taken to create an action list: '
-          f'{sum(board_manager.getting_actions_times)/len(board_manager.getting_actions_times)}')
-    print(f'Total time taken to create an action list: {sum(board_manager.getting_actions_times)}')
+        print(f'\nAverage time taken to create an action list: '
+              f'{sum(board_manager.getting_actions_times)/len(board_manager.getting_actions_times)}')
+        print(f'Total time taken to create an action list: {sum(board_manager.getting_actions_times)}')
 
-    if graph_data_after_run:
-        graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
+        if graph_data_after_run:
+            graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2)
 
-    return evaluations_during_game, white_times_taken, black_times_taken, num_actions_per_turn, total_num_actions
+        return evaluations_during_game, white_times_taken, black_times_taken, num_actions_per_turn, total_num_actions
 
 
 def test_undo():
@@ -382,10 +390,11 @@ def make_sample_game():
 
 if __name__ == '__main__':
     # make_sample_game()
-    load_game('spider_error_game2.hv')
+    # load_game('spider_error_game2.hv')
     # demo_game()
     # test_undo()
     # check_for_errors(max_num_runs=250, max_actions=1000)
+    # exit(0)
 
     player = agents.Player()
     hex_player = agents.HexPlayer()
@@ -414,7 +423,7 @@ if __name__ == '__main__':
     for i in range(num_games):
         # Run a game with specified players/AIs for white and black
         _, white_times, black_times, num_actions_per_turn, total_num_actions = play_game(
-            minimax_ai2,
+            hex_player,
             random_ai,
             graph_data_after_run=False,
             # max_turns=50,

@@ -69,9 +69,10 @@ class HexPlayer(Agent):
         super().__init__(is_white, board_manager)
         self.name = 'Player'
 
-    # TODO: Allow the player to cancel an action after selecting it but before it is performed.
-    # TODO: Possibly allow the player to undo actions?
+    # TODO: Refactor this function. It's really messy...
     def get_action_selection(self):
+        print()
+
         pieces_to_play, locations_to_place, possible_moves_dict = self.board_manager.get_board().get_all_possible_actions()
         ui_id_to_coords = self.board_manager.get_board().ui_id_to_coords
         ui_coords_to_id = self.board_manager.get_board().ui_coords_to_id
@@ -91,8 +92,9 @@ class HexPlayer(Agent):
         # Tell the player which pieces they can move
         if has_legal_movements:
             print('You can move the following pieces on the board (represented by their number ID):')
-            for i, piece_location in enumerate(possible_moves_dict.keys()):
-                print(f'\t* {ui_coords_to_id[piece_location]}')
+            for piece_location in possible_moves_dict.keys():
+                if piece_location in ui_coords_to_id:
+                    print(f'\t* {ui_coords_to_id[piece_location]}')
 
         # Determine if the player is placing or moving a piece
         if has_legal_placements and has_legal_movements:
@@ -114,6 +116,7 @@ class HexPlayer(Agent):
             for type_of_piece, amount in pieces_to_play.items():
                 if amount:
                     piece_options.append(type_of_piece)
+            piece_options.append(cancel_action)
 
             # Player chooses a piece to place
             piece_type = utils.make_choice(
@@ -125,38 +128,60 @@ class HexPlayer(Agent):
                 return self.get_action_selection()
 
             # Player chooses a location to place a piece
+            location_options = []
+            for coordinate in locations_to_place:
+                if coordinate in ui_coords_to_id:
+                    location_options.append(ui_coords_to_id[coordinate])
+            location_options.sort()
+            location_options.append(cancel_action)
             location_number = utils.make_choice(
                 f'Where would you like to place a new {piece_type}?',
                 'Select a location (represented by number ID):',
-                sorted([ui_coords_to_id[coordinate] for coordinate in locations_to_place])
+                location_options
             )
             if location_number == cancel_action:
                 return self.get_action_selection()
 
             chosen_action = (action_type, ui_id_to_coords[location_number], piece_type)
+
         # Player moves a piece
         elif action_type == board.HiveGameBoard.MOVE_PIECE:
             # Player chooses a piece to move
+            piece_locations = []
+            for coordinate in possible_moves_dict.keys():
+                if coordinate in ui_coords_to_id:
+                    piece_locations.append(ui_coords_to_id[coordinate])
+            piece_locations.sort()
+            piece_locations.append(cancel_action)
             location_number = utils.make_choice(
                 'Which piece would you like to move?',
                 'Select a piece (represented by number ID):',
-                sorted([ui_coords_to_id[coordinate] for coordinate in possible_moves_dict.keys()])
+                piece_locations
             )
             if location_number == cancel_action:
                 return self.get_action_selection()
+
             piece_location = ui_id_to_coords[location_number]
             piece_moves = possible_moves_dict[piece_location]
 
+            # Player chooses where to move their piece
+            new_locations = []
+            for coordinate in piece_moves:
+                if coordinate in ui_coords_to_id:
+                    new_locations.append(ui_coords_to_id[coordinate])
+            new_locations.sort()
+            new_locations.append(cancel_action)
             new_location_number = utils.make_choice(
                 f'Where would you like to move the piece at {location_number}',
                 'Select a space on the board (represented by number ID):',
-                sorted([ui_coords_to_id[coordinate] for coordinate in piece_moves])
+                new_locations
             )
             if new_location_number == cancel_action:
                 return self.get_action_selection()
             new_location = ui_id_to_coords[new_location_number]
 
             chosen_action = (board.HiveGameBoard.MOVE_PIECE, piece_location, new_location)
+
         # Player has no legal actions - skip their turn.
         else:
             print('You have no legal moves. Skipping turn...')

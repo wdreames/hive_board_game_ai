@@ -13,13 +13,10 @@ custom_depth = None
 def set_player_arguments():
     arguments = parse_arguments()
 
+    if arguments['size']:
+        board.BoardManager().set_board_size(arguments['size'])
     if arguments['load']:
         board.BoardManager().load_state(arguments['load'])
-    if arguments['size']:
-        # TODO: Add a way to change board size
-        pass
-    if arguments['depth']:
-        pass
 
     return arguments
 
@@ -33,15 +30,15 @@ def parse_arguments():
         help='Load a previously saved game from the `data` folder'
     )
     parser.add_argument(
-        "-s",
-        "--size",
-        help="Enter a maximum board size as an integer value. Default is 12",
+        '-s',
+        '--size',
+        help='Enter a maximum board size as an integer value. Default is 12',
         type=int,
         default=12
     )
     parser.add_argument(
-        "-d",
-        "--depth",
+        '-d',
+        '--depth',
         help=
         """
         Enter the maximum depth the AI can search as an integer value. This is equivalent to how many turns in
@@ -117,7 +114,7 @@ if __name__ == '__main__':
 
     if opponent_selection == play_against_player:
         opponent = agents.HexPlayer()
-    if opponent_selection == play_against_random:
+    elif opponent_selection == play_against_random:
         opponent = agents.RandomActionAI()
     elif opponent_selection == play_against_easy:
         opponent = agents.BestNextMoveAI()
