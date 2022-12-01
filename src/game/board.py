@@ -966,7 +966,6 @@ class HiveGameBoard:
 
         return round(evaluation, 2)
 
-    # TODO: [UI] This is a temporary solution. Do not use this in the final product...
     def print_board(self, hex_board=True):
 
         if hex_board:
@@ -1016,11 +1015,8 @@ class HiveGameBoard:
         # Code based off of https://inventwithpython.com/bigbookpython/project35.html
 
         # Set up the constants:
-        # TODO: Don't hardcode these values.
-
         min_x = -self.board_size + 1
         min_y = 0
-
         X_REPEAT = self.board_size  # How many times to tessellate horizontally.
         Y_REPEAT = self.board_size  # How many times to tessellate vertically.
 
