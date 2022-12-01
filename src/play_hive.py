@@ -117,7 +117,7 @@ if __name__ == '__main__':
 
     if opponent_selection == play_against_player:
         opponent = agents.HexPlayer()
-    if opponent_selection == play_against_random:
+    elif opponent_selection == play_against_random:
         opponent = agents.RandomActionAI()
     elif opponent_selection == play_against_easy:
         opponent = agents.BestNextMoveAI()
