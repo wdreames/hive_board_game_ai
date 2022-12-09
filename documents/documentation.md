@@ -145,7 +145,7 @@ To determine the best possible sequence of moves, the AI takes the evaluations i
 
 Although the minimax algorithm can be fairly good at determining the best course of action if it is given enough depth and a good evaluation function, it can also take an extremely long time if no adjustments are made. The end result of my minimax AI was able to search 2 full turns in the future (4 actions) in an average of 20 seconds. To do this, it searched through approximately 250,000 actions. If I had not made any adjustments, it would instead search through tens of millions of actions[^num_actions]. Because of this, it is fairly clear how important it is to improve minimax beyond its default implementation.
 
-[^num_actions]: There are an average of 28 turns per game, and an average of 40 moves per turn. If every action was checked 2 full turns in the future (depth of 4), the AI would need to check $28/2 \cdot (40^0 + 40^1 + 40^2 + 40^3 + 40^4) = 36,758,974$
+[^num_actions]: There are an average of 28 turns per game, and an average of 40 moves per turn. If every action was checked 2 full turns in the future (depth of 4), the AI would need to check 28/2 * (40^0 + 40^1 + 40^2 + 40^3 + 40^4) = 36,758,974
 
 #### Alpha-Beta Pruning
 
