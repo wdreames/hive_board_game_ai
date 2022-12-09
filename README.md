@@ -51,4 +51,4 @@ Run `# ./play_hive.sh --help` to learn about additional commands.
 
 ## Documentation
 
-More information about how I implemented *Hive* and my AI can be found [here](documents/documentation.md).
+More information about how I implemented *Hive* and my AI can be found [here](documents/Hive Board Game AI Documentation.md).
