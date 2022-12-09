@@ -48,3 +48,7 @@ After completing the steps above, run the following commands from within the `hi
 2. `# ./play_hive.sh`
 
 Run `# ./play_hive.sh --help` to learn about additional commands.
+
+## Documentation
+
+More information about how I implemented *Hive* and my AI can be found [here](documents/documentation.md).
