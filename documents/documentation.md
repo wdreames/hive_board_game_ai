@@ -73,11 +73,11 @@ The "one hive" rule states that all Pieces must be connected to each other at al
 
 To implement this, each Piece contained a `can_move` boolean value. If this rule would prevent a Piece from moving, this value was set to False. Otherwise, the `can_move` value would be set to True.
 
-There were two methods that I used to determine whether a Piece could move. For starters, if a Piece (a) was placed with only one connection to another Piece (b), the connected Piece (b) would be locked based on this rule. This is because the connected Piece (b) is the only connection the new Piece (a) has to the rest of the Hive. However, the inverse of this rule is not true. For example, the black Piece in the image below is only connected to one Piece. If the black piece were removed, the Piece it was connected to would still need to be locked based on the "one hive" rule.
+There were two methods that I used to determine whether a Piece could move. Firstly, if a Piece (a) was placed with only one connection to another Piece (b), the connected Piece (b) would be locked based on this rule. This is because the connected Piece (b) is the only connection the new Piece (a) has to the rest of the Hive. However, the inverse of this rule is not true. For example, the black Piece in the image below is only connected to one Piece. If the black piece were removed, the Piece it was connected to would still need to be locked based on the "one hive" rule.
 
 ![One Hive Rule Example 2](../images/one_hive_rule2.png)
 
-Beyond the one simplification of locking Pieces if a new piece is placed with one connected Piece, the rest of the "one hive" rule was implemented through the use of a graph algorithm. In this case, I treated every Piece as a node in a graph with the connections on each side of the Piece being edges. Then, I searched for articulation points, or any points that would disconnect the graph if they were removed through the use of Tarjan's algorithm. After determining which Pieces were articulation points, I set each Piece's `can_move` value accordingly. More information about Tarjan's algorithm can be found [here](https://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/).
+Beyond the one simplification of locking Pieces if a new piece is placed with one connected Piece, the rest of the "one hive" rule was implemented through the use of a graphing algorithm. In this case, I treated every Piece as a node in a graph with the connections on each side of the Piece being edges. Then, I searched for articulation points, or any points that would disconnect the graph if they were removed through the use of Tarjan's algorithm. After determining which Pieces were articulation points, I set each Piece's `can_move` value accordingly. More information about Tarjan's algorithm can be found [here](https://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/).
 
 ### Queen Bees
 
@@ -113,6 +113,39 @@ To accommodate being able to move on and off of other Pieces, additional functio
 
 
 ## Implementing the AI
+
+### Managing Board States
+
+There were two primary components that were required of my implementation before I could begin working on my AI. These were: being able to output a list of possible moves on a given turn, and being able to search through future board states. It was fairly simple to output a list of possible moves after implementing the various movement rules for each of the Pieces. However, none of the above descriptions of my implementation details searching through future board states. To be able to do this, I created a class called the `BoardManager`. 
+
+The `BoardManager` uses a Singleton design pattern and contains a single `HiveGameBoard` instance within it. The class has two important functions: `get_successor(action)` and `get_predecessor()`. These are what the AI uses to search future board states. When the `get_successor(action)` function is called, that action is performed on the HiveGameBoard, and the action is added to a stack. Later, when the `get_predecessor()` function is called, the action at the top of the stack is popped off, and the board manager calls the HiveGameBoard's `undo_action(action)` function. This returns the board to the state that existed before the previous `get_successor(action)` call. In order to return to the original board state, the board manager can undo all actions stored within the stack.
+
+### Evaluating a Board State
+
+In order for the AI to decide what a good or bad move would look like, it needs a way to evaluate the board. To do this, the `HiveGameBoard` class contains a `evaluate_state()` function. This function uses information about the current state of the game board, and outputs a number estimating which player is winning and by how much. A positive number indicates that white is winning, while a negative number indicates that black is winning. The following table displays aspects of the game board that the evaluation function accounts for:
+
+| Value         | Utility                                                                                                                                                                    |
+|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Really good!  | - Allied Pieces around the Opponent's Queen Bee <br/> - Beetles on top of the Opponent's Queen Bee <br/> - Enemy Pieces around the Opponent's Queen Bee that *cannot* move |
+| Good          | - Enemy Pieces around the Opponent's Queen Bee that *can* move <br/> - Allied Pieces that are able to move next to the Opponent's Queen Bee                                |
+| Bad           | - Allied Pieces that are *not* able to move to the Opponent's Queen Bee                                                                                                    |
+| Really Bad    | - Pieces that cannot move at all                                                                                                                                           |
+
+In addition, all of these values can be inverted when swapping the two players. For example, Opponent's Pieces around the Allied Queen Bee would be really bad! More details regarding the exact values for each of these utilities can be found within the `evaluate_state()` function in `HiveGameBoard`
+
+### Minimax
+
+The goal of the minimax AI is to maximize its chance of success, while accounting for its opponent minimizing its chance of success. This AI will search through all of its possible moves, along with each of its opponent's responses to those moves, then all the moves it could perform after its opponent's responses, then another set of its opponent's responses, and so on. This continues until the AI either reaches a predefined maximum depth (or in this case, a certain number of turns in the future), or an end-state (a win, loss, or draw). The AI will then use these values to determine the best possible sequence of moves.
+
+To determine the best possible sequence of moves, the AI takes the evaluations it found, then calculates which would be the best move for its opponent (the minimax algorithm I implemented always ends with an opponent's move). Next, it would compare the opponent's best responses its opponent would have after each of the actions available to the AI. The AI would then choose the best final state out of those responses. The image below (taken from [wikipedia](https://en.wikipedia.org/wiki/Minimax)) can help display how this algorithm works. In this case, the AI would be using the maximizing function, and would be simulating its opponents moves using the minimizing function:
+
+![minimax](../images/minimax.png)
+
+### Speeding up Minimax
+
+Although the minimax algorithm can be fairly good at determining the best course of action if it is given enough depth and a good evaluation function, it can also take an extremely long time if no adjustments are made. The end result of my minimax AI was able to search 2 full turns in the future (4 actions) in an average of 20 seconds. To do this, it searched through approximately 250,000 actions. If I had not made any adjustments, it would instead search through tens of millions of actions[^1].
+
+[^1]: There are an average of 29 actions per game, and an average of 40 moves per turn.
 
 
 ## Conclusion
