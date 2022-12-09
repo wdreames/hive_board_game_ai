@@ -5,8 +5,16 @@ William Reames
 
 This document gives an overview regarding how I implemented Hive within Python and explains how I implemented my AI.
 
+### Table of Contents
+
+1. [Implementing Hive](#hive)
+   1. [Keeping Track of the Board](#game_board)
+   2. [Performing Actions on the Game Board](#perform_actions)
+
+<a name="hive"></a>
 ## Implementing Hive
 
+<a name="game_board"></a>
 ### Keeping Track of the Board
 
 The first challenge I came across was determining a way to implement the hexagon-based game board within Python. The solution I ended up implementing was to give each hexagon a coordinate, and store it as if it were on a regular 2D plane. 
@@ -25,6 +33,7 @@ As for storing this information, I stored each space object into a dictionary th
 
 ![Class UML Diagram](../images/hive_class_diagram.png)
 
+<a name="perform_actions"></a>
 ### Performing Actions on the Game Board
 
 There are two different actions a player can perform on a given turn: placing pieces or moving pieces. To implement this, each Piece was given two important functions: `set_location_to(new_location)` and `remove()`. In order to place a Piece, a new Piece object would be created, then its `set_location_to(new_location)` function would be called. Moreover, if a player would like to move a piece, the Piece would call its `remove()` function, followed by its `set_location_to(new_location)` function. 
