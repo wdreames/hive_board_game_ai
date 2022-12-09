@@ -3,7 +3,7 @@
 
 William Reames
 
-This document gives an overview regarding how I implemented Hive within Python and explains how I implemented my AI.
+This document gives an overview describing how I implemented Hive and my AI within Python.
 
 ### Table of Contents
 
