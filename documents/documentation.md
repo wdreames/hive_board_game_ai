@@ -75,33 +75,41 @@ To implement this, each Piece contained a `can_move` boolean value. If this rule
 
 There were two methods that I used to determine whether a Piece could move. For starters, if a Piece (a) was placed with only one connection to another Piece (b), the connected Piece (b) would be locked based on this rule. This is because the connected Piece (b) is the only connection the new Piece (a) has to the rest of the Hive. However, the inverse of this rule is not true. For example, the black Piece in the image below is only connected to one Piece. If the black piece were removed, the Piece it was connected to would still need to be locked based on the "one hive" rule.
 
-![One Hive Rule Example 2](images/one_hive_rule2.png)
+![One Hive Rule Example 2](../images/one_hive_rule2.png)
 
 Beyond the one simplification of locking Pieces if a new piece is placed with one connected Piece, the rest of the "one hive" rule was implemented through the use of a graph algorithm. In this case, I treated every Piece as a node in a graph with the connections on each side of the Piece being edges. Then, I searched for articulation points, or any points that would disconnect the graph if they were removed through the use of Tarjan's algorithm. After determining which Pieces were articulation points, I set each Piece's `can_move` value accordingly. More information about Tarjan's algorithm can be found [here](https://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/).
 
 ### Queen Bees
-- Moves to any legal move surrounding it.
-  - Talk about how legal moves are calculated
+
+![Queen Bee Movement](../images/queen_bee_mvt.png)
+
+The Queen Bees have one of the simplest movement rules in the game. The prerequisites for implementing the Queen Bee were to implement the freedom of movement rule as described previously, and implement a way to determine which EmptySpaces Pieces were allowed to move to. In order for a Piece to move on the board, it would need to slide along the edge of another Piece. This meant that there would be cases where a Piece could have EmptySpaces connected to it that it could not move to. This was implemented via a `update_cannot_move_to()` function, which stored its results into a set named `cannot_move_to`. Upon completing these two rules, the Queen Bee's movement was difference between the EmptySpaces and the spaces residing within `self.sliding_prevented_to` and `self.cannot_move_to`.
 
 ### Ants
-- By default, can move to any open empty space
-- If a group of empty spaces become enclosed, those spaces are marked and Ants cannot move there unless they have a direct connection into the group
+
+![Ant Movement](../images/ant_mvt.png)
+
+The Ants are a very interesting Piece as they are able to move to *any* space on the board that they are able to slide into. To accomplish this, Ants were actually given the entire set of EmptySpaces as their set of possible moves by default. Although, if any new sliding preventions were discovered because of the freedom of movement rule, EmptySpaces would be added to what I called `ant_prevention_sets`. This would allow for groups on enclosed EmptySpaces to be marked as locations an Ant cannot move to. However, if the Ant could move to an EmptySpace within one of the `ant_prevention_sets` through the set of moves it would have as a Queen Bee (the set of moves one space in any direction), it would also have access to all EmptySpaces within that specific set.
 
 ### Grasshoppers
-- Traverse the board in directions of any connected Pieces
-- If an EmptySpace is found, it is added as a possible move
-- If a Piece on the path is removed, the path beyond the Piece is removed as well. This also removes a possible move from the Grasshopper, but adds a new one where the Piece used to be.
-- If a Piece is placed on an EmptySpace that a Grasshopper can move to, the path continues to traverse in the direction of the Grasshopper's movement until it reaches an EmptySpace. This EmptySpace becomes a new possible move for the Grasshopper. The space where the Piece was placed is not longer a possible move for the Grasshopper.
+
+![Grasshopper Movement](../images/grasshopper_mvt.png)
+
+The movement rules for Grasshoppers allow them to jump over a connected line of Pieces. Whenever a Grasshopper is placed on the game board, it traverses across the board in the direction of its connected Pieces. Whenever a path discovers an EmptySpace, that space is added as a possible move for the Grasshopper. Furthermore, as the Grasshopper is forming paths and passing through other Pieces, each Piece is marked as being on the path of that Grasshopper. This way if a Piece on the path is removed, the new EmptySpace that will be replacing that Piece will be added as a new move, and the rest of the path beyond that location will be removed. Moreover, if a Piece is placed on an EmptySpace that was marked as a possible move for a Grasshopper, that possible move is removed and the path continues its traversal in the direction of the Grasshopper's movement.
 
 ### Spiders
-- Traverse EmptySpaces in the direction of all possible moves.
-- Once a distance of three spaces is reached, a possible move is added.
-- If an update occurs on a path, it is updated accordingly to match the new set of possible moves.
+
+![Spider Movement](../images/spider_mvt.png)
+
+The implementation for Spider movement was very similar to the Grasshopper's. Rather than traverse across a line of Pieces, the Spider traverses across a sequence of EmptySpaces. In this case, a path for a Spider would move through EmptySpaces by traveling to each space within the set of moves it would have if it were a Queen Bee (moving one space at a time). Then, once the path reaches a distance of three spaces from the Spider, a possible move is added. Furthermore, in a similar fashion to the Grasshopper, if any EmptySpace that was marked as being on a path for a Spider is removed or movement rule is updated, the path will be updated accordingly.
 
 ### Beetles
-- Same as Queen Bee movement, but they also can move to surrounding Pieces
-- Specific rules for moving on/off of Pieces.
-- The Beetle is not limited by the "One Hive" rule while it is on top of Pieces.
+
+![Beetle Movement](../images/beetle_mvt.png)
+
+The Beetle's movement is the same as the Queen Bee's, except it is also able to move on top of other Pieces. In this case, the Beetle's set of possible moves was the set of EmptySpaces it could move, combined with the set of Pieces surrounding it. The Beetle was not limited by its `sliding_prevented_to` set, since it can be picked up to move to other spaces. Additionally, if the Beetle is on top of a piece, it is also not limited by the "one hive" rule, since its previous location would be filled by the piece it was on top of. 
+
+To accommodate being able to move on and off of other Pieces, additional functionality needed to be added to the Beetle's `set_location_to(new_location)` and `remove()` functions. If the Beetle is not moving on or off of another Piece, it calls the functions normally. On the other hand, if the Beetle is being placed onto another Piece, it copies that Piece's information (connected Pieces, connected EmptySpaces, movement limitations, etc.); stores the object of that Piece; replaces the Piece within the HiveGameBoard; and updates the surrounding EmptySpaces' counts of white/black pieces. If the Beetle is moving off of another Piece, it copies its information back to the stacked Piece; updates the surrounding EmptySpaces' counts of white/black pieces; and adds the stacked Piece back into the HiveGameBoard.
 
 
 ## Implementing the AI
