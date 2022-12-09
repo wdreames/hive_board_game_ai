@@ -47,22 +47,22 @@ The freedom of movement rule states that pieces must slide on the board rather t
 
 To implement this, I kept track of certain "sliding rules". Whenever a Piece was set to a new location (whether by being placed as a new piece or by moving to that location), it would check if other Pieces exist in certain locations. If it found a Piece at any of these locations, the spaces in between the two Pieces would be marked as unable to slide to each other. Then, if either of these Pieces are removed later in the game, the two spaces between them are updated so that they are marked as being able to slide to each other again. The sequence of images below help show how this works. Note, though, that these images are meant to demonstrate this rule specifically, and do not display all the Pieces or EmptySpaces that would usually be found on a game board:
 
-![Sliding Rule Example Slide 1](../images/sliding_rule_ex1.png)
+![Sliding Rule Example Slide 1](../images/sliding_rule_ex1.png) \
 1: A subset of a board state containing two Pieces and one EmptySpace
 
-![Sliding Rule Example Slide 2](../images/sliding_rule_ex2.png)
+![Sliding Rule Example Slide 2](../images/sliding_rule_ex2.png) \
 2: A new Piece is placed
 
-![Sliding Rule Example Slide 3](../images/sliding_rule_ex3.png)
+![Sliding Rule Example Slide 3](../images/sliding_rule_ex3.png) \
 3: The new Piece finds another Piece in one of the specified locations
 
-![Sliding Rule Example Slide 4](../images/sliding_rule_ex4.png)
+![Sliding Rule Example Slide 4](../images/sliding_rule_ex4.png) \
 4: The two spaces between those Pieces are marked as not being able to slide to each other
 
-![Sliding Rule Example Slide 5](../images/sliding_rule_ex5.png)
+![Sliding Rule Example Slide 5](../images/sliding_rule_ex5.png) \
 5: A Piece that was preventing sliding between two pieces was removed
 
-![Sliding Rule Example Slide 6](../images/sliding_rule_ex6.png)
+![Sliding Rule Example Slide 6](../images/sliding_rule_ex6.png) \
 6: The two spaces between those Pieces are marked as being able to slide to each other again
 
 #### The "One Hive" Rule
