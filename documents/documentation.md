@@ -143,16 +143,44 @@ To determine the best possible sequence of moves, the AI takes the evaluations i
 
 ### Speeding up Minimax
 
-Although the minimax algorithm can be fairly good at determining the best course of action if it is given enough depth and a good evaluation function, it can also take an extremely long time if no adjustments are made. The end result of my minimax AI was able to search 2 full turns in the future (4 actions) in an average of 20 seconds. To do this, it searched through approximately 250,000 actions. If I had not made any adjustments, it would instead search through tens of millions of actions[^1].
+Although the minimax algorithm can be fairly good at determining the best course of action if it is given enough depth and a good evaluation function, it can also take an extremely long time if no adjustments are made. The end result of my minimax AI was able to search 2 full turns in the future (4 actions) in an average of 20 seconds. To do this, it searched through approximately 250,000 actions. If I had not made any adjustments, it would instead search through tens of millions of actions[^num_actions]. Because of this, it is fairly clear how important it is to improve minimax beyond its default implementation.
 
-[^1]: There are an average of 29 actions per game, and an average of 40 moves per turn.
+[^num_actions]: There are an average of 28 turns per game, and an average of 40 moves per turn. If every action was checked 2 full turns in the future (depth of 4), the AI would need to check $28/2 \cdot (40^0 + 40^1 + 40^2 + 40^3 + 40^4) = 36,758,974$
 
+#### Alpha-Beta Pruning
+
+Alpha-beta pruning is an extremely common approach to speeding up minimax. It uses mathematical logic to prune off branches that do not need to be checked. For example, a minimax AI could have processed part of the decision tree, and found that performing action (a) will eventually lead to a value of 9. The AI is in the middle of processing action (b), and found that one of its opponent's responses will lead it to a state of -1. Because its opponent will always want to minimize its chance of success, the opponent will only play a move that would lead to a value ≤-1. And since the AI has already found a move (a) that is better than -1, it can ignore the rest of that branch (b). The image below helps demonstrate this concept:
+
+![Alpha-Beta Pruning](../images/alpha_beta_pruning.png)
+
+#### Sorting the List of Actions
+
+One of the ways to further improve alpha-beta pruning is to sort the list of actions. If the algorithm can find the best possible move first, it will be able to prune significantly more branches. To help with this, I sorted the actions so that all move actions were processed before placement actions. This is because it is often better to use the pieces you already have on the board rather than place new ones. Furthermore, it looked at its possible moves in the order of the following pieces: Queen Bees, Spiders, Grasshoppers, Beetles, and Ants. Although, the ordering in which different types of pieces was more so that pieces with fewer actions or faster processing times would be processed sooner. For example, although moving an Ant can often be the best move, it is processed last in that sequence since Ants have significantly more moves than any other piece and take a while to process.
+
+#### Iterative Deepening with Sorted Estimates of Actions
+
+Because the minimax AI can sometimes take a very long time to process actions (if I let it look three full turns in the future, it can take up to an hour in some cases), I wanted to set a time limit to make sure the player would not be waiting for an eternity before the AI plays a move. To do this, I used something called iterative deepening. This means that I would iteratively increase the depth the AI would search using minimax. It would start by searching one full turn in the future, then two full turns, then three, and so on. At some point during this process, the AI may run out of time, and then it will return the best move it was able to find during that timeframe.
+
+An interesting thing about iterative deepening is that although it may sound counter-intuitive to completely redo a run of minimax for each iteration, it actually speeds up the process. Because adding a single extra layer of depth would increase the time minimax takes exponentially, all the previous layers will be a very small fraction of the total time. So even though it is recalculating a lot of information, it does not increase the total time by a significant amount.
+
+Furthermore, the AI I implemented is also able to record estimates of good/bad actions for a given board state while it progresses through the minimax algorithm. For example, say that the AI processed a depth of 1, and found that action (a) had a value of -10, action (b) had a value of 18, and action (c) had a value of 7. When the AI goes to process a depth of 2, it will be able to recognize that it has seen that state before, and will process actions in the order of (b), then (c), then (a). This means that the alpha-beta pruning algorithm should find the best action closer to the beginning of the list, therefore allowing it to prune off significantly more branches.
+
+#### Additional Improvements
+
+There were a couple additional improvements that I added to speed up my minimax algorithm. For starters, if the AI ever found a winning move, it would immediately play it without any further thought. This is because you cannot play anything better than a winning move, and there is no point to continue searching if you found a way to win. 
+
+Moreover, if the AI ever found a state where there were 5 pieces around its opponent's Queen Bee, it would check if it had any free pieces with the ability to move to the last location surrounding the Queen Bee. This was a lot faster than checking every possible move since it would only need to check if any of its pieces can move to a single specific location. Additionally, this function would be run even if the AI had reached its maximum depth. This allowed it to effectively search an extra action further during the endgame.
 
 ## Conclusion
-- lessons learned
-- description of work completed
+
+While working on this project, I was able to implement the board game, *Hive*, within Python, and created an AI that can play it. My implementation can keep track of all board information, including piece locations, possible moves, possible locations to place pieces, and how many pieces each player has left in their reserve. I was able to create an evaluation function to use along with a minimax AI to allow the AI to perform intelligent moves. Furthermore, I used alpha-beta pruning, sorted action lists, iterative deepening, and stored estimates of good/bad moves to speed up my minimax algorithm. The AI seems to be performing fairly well, and takes an average of 20 seconds with a maximum of 1-2 minutes when searching 2 full turns in the future. 
+
+However, there are still a few aspect of my AI that could be improved. Firstly, its endgame could be improved significantly. If the AI ever discovers that its opponent has a sequence of moves guaranteeing that it will win, the AI will give up and perform moves at random without any logic behind them. This is because it registers all moves as being equally bad, and does not know which action would be best. Secondly, there is still much that could be done to speed up my AI. This could involve either improving the algorithm, or more likely, making my implementation of Hive more efficient. Lastly, I created my evaluation function using a guess-and-check system, and many of the values may not be optimal. It could be beneficial to use a reinforcement learning algorithm to help the AI learn which aspects of the evaluation function it should value the most in order to have the best chance of success.
+
+Overall, though, I would say that I am fairly happy with how my project turned out :). I was able to successfully create a seemingly intelligent AI through the use of a minimax algorithm. The AI is able to beat me when searching two full turns in the future, and even when I am able to win, I still enjoy playing against it and find it challenging. This was exactly what I was hoping for when I started working on this project, and I am happy with the final product.
+
 
 ## Acknowledgments
-- Charles
-- printing hex board: https://inventwithpython.com/bigbookpython/project35.html
-- Tarjan's algorithm: https://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/
+- One of my best friends, [Charles Steelberg](https://www.linkedin.com/in/charles-steelberg-746177213/), helped me think of a majority of the methods I used to speed up my minimax implementation
+- My implementation for Tarjan's algorithm was based off of https://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/
+- The method I used to output the board state to the terminal in a hexagon grid was based off of https://inventwithpython.com/bigbookpython/project35.html
