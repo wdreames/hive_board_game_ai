@@ -1,3 +1,4 @@
+from functools import lru_cache
 from src.game.spaces import Piece
 
 
@@ -21,38 +22,45 @@ class Ant(Piece):
         self.board.ant_locations.add(new_location)
 
     def calc_possible_moves(self):
-        # Can move to any open space that it can slide to
-        can_slide_into = self.connected_empty_spaces.difference(self.sliding_prevented_to.keys())
-        can_slide_into_prevention_sets = set()
-        spaces_in_connected_prevention_sets = set()
-        if not can_slide_into:
-            self.possible_moves = set()
-        else:
-            moveset = set(self.board.empty_spaces.keys())
-            for prevention_set in self.board.ant_mvt_prevention_sets:
-                # If the Ant cannot slide into a given prevention set,
-                # those potential moves are removed from the moveset
-                overlap_with_prevention_set = can_slide_into.intersection(prevention_set)
-                if not overlap_with_prevention_set:
-                    moveset = moveset.difference(prevention_set)
-                else:
-                    can_slide_into_prevention_sets = can_slide_into_prevention_sets.union(overlap_with_prevention_set)
-                    spaces_in_connected_prevention_sets = spaces_in_connected_prevention_sets.union(prevention_set)
-
-            # Check if every move the Ant has is within a prevention set. In this scenario, the base set of
-            # Empty Spaces are not added into the moveset
-            if not can_slide_into.difference(can_slide_into_prevention_sets):
-                moveset = spaces_in_connected_prevention_sets
-
-            # Check if any surrounding Empty Spaces are only connected to this Piece. If so, that is not a possible move
-            for space_location in can_slide_into.intersection(self.cannot_move_to):
-                empty_space = self.board.empty_spaces[space_location]
-                if len(empty_space.connected_pieces) == 1 and self.location in empty_space.connected_pieces:
-                    moveset.remove(space_location)
-
-            self.possible_moves = moveset.difference(self.board.disconnected_empty_spaces)
+        self.possible_moves = self._calc_moves_helper(self.board, self)
         self.update_board_moves()
         return self.possible_moves
+
+    # TODO: This caching does not work properly. It ends up causing movement errors
+    @staticmethod
+    @lru_cache(maxsize=1000)
+    def _calc_moves_helper(board_state, ant_piece):
+        # Can move to any open space that it can slide to
+        can_slide_into = ant_piece.connected_empty_spaces.difference(ant_piece.sliding_prevented_to.keys())
+        can_slide_into_prevention_sets = set()
+        spaces_in_connected_prevention_sets = set()
+
+        if not can_slide_into:
+            return set()
+
+        moveset = set(board_state.empty_spaces.keys())
+        for prevention_set in board_state.ant_mvt_prevention_sets:
+            # If the Ant cannot slide into a given prevention set,
+            # those potential moves are removed from the moveset
+            overlap_with_prevention_set = can_slide_into.intersection(prevention_set)
+            if not overlap_with_prevention_set:
+                moveset = moveset.difference(prevention_set)
+            else:
+                can_slide_into_prevention_sets = can_slide_into_prevention_sets.union(overlap_with_prevention_set)
+                spaces_in_connected_prevention_sets = spaces_in_connected_prevention_sets.union(prevention_set)
+
+        # Check if every move the Ant has is within a prevention set. In this scenario, the base set of
+        # Empty Spaces are not added into the moveset
+        if not can_slide_into.difference(can_slide_into_prevention_sets):
+            moveset = spaces_in_connected_prevention_sets
+
+        # Check if any surrounding Empty Spaces are only connected to this Piece. If so, that is not a possible move
+        for space_location in can_slide_into.intersection(ant_piece.cannot_move_to):
+            empty_space = board_state.empty_spaces[space_location]
+            if len(empty_space.connected_pieces) == 1 and ant_piece.location in empty_space.connected_pieces:
+                moveset.remove(space_location)
+
+        return moveset.difference(board_state.disconnected_empty_spaces)
 
 
 class Beetle(Piece):

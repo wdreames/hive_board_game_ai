@@ -1,6 +1,7 @@
 import os
 import pickle
 import random
+from functools import lru_cache
 from timeit import default_timer as timer
 
 import numpy as np
@@ -83,6 +84,7 @@ class BoardManager:
         return str(self.current_board)
 
 
+# TODO: Add hashing method based on board state
 class HiveGameBoard:
     """
     This class is used to store the state of a game.
@@ -251,12 +253,9 @@ class HiveGameBoard:
 
     def get_action_list(self, randomize_actions=False):
         start_time = timer()
-
+        
         pieces_to_play, locations_to_place, possible_moves_dict = self.get_all_possible_actions()
-
-        # Move actions
-        move_actions = []
-
+        
         # Order Pieces so that Pieces with longer processing times are processed last
         order_of_pieces = {
             Piece.QUEEN_BEE: 0,
@@ -266,14 +265,41 @@ class HiveGameBoard:
             Piece.ANT: 4,
         }
 
-        for piece_location, move_locations in sorted(
-                possible_moves_dict.items(),
+        sorted_pieces_to_play = tuple(
+            sorted(
+                pieces_to_play.items(),
+                key=lambda item: order_of_pieces[item[0]]
+            )
+        )
+        sorted_locations_to_place = tuple(sorted(locations_to_place))
+        
+        possible_moves_tuple_values = dict()
+        for piece_location, move_locations in possible_moves_dict.items():
+            possible_moves_tuple_values[piece_location] = tuple(sorted(move_locations))
+        sorted_possible_moves = tuple(
+            sorted(
+                possible_moves_tuple_values.items(),
                 key=lambda item: (
                     order_of_pieces[self.pieces[item[0]].name],
                     item[0][0],
                     item[0][1]
                 )
-        ):
+            )
+        )
+
+
+        action_list = self._get_action_list_helper(sorted_pieces_to_play, sorted_locations_to_place, sorted_possible_moves, randomize_actions)
+
+        BoardManager().getting_actions_times.append(timer() - start_time)
+        return action_list
+
+    @staticmethod
+    @lru_cache(maxsize=1000)
+    def _get_action_list_helper(sorted_pieces_to_play, sorted_locations_to_place, sorted_possible_moves, randomize_actions=False):
+        # Move actions
+        move_actions = []
+
+        for piece_location, move_locations in sorted_possible_moves:
             for new_location in sorted(move_locations):
                 move_actions.append((
                     HiveGameBoard.MOVE_PIECE,
@@ -283,12 +309,9 @@ class HiveGameBoard:
 
         # Place actions
         place_actions = []
-        for piece_type, amount_of_type in sorted(
-                pieces_to_play.items(),
-                key=lambda item: order_of_pieces[item[0]]
-        ):
+        for piece_type, amount_of_type in sorted_pieces_to_play:
             if amount_of_type:
-                for possible_location in sorted(locations_to_place):
+                for possible_location in sorted_locations_to_place:
                     place_actions.append((
                         HiveGameBoard.PLACE_PIECE,
                         possible_location,
@@ -303,8 +326,7 @@ class HiveGameBoard:
 
         if not all_actions:
             return [(HiveGameBoard.SKIP_TURN, None, None)]
-
-        BoardManager().getting_actions_times.append(timer() - start_time)
+        
         return all_actions
 
     def get_all_possible_actions(self):
@@ -798,17 +820,19 @@ class HiveGameBoard:
         else:
             return None
 
+    # TODO: Use caching
     # TODO: Documentation
     def evaluate_state(self, print_utilities=False):
 
         # Evaluate if this is an end-game state:
         winner = self.determine_winner()
-        if winner == self.WHITE_WINNER:
-            return 100000
-        elif winner == self.BLACK_WINNER:
-            return -100000
-        elif winner == self.DRAW:
+        winner_value = 0
+        if winner == self.DRAW:
             return 0
+        elif winner == self.WHITE_WINNER:
+            winner_value = 100000
+        elif winner == self.BLACK_WINNER:
+            winner_value = -100000
 
         # Otherwise, evaluate a utility function
         # TODO: Clean this up. It looks pretty messy and is hard to follow
@@ -959,7 +983,7 @@ class HiveGameBoard:
         black_values = -white_values
         values = np.concatenate((white_values, black_values))
 
-        evaluation = sum([utility * value for utility, value in zip(utilities, values)])
+        evaluation = sum([utility * value for utility, value in zip(utilities, values)]) + winner_value
 
         if print_utilities:
             print([utility * value for utility, value in zip(utilities, values)])
@@ -1139,7 +1163,12 @@ class HiveGameBoard:
         return piece_char
 
     def __eq__(self, other):
-        return isinstance(other, HiveGameBoard) and self.pieces == other.pieces
+        return isinstance(other, HiveGameBoard) and self.pieces == other.pieces and self.empty_spaces == other.empty_spaces
+
+    def __hash__(self):
+        sorted_pieces = tuple(sorted(self.pieces.items(), key=lambda item: item[0]))
+        sorted_empty_spaces = tuple(sorted(self.empty_spaces.items(), key=lambda item: item[0]))
+        return hash((sorted_pieces, sorted_empty_spaces))
 
     def __str__(self):
         # Used to print the board state

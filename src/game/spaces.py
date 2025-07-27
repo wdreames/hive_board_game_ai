@@ -1,3 +1,4 @@
+from functools import lru_cache
 import src.utils as utils
 from abc import abstractmethod
 
@@ -118,6 +119,7 @@ class HexSpace:
         self.prepare_for_update()
 
     @staticmethod
+    @lru_cache(maxsize=1000)
     def direction_from_a_to_b(location_a, location_b):
         """
         Returns the direction from location a to location b. The values returned will always be within the set returned
@@ -237,6 +239,9 @@ class HexSpace:
         if location in self.connected_empty_spaces:
             self.connected_empty_spaces.remove(location)
             self.prepare_for_update()
+
+    def __hash__(self):
+        return hash((self.location, tuple(sorted(list(self.connected_pieces))), tuple(sorted(list(self.connected_empty_spaces)))))
 
 
 class EmptySpace(HexSpace):

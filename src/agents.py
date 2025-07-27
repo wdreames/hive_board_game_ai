@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from functools import lru_cache
 from timeit import default_timer as timer
 import src.game.board as board
 import src.game.spaces as spaces
@@ -235,7 +236,7 @@ class BestNextMoveAI(Agent):
 
 class MinimaxAI(Agent):
 
-    def __init__(self, is_white=True, board_manager=None, max_depth=4, max_time=float("inf"), winning_value=10000):
+    def __init__(self, is_white=True, board_manager=None, max_depth=4, max_time=float("inf"), winning_value=5000):
         super().__init__(is_white, board_manager)
         self.max_depth = max_depth if max_depth >= 1 else 1
         self.max_time = max_time if max_time > 0 else 1
@@ -346,10 +347,6 @@ class MinimaxAI(Agent):
             actions = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
             self.sorted_action_lists[action_list] = actions, self.maximizing
 
-            # If every action is a losing move, return a random action.
-            if action_evaluations[actions[0]] <= -self.winning_value:
-                return random.choice(actions)
-
             # If a forced win was found, exit the loop to return the best move
             if action_evaluations[actions[0]] >= self.winning_value - 1:
                 break
@@ -409,7 +406,7 @@ class MinimaxAI(Agent):
             action_evaluations[action] = value
 
         # Sort high to low evaluations
-        sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
+        sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda item: -item[1])]
         self.sorted_action_lists[action_list] = sorted_action_list, self.maximizing
 
         return value
@@ -418,7 +415,7 @@ class MinimaxAI(Agent):
         if board_state.determine_winner() is not None:
             return self.get_evaluation()
         elif self.find_win(board_state, white_to_move=not self.is_white):
-            return -self.winning_value
+            return self.get_evaluation() - self.winning_value
 
         # Check if we have seen this list of actions before
         action_list = tuple(board_state.get_action_list())
@@ -451,13 +448,14 @@ class MinimaxAI(Agent):
             action_evaluations[action] = value
 
         # Sort low to high evaluations
-        sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda x: x[1])]
+        sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda item: item[1])]
         self.sorted_action_lists[action_list] = sorted_action_list, self.minimizing
 
         return value
 
     @staticmethod
-    def find_win(current_state, white_to_move=True):
+    @lru_cache(maxsize=1000)
+    def find_win(current_state: board.HiveGameBoard, white_to_move=True):
         """
         This function is called when minimax finds a scenario with 5 pieces surrounding the opponent's queen bee.
         This checks if any allied piece can move there immediately during the next turn, this function returns True.
@@ -466,24 +464,24 @@ class MinimaxAI(Agent):
         """
         if current_state.black_queen_location is None or current_state.white_queen_location is None:
             return False
+
         if white_to_move:
-            black_qb = current_state.pieces[current_state.black_queen_location]
-            if len(black_qb.connected_pieces) == 5:
-                last_empty_space = black_qb.connected_empty_spaces.copy().pop()
-                for piece_location, moves in current_state.white_possible_moves.items():
-                    if last_empty_space in moves and piece_location not in black_qb.connected_pieces:
-                        return True
-                if last_empty_space in current_state.white_locations_to_place:
-                    return True
+            queen_bee = current_state.pieces[current_state.black_queen_location]
+            possible_moves = current_state.white_possible_moves
+            locations_to_place = current_state.white_locations_to_place
         else:
-            white_qb = current_state.pieces[current_state.white_queen_location]
-            if len(white_qb.connected_pieces) == 5:
-                last_empty_space = white_qb.connected_empty_spaces.copy().pop()
-                for piece_location, moves in current_state.black_possible_moves.items():
-                    if last_empty_space in moves and piece_location not in white_qb.connected_pieces:
-                        return True
-                if last_empty_space in current_state.black_locations_to_place:
+            queen_bee = current_state.pieces[current_state.white_queen_location]
+            possible_moves = current_state.black_possible_moves
+            locations_to_place = current_state.black_locations_to_place
+
+        if len(queen_bee.connected_pieces) == 5:
+            last_empty_space = queen_bee.connected_empty_spaces.copy().pop()
+            if last_empty_space in locations_to_place:
+                return True
+            for piece_location, moves in possible_moves.items():
+                if last_empty_space in moves and piece_location not in queen_bee.connected_pieces:
                     return True
+
         return False
 
 

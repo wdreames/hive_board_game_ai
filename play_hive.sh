@@ -2,4 +2,4 @@
 
 [ ! -d data ] && mkdir data
 
-python3 -m src.play_hive "$@"
+python -m src.play_hive "$@"
