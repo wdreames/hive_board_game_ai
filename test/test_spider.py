@@ -292,7 +292,7 @@ class TestSpiderBoard3(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.manager = board.BoardManager(new_manager=True)
+        cls.manager = board.BoardManager()
         with open(os.path.join('test', 'data', 'spider_board_3.hv'), 'rb') as file:
             game_state = pickle.load(file)
             cls.manager.current_board = game_state
@@ -414,7 +414,7 @@ class TestSpiderBoard4(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.manager = board.BoardManager(new_manager=True)
+        cls.manager = board.BoardManager()
         with open(os.path.join('test', 'data', 'spider_board_4.hv'), 'rb') as file:
             game_state = pickle.load(file)
             cls.manager.current_board = game_state
@@ -423,7 +423,7 @@ class TestSpiderBoard4(unittest.TestCase):
 
     # Ensure that the following does not cause an error
     def test_spider1(self):
-        game_board = board.BoardManager().get_board()
+        game_board = self.manager.get_board()
 
         actions_leading_to_state = [
             ('Move Piece', (1, 0), (-1, 5)),

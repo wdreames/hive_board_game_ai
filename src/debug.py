@@ -137,21 +137,21 @@ def demo_game():
 
 
 def check_for_errors(word_to_find=None, words_to_ignore=None, max_num_runs=25, max_actions=5000):
+    board_manager = board.BoardManager()
     num_runs = 0
     while num_runs < max_num_runs:
         try:
-            board.BoardManager(new_manager=True)
-            play_game(agents.RandomActionAI(), agents.RandomActionAI(), max_turns=max_actions, debug_output=True)
+            play_game(agents.RandomActionAI(board_manager=board_manager), agents.RandomActionAI(board_manager=board_manager), max_turns=max_actions, debug_output=True)
         except Exception:
             err_output = traceback.format_exc()
             if word_to_find is None and words_to_ignore is None:
-                print(board.BoardManager().get_board())
-                board.BoardManager().get_board().print_board()
+                print(board_manager.get_board())
+                board_manager.get_board().print_board()
                 print(err_output)
                 exit(1)
             if word_to_find is not None and word_to_find in err_output.lower():
-                print(board.BoardManager().get_board())
-                board.BoardManager().get_board().print_board()
+                print(board_manager.get_board())
+                board_manager.get_board().print_board()
                 print(err_output)
                 exit(1)
             if words_to_ignore is not None:
@@ -160,15 +160,15 @@ def check_for_errors(word_to_find=None, words_to_ignore=None, max_num_runs=25, m
                     if word in err_output.lower():
                         found_word = True
                 if not found_word:
-                    print(board.BoardManager().get_board())
-                    board.BoardManager().get_board().print_board()
+                    print(board_manager.get_board())
+                    board_manager.get_board().print_board()
                     print(err_output)
                     exit(1)
 
         num_runs += 1
 
 
-def graph_data(evaluations_during_game, times_taken, num_actions_per_turn, player1, player2):
+def graph_data(board_manager: board.BoardManager, evaluations_during_game, times_taken, num_actions_per_turn, player1, player2):
     # Plot the evaluation
     plt.figure(figsize=(10, 5))
     x_range = range(0, len(evaluations_during_game))
@@ -177,7 +177,7 @@ def graph_data(evaluations_during_game, times_taken, num_actions_per_turn, playe
     plt.ylabel('Evaluation')
     plt.title(f'Board Evaluation During a Hive Game\n'
               f'{player1} vs {player2}\n'
-              f'Winner: {board.BoardManager().get_board().determine_winner()}')
+              f'Winner: {board_manager.get_board().determine_winner()}')
 
     # Plot white data
     fig2, ax1 = plt.subplots(figsize=(10, 5))
@@ -192,7 +192,7 @@ def graph_data(evaluations_during_game, times_taken, num_actions_per_turn, playe
 
     plt.title(f'{player1} Time Taken to Decide and Action During a Hive Game\n'
               f'{player1} vs {player2}\n'
-              f'Winner: {board.BoardManager().get_board().determine_winner()}')
+              f'Winner: {board_manager.get_board().determine_winner()}')
     fig2.legend()
 
     # Plot black data
@@ -208,15 +208,13 @@ def graph_data(evaluations_during_game, times_taken, num_actions_per_turn, playe
 
     plt.title(f'{player2} Time Taken to Decide and Action During a Hive Game\n'
               f'{player1} vs {player2}\n'
-              f'Winner: {board.BoardManager().get_board().determine_winner()}')
+              f'Winner: {board_manager.get_board().determine_winner()}')
 
     plt.show()
 
 
-def play_game(player1, player2, max_time=float("inf"), max_turns=float("inf"), graph_data_after_run=False,
+def play_game(board_manager, player1, player2, max_time=float("inf"), max_turns=float("inf"), graph_data_after_run=False,
               debug_output=False):
-    board_manager = board.BoardManager()  # new_manager=True)
-
     if player1 == player2:
         player2 = copy.deepcopy(player1)
 
@@ -324,7 +322,7 @@ def test_undo():
     game_board = test_sliding_rules()
     print('='*50)
 
-    board_manager = board.BoardManager(new_manager=True)
+    board_manager = board.BoardManager()
     board_manager.current_board = game_board
 
     board_state2 = board_manager.get_successor((board.HiveGameBoard.PLACE_PIECE, (-3, 0), spaces.Piece.ANT))
@@ -357,14 +355,14 @@ def test_undo():
 
 
 def load_game(filename):
-    manager = board.BoardManager(new_manager=True)
+    manager = board.BoardManager()
     manager.load_state(filename)
     manager.get_board().print_board(hex_board=False)
 
 
 def make_sample_game():
     import src.game.pieces as pieces
-    manager = board.BoardManager(new_manager=True)
+    manager = board.BoardManager()
     game_board = manager.get_board()
 
     pieces.Spider(game_board, 0, 0, True)
@@ -396,19 +394,6 @@ if __name__ == '__main__':
     # check_for_errors(max_num_runs=250, max_actions=1000)
     # exit(0)
 
-    player = agents.Player()
-    hex_player = agents.HexPlayer()
-    random_ai = agents.RandomActionAI()
-    best_next_move_ai = agents.BestNextMoveAI()
-    minimax_ai1 = agents.MinimaxAI(max_depth=1)
-    minimax_ai2 = agents.MinimaxAI(max_depth=2)
-    minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=120)
-    minimax_ai4 = agents.MinimaxAI(max_depth=4, max_time=10)
-    minimax_ai8 = agents.MinimaxAI(max_depth=8, max_time=10)
-    expectimax_ai1 = agents.ExpectimaxAI(max_depth=1, max_time=30)
-    expectimax_ai2 = agents.ExpectimaxAI(max_depth=2, max_time=10)
-    expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10)
-
     num_games = 1
     num_turns = 0
     num_white_wins = 0
@@ -421,15 +406,31 @@ if __name__ == '__main__':
     actions_processed = []
 
     for i in range(num_games):
+        board_manager = board.BoardManager()
+
+        player = agents.Player(board_manager=board_manager)
+        hex_player = agents.HexPlayer(board_manager=board_manager)
+        random_ai = agents.RandomActionAI(board_manager=board_manager)
+        best_next_move_ai = agents.BestNextMoveAI(board_manager=board_manager)
+        minimax_ai1 = agents.MinimaxAI(max_depth=1, board_manager=board_manager)
+        minimax_ai2 = agents.MinimaxAI(max_depth=2, board_manager=board_manager)
+        minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=120, board_manager=board_manager)
+        minimax_ai4 = agents.MinimaxAI(max_depth=4, max_time=10, board_manager=board_manager)
+        minimax_ai8 = agents.MinimaxAI(max_depth=8, max_time=10, board_manager=board_manager)
+        expectimax_ai1 = agents.ExpectimaxAI(max_depth=1, max_time=30, board_manager=board_manager)
+        expectimax_ai2 = agents.ExpectimaxAI(max_depth=2, max_time=10, board_manager=board_manager)
+        expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10, board_manager=board_manager)
+        
         # Run a game with specified players/AIs for white and black
         _, white_times, black_times, num_actions_per_turn, total_num_actions = play_game(
-            hex_player,
-            random_ai,
+            board_manager,
+            best_next_move_ai,
+            best_next_move_ai,
             graph_data_after_run=False,
             # max_turns=50,
         )
 
-        game_board = board.BoardManager().get_board()
+        game_board = board_manager.get_board()
         if game_board.determine_winner() == board.HiveGameBoard.WHITE_WINNER:
             num_white_wins += 1
             all_white_times_taken += white_times
@@ -462,5 +463,3 @@ if __name__ == '__main__':
             print(f'Average number of actions on a turn: {sum(all_num_actions_per_turn)/len(all_num_actions_per_turn):.0f}')
             print(f'Average number of actions processed in a game: {sum(actions_processed)/num_games:.0f}')
         print('='*50)
-
-        board.BoardManager(new_manager=True)

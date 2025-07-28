@@ -419,7 +419,7 @@ class TestAntBoard4(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.manager = board.BoardManager(new_manager=True)
+        cls.manager = board.BoardManager()
         with open(os.path.join('test', 'data', 'ant_board_4.hv'), 'rb') as file:
             game_state = pickle.load(file)
             cls.manager.current_board = game_state
@@ -722,7 +722,7 @@ class TestAntErrorsFromRandomBoards(unittest.TestCase):
         ]
 
     def test_game_1(self):
-        manager = board.BoardManager(new_manager=True)
+        manager = board.BoardManager()
         for action in self.actions[:-3]:
             manager.perform_action(action)
         manager.get_board().print_board()
@@ -743,7 +743,7 @@ class TestAntErrorsFromRandomBoards(unittest.TestCase):
         manager.get_board().print_board()
 
     def test_game_2(self):
-        manager = board.BoardManager(new_manager=True)
+        manager = board.BoardManager()
         for action in self.actions[:-3]:
             manager.perform_action(action)
         manager.get_board().print_board(hex_board=False)

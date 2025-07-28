@@ -10,14 +10,11 @@ from tqdm import tqdm
 
 class Agent:
 
-    def __init__(self, is_white=True, board_manager=None):
-        if board_manager is None:
-            board_manager = board.BoardManager()
-
+    def __init__(self, board_manager, is_white=True, weights_override=None):
         self.is_white = is_white
         self.board_manager = board_manager
         self.actions_performed = []
-
+        self.weights_override = weights_override
         self.name = 'Agent'
 
     def get_action(self):
@@ -28,7 +25,7 @@ class Agent:
 
     def get_evaluation(self):
         # Base evaluation of the board state
-        evaluation = self.board_manager.get_board().evaluate_state()
+        evaluation = self.board_manager.get_board().evaluate_state(weights_override=self.weights_override)
         if not self.is_white:
             evaluation *= -1
 
@@ -57,6 +54,7 @@ class Player(Agent):
             return actions[0]
 
         return utils.make_choice(
+            self.board_manager,
             'The following actions can be played:',
             'Select an action:',
             actions
@@ -100,6 +98,7 @@ class HexPlayer(Agent):
         # Determine if the player is placing or moving a piece
         if has_legal_placements and has_legal_movements:
             action_type = utils.make_choice(
+                self.board_manager,
                 'Do you want to place a piece or move a piece?',
                 'Select an action type:',
                 [board.HiveGameBoard.PLACE_PIECE, board.HiveGameBoard.MOVE_PIECE]
@@ -121,6 +120,7 @@ class HexPlayer(Agent):
 
             # Player chooses a piece to place
             piece_type = utils.make_choice(
+                self.board_manager,
                 'Which type of piece would you like to place?',
                 'Select a type of piece:',
                 piece_options
@@ -136,6 +136,7 @@ class HexPlayer(Agent):
             location_options.sort()
             location_options.append(cancel_action)
             location_number = utils.make_choice(
+                self.board_manager,
                 f'Where would you like to place a new {piece_type}?',
                 'Select a location (represented by number ID):',
                 location_options
@@ -155,6 +156,7 @@ class HexPlayer(Agent):
             piece_locations.sort()
             piece_locations.append(cancel_action)
             location_number = utils.make_choice(
+                self.board_manager,
                 'Which piece would you like to move?',
                 'Select a piece (represented by number ID):',
                 piece_locations
@@ -173,6 +175,7 @@ class HexPlayer(Agent):
             new_locations.sort()
             new_locations.append(cancel_action)
             new_location_number = utils.make_choice(
+                self.board_manager,
                 f'Where would you like to move the piece at {location_number}',
                 'Select a space on the board (represented by number ID):',
                 new_locations
@@ -205,8 +208,8 @@ class RandomActionAI(Agent):
 
 class BestNextMoveAI(Agent):
 
-    def __init__(self, is_white=True, board_manager=None, winning_value=50000):
-        super().__init__(is_white, board_manager)
+    def __init__(self, is_white=True, board_manager=None, winning_value=50000, weights_override=None):
+        super().__init__(is_white, board_manager, weights_override)
         self.name = 'Best Next Move AI'
         self.winning_value = winning_value
 
@@ -236,8 +239,8 @@ class BestNextMoveAI(Agent):
 
 class MinimaxAI(Agent):
 
-    def __init__(self, is_white=True, board_manager=None, max_depth=4, max_time=float("inf"), winning_value=5000):
-        super().__init__(is_white, board_manager)
+    def __init__(self, is_white=True, board_manager=None, max_depth=4, max_time=float("inf"), winning_value=5000, weights_override=None):
+        super().__init__(is_white, board_manager, weights_override)
         self.max_depth = max_depth if max_depth >= 1 else 1
         self.max_time = max_time if max_time > 0 else 1
         self.name = f'Minimax AI with Depth {self.max_depth}'
@@ -487,8 +490,8 @@ class MinimaxAI(Agent):
 
 class ExpectimaxAI(MinimaxAI):
 
-    def __init__(self, is_white=True, board_manager=None, max_depth=4, max_time=5):
-        super().__init__(is_white, board_manager, max_depth, max_time)
+    def __init__(self, is_white=True, board_manager=None, max_depth=4, max_time=5, weights_override=None):
+        super().__init__(is_white, board_manager, max_depth, max_time, weights_override=weights_override)
         self.name = f'Expectimax AI with Depth {self.max_depth}'
 
     def min_value(self, board_state, alpha, beta, current_depth, start_time):

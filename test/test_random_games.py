@@ -22,7 +22,7 @@ class TestRandomGames(unittest.TestCase):
             action_to_perform = None
 
             start_of_run = timer()
-            board_manager = board.BoardManager(new_manager=True)
+            board_manager = board.BoardManager()
             try:
                 while board_manager.get_board().determine_winner() is None and board_manager.get_board().turn_number < 5000:
                     actions = board_manager.get_action_list()
@@ -48,6 +48,8 @@ class TestRandomGames(unittest.TestCase):
             print(f'Completed game {i+1}. Performed {board_manager.get_board().turn_number} moves in '
                   f'{end_of_run - start_of_run} seconds.')
             successful_games += 1
+            
+            # board_manager.save_state(f'random_board_{i+1}.hv')
 
         print(f'Total number of actions:    {total_actions}')
         print(f'Total time taken:           {total_time}')

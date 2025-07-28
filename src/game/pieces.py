@@ -28,7 +28,7 @@ class Ant(Piece):
 
     # TODO: This caching does not work properly. It ends up causing movement errors
     @staticmethod
-    @lru_cache(maxsize=1000)
+    # @lru_cache(maxsize=5000)
     def _calc_moves_helper(board_state, ant_piece):
         # Can move to any open space that it can slide to
         can_slide_into = ant_piece.connected_empty_spaces.difference(ant_piece.sliding_prevented_to.keys())

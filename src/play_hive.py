@@ -10,13 +10,13 @@ import src.utils as utils
 custom_depth = None
 
 
-def set_player_arguments():
+def set_player_arguments(board_manager):
     arguments = parse_arguments()
 
     if arguments['size']:
-        board.BoardManager().set_board_size(arguments['size'])
+        board_manager.set_board_size(arguments['size'])
     if arguments['load']:
-        board.BoardManager().load_state(arguments['load'])
+        board_manager.load_state(arguments['load'])
 
     return arguments
 
@@ -54,9 +54,7 @@ def parse_arguments():
     return {'load': args.load, 'size': args.size, 'depth': args.depth}
 
 
-def play_game(player1, player2):
-    board_manager = board.BoardManager()
-
+def play_game(board_manager, player1, player2):
     if player1 == player2:
         player2 = copy.deepcopy(player1)
 
@@ -87,8 +85,10 @@ def play_game(player1, player2):
 
 
 if __name__ == '__main__':
-    arguments = set_player_arguments()
-    player = agents.HexPlayer()
+    board_manager = board.BoardManager()
+    
+    arguments = set_player_arguments(board_manager)
+    player = agents.HexPlayer(board_manager=board_manager)
 
     play_against_player = 'Another player'
     play_against_random = 'A random AI'
@@ -98,6 +98,7 @@ if __name__ == '__main__':
 
     if not arguments['depth']:
         opponent_selection = utils.make_choice(
+            board_manager,
             'Choose your opponent.',
             'Select from the following options:',
             [
@@ -113,13 +114,13 @@ if __name__ == '__main__':
         opponent_selection = arguments['depth']
 
     if opponent_selection == play_against_player:
-        opponent = agents.HexPlayer()
+        opponent = agents.HexPlayer(board_manager=board_manager)
     elif opponent_selection == play_against_random:
-        opponent = agents.RandomActionAI()
+        opponent = agents.RandomActionAI(board_manager=board_manager)
     elif opponent_selection == play_against_easy:
-        opponent = agents.BestNextMoveAI()
+        opponent = agents.BestNextMoveAI(board_manager=board_manager)
     elif opponent_selection == play_against_medium:
-        opponent = agents.MinimaxAI(max_depth=1)
+        opponent = agents.MinimaxAI(max_depth=1, board_manager=board_manager)
     else:
         if arguments['depth']:
             print(f'Using an AI with depth {arguments["depth"]}.\n')
@@ -139,12 +140,13 @@ if __name__ == '__main__':
                     print('Error. You did not enter an integer value. Please try again.')
 
         max_depth = arguments['depth'] if arguments['depth'] else 2
-        opponent = agents.MinimaxAI(max_depth=max_depth, max_time=max_time)
+        opponent = agents.MinimaxAI(board_manager=board_manager, max_depth=max_depth, max_time=max_time)
 
     white = 'White'
     black = 'Black'
     random_color = 'Random Selection'
     color_selection = utils.make_choice(
+        board_manager,
         'Would you like to play as White or Black?',
         'Select an option:',
         [white, black, random_color]
@@ -154,6 +156,6 @@ if __name__ == '__main__':
         color_selection = random.choice([white, black])
 
     if color_selection == white:
-        play_game(player, opponent)
+        play_game(board_manager, player, opponent)
     else:
-        play_game(opponent, player)
+        play_game(board_manager, opponent, player)

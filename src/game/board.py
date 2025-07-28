@@ -17,26 +17,19 @@ from src.game.pieces import Spider
 
 class BoardManager:
 
-    def __new__(cls, new_manager=False):
-        if not hasattr(cls, 'instance') or new_manager:
-            cls.instance = super(BoardManager, cls).__new__(cls)
-            board = HiveGameBoard()
-            # cls.root_board = board
-            cls.current_board = board
-
-            cls.object_action_times = {
-                Piece.ANT: [],
-                Piece.BEETLE: [],
-                Piece.GRASSHOPPER: [],
-                Piece.QUEEN_BEE: [],
-                Piece.SPIDER: []
-            }
-            cls.cloning_times = []
-            cls.getting_actions_times = []
-
-            cls.successor_actions = []
-
-        return cls.instance
+    def __init__(self):
+        board = HiveGameBoard()
+        self.current_board = board
+        self.object_action_times = {
+            Piece.ANT: [],
+            Piece.BEETLE: [],
+            Piece.GRASSHOPPER: [],
+            Piece.QUEEN_BEE: [],
+            Piece.SPIDER: []
+        }
+        self.cloning_times = []
+        self.getting_actions_times = []
+        self.successor_actions = []
 
     def set_board_size(self, board_size):
         self.current_board.board_size = board_size
@@ -822,7 +815,7 @@ class HiveGameBoard:
 
     # TODO: Use caching
     # TODO: Documentation
-    def evaluate_state(self, print_utilities=False):
+    def evaluate_state(self, print_utilities=False, weights_override=None):
 
         # Evaluate if this is an end-game state:
         winner = self.determine_winner()
@@ -959,29 +952,40 @@ class HiveGameBoard:
             self.num_black_free_pieces[Piece.SPIDER],  # if (self.turn_number + 1) // 2 > 2 else 0,
         ]
 
-        value_of_piece_around_qb = 25 if (self.turn_number + 1) // 2 > 4 else 0
-        free_piece_multiplier = 2.5  # if (self.turn_number + 1) // 2 <= 4 else 0
-        white_values = np.array([
-            # Multiplied by the number of white pieces around the black queen bee
-            value_of_piece_around_qb,
-            # Multiplied by the number of black pieces around the black queen bee that can move
-            value_of_piece_around_qb * 0.7,
-            # Multiplied by the number of white pieces that can move to locations around the black queen bee
-            value_of_piece_around_qb * 0.7,
-            # Multiplied by the number of white pieces that cannot move to locations around the black queen bee
-            value_of_piece_around_qb * -0.7,
+        if weights_override is not None:
+            if len(weights_override) != len(utilities):
+                raise ValueError(f'The number of weights much match the number of utilities in the evaluation. num_weights: {len(weights_override)}; num_utilities: {len(utilities)}')
+            values = weights_override
+        else:
+            value_of_piece_around_qb = 25 if (self.turn_number + 1) // 2 > 4 else 0
+            free_piece_multiplier = 2.5  # if (self.turn_number + 1) // 2 <= 4 else 0
+            white_values = np.array([
+                # Multiplied by the number of white pieces around the black queen bee
+                value_of_piece_around_qb,
+                # Multiplied by the number of black pieces around the black queen bee that can move
+                value_of_piece_around_qb * 0.7,
+                # Multiplied by the number of white pieces that can move to locations around the black queen bee
+                value_of_piece_around_qb * 0.7,
+                # Multiplied by the number of white pieces that cannot move to locations around the black queen bee
+                value_of_piece_around_qb * -0.7,
 
-            -free_piece_multiplier,  # Multiplied by the total number of white pieces
+                -free_piece_multiplier,  # Multiplied by the total number of white pieces
 
-            free_piece_multiplier,  # Multiplied by number of free white ants
-            free_piece_multiplier,  # Multiplied by number of free white beetles
-            free_piece_multiplier,  # Multiplied by number of free white grasshoppers
-            # Multiplied by number of free white queen bees
-            value_of_piece_around_qb * 1.1 if (self.turn_number + 1) // 2 > 4 else free_piece_multiplier,
-            free_piece_multiplier,  # Multiplied by number of free white spiders
-        ])
-        black_values = -white_values
-        values = np.concatenate((white_values, black_values))
+                free_piece_multiplier,  # Multiplied by number of free white ants
+                free_piece_multiplier,  # Multiplied by number of free white beetles
+                free_piece_multiplier,  # Multiplied by number of free white grasshoppers
+                # Multiplied by number of free white queen bees
+                value_of_piece_around_qb * 1.1 if (self.turn_number + 1) // 2 > 4 else free_piece_multiplier,
+                free_piece_multiplier,  # Multiplied by number of free white spiders
+            ])
+            black_values = -white_values
+            values = np.concatenate((white_values, black_values))
+
+        # Early moves require a different evaluation
+        if (self.turn_number + 1) // 2 <= 4:
+            zeroed_indexes = [0, 1, 2, 3, 9, 10, 11, 12, 13, 18]
+            for i in zeroed_indexes:
+                values[i] = 0 
 
         evaluation = sum([utility * value for utility, value in zip(utilities, values)]) + winner_value
 

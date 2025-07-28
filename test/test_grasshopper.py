@@ -54,7 +54,7 @@ class TestGrasshopperErrorsFromRandomBoards(unittest.TestCase):
 
     @staticmethod
     def _test_game_helper(actions):
-        game_board = board.BoardManager(new_manager=True)
+        game_board = board.BoardManager()
         for action in actions[:-1]:
             game_board.perform_action(action)
         game_board.get_board().print_board()
