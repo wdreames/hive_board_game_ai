@@ -42,8 +42,8 @@ class Agent:
 # TODO: Rename to DebugPlayer
 class Player(Agent):
 
-    def __init__(self, is_white=True, board_manager=None):
-        super().__init__(is_white, board_manager)
+    def __init__(self, board_manager, is_white=True):
+        super().__init__(board_manager, is_white)
         self.name = 'Player'
 
     def get_action_selection(self):
@@ -64,8 +64,8 @@ class Player(Agent):
 # TODO: Rename to Player
 class HexPlayer(Agent):
 
-    def __init__(self, is_white=True, board_manager=None):
-        super().__init__(is_white, board_manager)
+    def __init__(self, board_manager, is_white=True):
+        super().__init__(board_manager, is_white)
         self.name = 'Player'
 
     # TODO: Refactor this function. It's really messy...
@@ -196,8 +196,8 @@ class HexPlayer(Agent):
 
 class RandomActionAI(Agent):
 
-    def __init__(self, is_white=True, board_manager=None):
-        super().__init__(is_white, board_manager)
+    def __init__(self, board_manager, is_white=True):
+        super().__init__(board_manager, is_white)
         self.name = 'Random Action AI'
 
     def get_action_selection(self):
@@ -208,8 +208,8 @@ class RandomActionAI(Agent):
 
 class BestNextMoveAI(Agent):
 
-    def __init__(self, is_white=True, board_manager=None, winning_value=50000, weights_override=None):
-        super().__init__(is_white, board_manager, weights_override)
+    def __init__(self, board_manager, is_white=True, winning_value=50000, weights_override=None):
+        super().__init__(board_manager, is_white, weights_override)
         self.name = 'Best Next Move AI'
         self.winning_value = winning_value
 
@@ -239,8 +239,8 @@ class BestNextMoveAI(Agent):
 
 class MinimaxAI(Agent):
 
-    def __init__(self, is_white=True, board_manager=None, max_depth=4, max_time=float("inf"), winning_value=5000, weights_override=None):
-        super().__init__(is_white, board_manager, weights_override)
+    def __init__(self, board_manager, is_white=True, max_depth=4, max_time=float("inf"), winning_value=5000, weights_override=None):
+        super().__init__(board_manager, is_white, weights_override)
         self.max_depth = max_depth if max_depth >= 1 else 1
         self.max_time = max_time if max_time > 0 else 1
         self.name = f'Minimax AI with Depth {self.max_depth}'
@@ -322,29 +322,29 @@ class MinimaxAI(Agent):
             beta = self.winning_value
 
             # Check all the actions with maximum depth, d
-            with tqdm(total=len(actions)) as pbar:
-                for i, action in enumerate(actions):
-                    next_board_state = self.board_manager.get_successor(action)
-                    action_eval = self.min_value(next_board_state, alpha, beta, (d * 2) + 1, start_time)
-                    self.board_manager.get_predecessor()
+            # with tqdm(total=len(actions)) as pbar:
+            for i, action in enumerate(actions):
+                next_board_state = self.board_manager.get_successor(action)
+                action_eval = self.min_value(next_board_state, alpha, beta, (d * 2) + 1, start_time)
+                self.board_manager.get_predecessor()
 
-                    # Check if time has run out
-                    if action_eval is None and action not in action_evaluations:
-                        action_evaluations[action] = -self.winning_value
-                    if action_eval is None or timer() - start_time >= self.max_time:
-                        # Return the best action that was found
-                        actions = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
-                        return self._select_best_from_actions(actions, action_evaluations)
+                # Check if time has run out
+                if action_eval is None and action not in action_evaluations:
+                    action_evaluations[action] = -self.winning_value
+                if action_eval is None or timer() - start_time >= self.max_time:
+                    # Return the best action that was found
+                    actions = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
+                    return self._select_best_from_actions(actions, action_evaluations)
 
-                    # If a winning move was found, play it
-                    if action_eval >= self.winning_value:
-                        return action
+                # If a winning move was found, play it
+                if action_eval >= self.winning_value:
+                    return action
 
-                    # Store evaluation
-                    action_evaluations[action] = action_eval
-                    alpha = max(alpha, action_eval)
+                # Store evaluation
+                action_evaluations[action] = action_eval
+                alpha = max(alpha, action_eval)
 
-                    pbar.update()
+                # pbar.update()
 
             # Sort the action list based on the evaluations found during this iteration (high to low)
             actions = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
@@ -490,8 +490,8 @@ class MinimaxAI(Agent):
 
 class ExpectimaxAI(MinimaxAI):
 
-    def __init__(self, is_white=True, board_manager=None, max_depth=4, max_time=5, weights_override=None):
-        super().__init__(is_white, board_manager, max_depth, max_time, weights_override=weights_override)
+    def __init__(self, board_manager, is_white=True, max_depth=4, max_time=5, weights_override=None):
+        super().__init__(board_manager, is_white, max_depth, max_time, weights_override=weights_override)
         self.name = f'Expectimax AI with Depth {self.max_depth}'
 
     def min_value(self, board_state, alpha, beta, current_depth, start_time):

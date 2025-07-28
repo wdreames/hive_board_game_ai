@@ -141,7 +141,7 @@ def check_for_errors(word_to_find=None, words_to_ignore=None, max_num_runs=25, m
     num_runs = 0
     while num_runs < max_num_runs:
         try:
-            play_game(agents.RandomActionAI(board_manager=board_manager), agents.RandomActionAI(board_manager=board_manager), max_turns=max_actions, debug_output=True)
+            play_game(agents.RandomActionAI(board_manager), agents.RandomActionAI(board_manager), max_turns=max_actions, debug_output=True)
         except Exception:
             err_output = traceback.format_exc()
             if word_to_find is None and words_to_ignore is None:
@@ -408,18 +408,18 @@ if __name__ == '__main__':
     for i in range(num_games):
         board_manager = board.BoardManager()
 
-        player = agents.Player(board_manager=board_manager)
-        hex_player = agents.HexPlayer(board_manager=board_manager)
-        random_ai = agents.RandomActionAI(board_manager=board_manager)
-        best_next_move_ai = agents.BestNextMoveAI(board_manager=board_manager)
-        minimax_ai1 = agents.MinimaxAI(max_depth=1, board_manager=board_manager)
-        minimax_ai2 = agents.MinimaxAI(max_depth=2, board_manager=board_manager)
-        minimax_ai3 = agents.MinimaxAI(max_depth=3, max_time=120, board_manager=board_manager)
-        minimax_ai4 = agents.MinimaxAI(max_depth=4, max_time=10, board_manager=board_manager)
-        minimax_ai8 = agents.MinimaxAI(max_depth=8, max_time=10, board_manager=board_manager)
-        expectimax_ai1 = agents.ExpectimaxAI(max_depth=1, max_time=30, board_manager=board_manager)
-        expectimax_ai2 = agents.ExpectimaxAI(max_depth=2, max_time=10, board_manager=board_manager)
-        expectimax_ai3 = agents.ExpectimaxAI(max_depth=3, max_time=10, board_manager=board_manager)
+        player = agents.Player(board_manager)
+        hex_player = agents.HexPlayer(board_manager)
+        random_ai = agents.RandomActionAI(board_manager)
+        best_next_move_ai = agents.BestNextMoveAI(board_manager)
+        minimax_ai1 = agents.MinimaxAI(board_manager, max_depth=1)
+        minimax_ai2 = agents.MinimaxAI(board_manager, max_depth=2)
+        minimax_ai3 = agents.MinimaxAI(board_manager, max_depth=3, max_time=120)
+        minimax_ai4 = agents.MinimaxAI(board_manager, max_depth=4, max_time=10)
+        minimax_ai8 = agents.MinimaxAI(board_manager, max_depth=8, max_time=10)
+        expectimax_ai1 = agents.ExpectimaxAI(board_manager, max_depth=1, max_time=30)
+        expectimax_ai2 = agents.ExpectimaxAI(board_manager, max_depth=2, max_time=10)
+        expectimax_ai3 = agents.ExpectimaxAI(board_manager, max_depth=3, max_time=10)
         
         # Run a game with specified players/AIs for white and black
         _, white_times, black_times, num_actions_per_turn, total_num_actions = play_game(

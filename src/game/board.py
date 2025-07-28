@@ -1,3 +1,4 @@
+import copy
 import os
 import pickle
 import random
@@ -955,7 +956,7 @@ class HiveGameBoard:
         if weights_override is not None:
             if len(weights_override) != len(utilities):
                 raise ValueError(f'The number of weights much match the number of utilities in the evaluation. num_weights: {len(weights_override)}; num_utilities: {len(utilities)}')
-            values = weights_override
+            weights = weights_override
         else:
             value_of_piece_around_qb = 25 if (self.turn_number + 1) // 2 > 4 else 0
             free_piece_multiplier = 2.5  # if (self.turn_number + 1) // 2 <= 4 else 0
@@ -979,13 +980,16 @@ class HiveGameBoard:
                 free_piece_multiplier,  # Multiplied by number of free white spiders
             ])
             black_values = -white_values
-            values = np.concatenate((white_values, black_values))
+            weights = np.concatenate((white_values, black_values))
 
         # Early moves require a different evaluation
         if (self.turn_number + 1) // 2 <= 4:
+            values = copy.deepcopy(weights)
             zeroed_indexes = [0, 1, 2, 3, 9, 10, 11, 12, 13, 18]
             for i in zeroed_indexes:
-                values[i] = 0 
+                values[i] = 0
+        else:
+            values = weights
 
         evaluation = sum([utility * value for utility, value in zip(utilities, values)]) + winner_value
 

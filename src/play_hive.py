@@ -88,7 +88,7 @@ if __name__ == '__main__':
     board_manager = board.BoardManager()
     
     arguments = set_player_arguments(board_manager)
-    player = agents.HexPlayer(board_manager=board_manager)
+    player = agents.HexPlayer(board_manager)
 
     play_against_player = 'Another player'
     play_against_random = 'A random AI'
@@ -114,13 +114,13 @@ if __name__ == '__main__':
         opponent_selection = arguments['depth']
 
     if opponent_selection == play_against_player:
-        opponent = agents.HexPlayer(board_manager=board_manager)
+        opponent = agents.HexPlayer(board_manager)
     elif opponent_selection == play_against_random:
-        opponent = agents.RandomActionAI(board_manager=board_manager)
+        opponent = agents.RandomActionAI(board_manager)
     elif opponent_selection == play_against_easy:
-        opponent = agents.BestNextMoveAI(board_manager=board_manager)
+        opponent = agents.BestNextMoveAI(board_manager)
     elif opponent_selection == play_against_medium:
-        opponent = agents.MinimaxAI(max_depth=1, board_manager=board_manager)
+        opponent = agents.MinimaxAI(board_manager, max_depth=1)
     else:
         if arguments['depth']:
             print(f'Using an AI with depth {arguments["depth"]}.\n')
@@ -140,7 +140,7 @@ if __name__ == '__main__':
                     print('Error. You did not enter an integer value. Please try again.')
 
         max_depth = arguments['depth'] if arguments['depth'] else 2
-        opponent = agents.MinimaxAI(board_manager=board_manager, max_depth=max_depth, max_time=max_time)
+        opponent = agents.MinimaxAI(board_manager, max_depth=max_depth, max_time=max_time)
 
     white = 'White'
     black = 'Black'
