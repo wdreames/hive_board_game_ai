@@ -288,7 +288,7 @@ class HiveGameBoard:
         return action_list
 
     @staticmethod
-    @lru_cache(maxsize=1000)
+    # @lru_cache(maxsize=1000)
     def _get_action_list_helper(sorted_pieces_to_play, sorted_locations_to_place, sorted_possible_moves, randomize_actions=False):
         # Move actions
         move_actions = []
@@ -954,9 +954,9 @@ class HiveGameBoard:
         ]
 
         if weights_override is not None:
-            if len(weights_override) != len(utilities):
+            if len(weights_override) * 2 != len(utilities):
                 raise ValueError(f'The number of weights much match the number of utilities in the evaluation. num_weights: {len(weights_override)}; num_utilities: {len(utilities)}')
-            weights = weights_override
+            white_values = np.array(weights_override)
         else:
             value_of_piece_around_qb = 25 if (self.turn_number + 1) // 2 > 4 else 0
             free_piece_multiplier = 2.5  # if (self.turn_number + 1) // 2 <= 4 else 0
@@ -979,8 +979,8 @@ class HiveGameBoard:
                 value_of_piece_around_qb * 1.1 if (self.turn_number + 1) // 2 > 4 else free_piece_multiplier,
                 free_piece_multiplier,  # Multiplied by number of free white spiders
             ])
-            black_values = -white_values
-            weights = np.concatenate((white_values, black_values))
+        black_values = -white_values
+        weights = np.concatenate((white_values, black_values))
 
         # Early moves require a different evaluation
         if (self.turn_number + 1) // 2 <= 4:

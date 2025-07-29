@@ -457,7 +457,7 @@ class MinimaxAI(Agent):
         return value
 
     @staticmethod
-    @lru_cache(maxsize=1000)
+    # @lru_cache(maxsize=1000)
     def find_win(current_state: board.HiveGameBoard, white_to_move=True):
         """
         This function is called when minimax finds a scenario with 5 pieces surrounding the opponent's queen bee.
