@@ -181,7 +181,7 @@ def run_games_in_thread(thread_name, contestants, minimax_depth, results_queue, 
 
 def run_tournament(num_threads=4, minimax_depth=1, num_iterations=10, num_contestants=10, mutation_chance=0.5, mutation_range=(-0.5, 0.5), crossover_chance=0.5, max_time_per_move=float("inf"), max_time_per_game=float("inf"), max_turns_per_game=float("inf")):
     initial_weights = get_initial_weights()
-    contestants = [Contestant(weights=mutate(copy.deepcopy(initial_weights), mutation_chance, mutation_range)) for _ in range(num_contestants)]
+    contestants = [Contestant(initial_weights)] + [Contestant(weights=mutate(copy.deepcopy(initial_weights), mutation_chance, mutation_range)) for _ in range(num_contestants - 1)]
 
     for i in range(num_iterations):
         print(f'Beginning iteration {i+1} of the tournament.')
@@ -227,10 +227,11 @@ def run_tournament(num_threads=4, minimax_depth=1, num_iterations=10, num_contes
 
 
 def get_initial_weights():
-    return [482.0995973399494, -4.009421117113153, 66.0953459264619, -0.48336047759406564, -0.03084497704606408, -0.35647194025252293, 0.1857165602725429, 0.1857165602725429, 14.16321981398211, -0.07543227295385808]
+    return [1,1,1,1,1,1,1,1,1,1]
+    return [482.0995973399494, 3.2242430892810825, 27.7235511309986, -0.48336047759406564, -0.22454442284522128, 0.14364161231710681, 0.2771940489184473, -0.020682666521378124, 14.16321981398211, 0.06365532306114718]
 
 if __name__ == '__main__':
-    run_tournament(num_threads=6, minimax_depth=2, num_iterations=50, num_contestants=12, mutation_chance=0.75, mutation_range=(-2.0, 2.0), crossover_chance=1.0, max_time_per_move=60, max_time_per_game=60*80, max_turns_per_game=80)
+    run_tournament(num_threads=6, minimax_depth=1, num_iterations=2500, num_contestants=12, mutation_chance=0.5, mutation_range=(-1.5, 1.5), crossover_chance=0.9, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=100)
 
 """
 Original weights:
@@ -345,6 +346,39 @@ Contestant 203:
         performance_history: [41, 32, 48, 28, 0, 40, 0, 26]
         median_performance: 32.0
         winrate_value: 5.5
+
+Run 11 - starting with a mix of run 10 contestant 118 and 203 (num_threads=6, minimax_depth=2, num_iterations=500, num_contestants=12, mutation_chance=0.60, mutation_range=(-2.0, 2.0), crossover_chance=1.0, max_time_per_move=200, max_time_per_game=200*80, max_turns_per_game=80)
+Contestant 10:
+        weights: [482.0995973399494, 3.2242430892810825, 27.7235511309986, -0.48336047759406564, -0.22454442284522128, 0.14364161231710681, 0.2771940489184473, -0.020682666521378124, 14.16321981398211, 0.06365532306114718]
+        performance_history: [39, 0, 34, 53, 37, -31, 43, 40, 45, 43, 64, -37]
+        median_performance: 43.0
+        winrate_value: 5.0
         
-Run 11 - starting with a mix of run 10 contestant 118 and 203 (num_threads=6, minimax_depth=2, num_iterations=50, num_contestants=12, mutation_chance=0.75, mutation_range=(-2.0, 2.0), crossover_chance=1.0, max_time_per_move=200, max_time_per_game=200*80, max_turns_per_game=80)
+Run 12 - starting with run 11 contestant 10 weights (num_threads=6, minimax_depth=1, num_iterations=500, num_contestants=12, mutation_chance=0.65, mutation_range=(-0.2, 0.2), crossover_chance=1.0, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=100)
+1) Contestant 2961:
+        weights: [93.16171905178355, 1.8693734113476352, 52.41911016151369, -0.1682611937055484, -0.08598631104249256, 0.04890283535822403, 0.8904971793978608, -0.03890874507656261, 0.5342486630653795, 0.02823936423603152]
+        performance_history: [30, 48, 37, 0, 67, 68, 51, -44]
+        median_performance: 48.0
+        winrate_value: 4.75
+12) Contestant 2909:
+        weights: [72.76655736024148, 1.8690176716666302, 27.75059114491946, -0.12844451835197654, -0.11758566386721761, 0.059364698743402645, 0.5986053914476076, -0.03993604455946739, 0.547244273517883, 0.03022447233597878]
+        performance_history: [27, 45, 32, 40, 54, 40, -31, 44, 32, -34, -48, 0, 36, 38, 0, 54, -34]
+        median_performance: 0.0
+        winrate_value: 0.5
+
+Run 13 - starting with `1` for all weights (num_threads=6, minimax_depth=1, num_iterations=388, num_contestants=12, mutation_chance=0.65, mutation_range=(-0.2, 0.2), crossover_chance=0.9, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=100)
+Contestant 2314:
+        weights: [2.0727174466777187, 0.43062314768168175, 0.5868187988918447, 0.17904632263694878, 0.5213094996223167, 0.26697540985825124, 0.3361533719818756, 0.2466300405825513, 0.19519153225200592, 0.37616328082467476]
+        performance_history: [37, 46, 36]
+        median_performance: 37.0
+        winrate_value: 3.0
+Contestant 2270:
+        weights: [2.4571522591696295, 0.6279773684729827, 0.7538968242372678, 0.16959383467111389, 0.47927057921815547, 0.3034965494096136, 0.38366439658118945, 0.368215590482877, 0.22112068806919982, 0.517780053350381]
+        performance_history: [70, 48, 0, 0, 59, -56, 41, 0, 34, -43]
+        median_performance: 0.0
+        winrate_value: 1.25
+
+# I realized the above set of hyperparameters prevents negative weights from being formed. Adjusted the mutation range to fix that.
+Run 14 - starting with `1` for all weights (num_threads=6, minimax_depth=1, num_iterations=2500, num_contestants=12, mutation_chance=0.5, mutation_range=(-1.5, 1.5), crossover_chance=0.9, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=100)
+
 """
