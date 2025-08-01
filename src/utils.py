@@ -13,7 +13,7 @@ def make_choice(board_manager, description, prompt, choices):
     if selection.lower() in exit_options:
         return _save_and_exit(board_manager, description, prompt, choices)
     elif not selection.isnumeric() or int(selection) not in range(1, len(choices) + 1):
-        return make_choice(description, prompt, choices)
+        return make_choice(board_manager, description, prompt, choices)
 
     return choices[int(selection) - 1]
 

@@ -851,7 +851,10 @@ class HiveGameBoard:
 
         black_beetle_on_white_qb = 0
         white_beetle_on_black_qb = 0
-
+        
+        total_around_white_qb = 0
+        total_around_black_qb = 0
+        
         if self.white_queen_location is not None and self.black_queen_location is not None:
             white_queen_bee = self.pieces[self.white_queen_location]
             black_queen_bee = self.pieces[self.black_queen_location]
@@ -923,8 +926,21 @@ class HiveGameBoard:
                 num_black_can_move_to_white_qb -= difference
                 num_black_cannot_move_to_white_qb += difference
 
+        total_locked_around_black_qb = num_white_around_black_qb + num_black_immovable_around_black_qb
+        total_locked_around_white_qb = num_black_around_white_qb + num_white_immovable_around_white_qb
+
         utilities = [
             # White utilities (positive)
+            # 1 if total_locked_around_black_qb == 1 else 0,
+            # 1 if total_locked_around_black_qb == 2 else 0,
+            # 1 if total_locked_around_black_qb == 3 else 0,
+            # 1 if total_locked_around_black_qb == 4 else 0,
+            # 1 if total_locked_around_black_qb == 5 else 0,
+            
+            # num_white_around_black_qb,
+            # num_black_immovable_around_black_qb,
+            # white_beetle_on_black_qb,
+            
             (num_white_around_black_qb + num_black_immovable_around_black_qb*0.8 + white_beetle_on_black_qb) ** 1.5,
             num_black_movable_around_black_qb,
             num_white_can_move_to_black_qb,
@@ -939,6 +955,16 @@ class HiveGameBoard:
             self.num_white_free_pieces[Piece.SPIDER],  # if (self.turn_number + 1) // 2 >= 5 else 0,
 
             # Black utilities (negative)
+            # 1 if total_locked_around_white_qb == 1 else 0,
+            # 1 if total_locked_around_white_qb == 2 else 0,
+            # 1 if total_locked_around_white_qb == 3 else 0,
+            # 1 if total_locked_around_white_qb == 4 else 0,
+            # 1 if total_locked_around_white_qb == 5 else 0,
+            
+            # num_black_around_white_qb,
+            # num_white_immovable_around_white_qb,
+            # black_beetle_on_white_qb,
+            
             (num_black_around_white_qb + num_white_immovable_around_white_qb*0.8 + black_beetle_on_white_qb) ** 1.5,
             num_white_movable_around_white_qb,
             num_black_can_move_to_white_qb,
@@ -1176,6 +1202,8 @@ class HiveGameBoard:
     def __hash__(self):
         sorted_pieces = tuple(sorted(self.pieces.items(), key=lambda item: item[0]))
         sorted_empty_spaces = tuple(sorted(self.empty_spaces.items(), key=lambda item: item[0]))
+        # value = hash((sorted_pieces, sorted_empty_spaces))
+        # print(f'hash for board state: {value}')
         return hash((sorted_pieces, sorted_empty_spaces))
 
     def __str__(self):

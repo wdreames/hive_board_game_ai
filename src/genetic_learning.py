@@ -33,9 +33,14 @@ class Contestant:
         self.performance_history.append(result)
 
     def get_recent_performance_history(self):
-        if len(self.performance_history) > self.recent_game_limit:
-            return self.performance_history[-self.recent_game_limit:]
-        return self.performance_history[:]
+        perf_hist_copy = []
+        for value in self.performance_history:
+            if value is not None:
+                perf_hist_copy.append(value)
+        
+        if len(perf_hist_copy) > self.recent_game_limit:
+            return perf_hist_copy[-self.recent_game_limit:]
+        return perf_hist_copy
 
     def get_performance_value(self):
         recent_performance_values = self.get_recent_performance_history()
@@ -108,20 +113,33 @@ def mutate(weights, mutation_chance=0.5, mutation_range=(-0.5, 0.5)):
     return weights
 
 
-def get_next_generation_of_weights(contestants_list, mutation_chance=0.5, mutation_range=(-0.5, 0.5), crossover_chance=0.5, chance_of_low_performing_parent=0.2):
-    highest_performers = contestants_list[:len(contestants_list)//2]
-    lowest_performers = contestants_list[len(contestants_list)//2:]
+def get_next_generation_of_weights(contestants_list, mutation_chance=0.5, mutation_range=(-1.5, 1.5), crossover_chance=0.9, chance_of_low_performing_parent=0.1):
+    """
+    Parents are randomly selected from the top half of the list of performers. The number of parents is equal to 1/4 the number of contestants.
+    The bottom 1/4 of contestants are replaced by the new population of children that were generated.
+    """
+    top_half = contestants_list[:len(contestants_list)//2]
+    bottom_half = contestants_list[len(contestants_list)//2:]
+    num_parents = len(contestants_list)//4
+    remaining_original_population = contestants_list[: 3 * len(contestants_list) // 4 ]
 
-    parents_weights = []
-    for i in range(len(highest_performers)):
-        parents_weights.append(highest_performers[i].weights)
+    parents = []
+    for _ in range(num_parents):
+        if random.random() < chance_of_low_performing_parent:
+            random_parent = random.choice(bottom_half)
+            bottom_half.remove(random_parent)
+        else:
+            random_parent = random.choice(top_half)
+            top_half.remove(random_parent)
+        parents.append(random_parent)
 
     children = []
-    for i in range(0, len(parents_weights), 2):
-        for child_weights in crossover(parents_weights[i], parents_weights[i+1], crossover_chance):
+    for i in range(0, len(parents), 2):
+        print(f'Crossing over contestants {parents[i].id} and {parents[i+1].id} to make new children.')
+        for child_weights in crossover(parents[i].weights, parents[i+1].weights, crossover_chance):
             children.append(Contestant(mutate(child_weights, mutation_chance, mutation_range)))
 
-    return highest_performers + children
+    return remaining_original_population + children
 
 
 def play_game(minimax_depth, contestant1: Contestant, contestant2: Contestant, results_queue, max_time_per_move=float("inf"), max_time_per_game=float("inf"), max_turns_per_game=float("inf")):
@@ -131,7 +149,8 @@ def play_game(minimax_depth, contestant1: Contestant, contestant2: Contestant, r
     player2 = agents.MinimaxAI(board_manager, max_depth=minimax_depth, max_time=max_time_per_move, is_white=False, weights_override=contestant2.weights)
 
     start_of_game = timer()
-
+    
+    error_occurred = False
     try:
         while board_manager.get_board().determine_winner() is None and board_manager.get_board().turn_number < max_turns_per_game:
             time_check = timer()
@@ -149,6 +168,7 @@ def play_game(minimax_depth, contestant1: Contestant, contestant2: Contestant, r
     except KeyboardInterrupt:
         pass
     except Exception:
+        error_occurred = True
         board_manager.get_board().print_board(hex_board=False)
         board_manager.save_state('last_hive_error.hv')
         print(traceback.format_exc())
@@ -163,10 +183,14 @@ def play_game(minimax_depth, contestant1: Contestant, contestant2: Contestant, r
         print(f'Contestant {contestant2.id} (black) won against contestant {contestant1.id} (white) after {num_moves} moves.')
         contestant1.record_result(-num_moves)
         contestant2.record_result(num_moves)
-    else:
+    elif not error_occurred:
         print(f'Contestant {contestant1.id} (white) drew against contestant {contestant2.id} (black) after {num_moves} moves.')
         contestant1.record_result(0)
         contestant2.record_result(0)
+    else:
+        print(f'An error occurred during a game between contestant {contestant1.id} and contestant {contestant2.id}. This result will not be counted.')
+        contestant1.record_result(None)
+        contestant2.record_result(None)
     results_queue.put(contestant1)
     results_queue.put(contestant2)
 
@@ -227,11 +251,10 @@ def run_tournament(num_threads=4, minimax_depth=1, num_iterations=10, num_contes
 
 
 def get_initial_weights():
-    return [1,1,1,1,1,1,1,1,1,1]
-    return [482.0995973399494, 3.2242430892810825, 27.7235511309986, -0.48336047759406564, -0.22454442284522128, 0.14364161231710681, 0.2771940489184473, -0.020682666521378124, 14.16321981398211, 0.06365532306114718]
+    return [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 
 if __name__ == '__main__':
-    run_tournament(num_threads=6, minimax_depth=1, num_iterations=2500, num_contestants=12, mutation_chance=0.5, mutation_range=(-1.5, 1.5), crossover_chance=0.9, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=100)
+    run_tournament(num_threads=6, minimax_depth=1, num_iterations=2500, num_contestants=24, mutation_chance=0.5, mutation_range=(-1.2, 1.2), crossover_chance=0.9, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=100)
 
 """
 Original weights:
@@ -379,6 +402,17 @@ Contestant 2270:
         winrate_value: 1.25
 
 # I realized the above set of hyperparameters prevents negative weights from being formed. Adjusted the mutation range to fix that.
-Run 14 - starting with `1` for all weights (num_threads=6, minimax_depth=1, num_iterations=2500, num_contestants=12, mutation_chance=0.5, mutation_range=(-1.5, 1.5), crossover_chance=0.9, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=100)
+Run 14 - starting with `1` for all weights (num_threads=6, minimax_depth=1, num_iterations=2500, num_contestants=12, mutation_chance=0.5, mutation_range=(-1.2, 1.2), crossover_chance=0.9, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=100)
+Contestant 3342:
+        weights: [23.837258798632046, 2.212159190686706e-05, 0.7049882779332708, -6.525600079068667e-08, 2.6761812420029147e-12, -3.059426684982831e-12, 0.12994498468350724, -4.231145281098476e-21, 6.159790004564181e-14, -6.68506448280828e-13]
+        performance_history: [33, 25, -32, 43, 33, 29, 35]
+        median_performance: 33.0
+        winrate_value: 5.0
+
+<Added new utilities to the evaluation function for distinct number of bugs around the enemy qb>
+<Ignore errored games rather than treat them as draws>
+<Improved new population generation>
+
+Run 15 - starting with `1` for all weights (num_threads=6, minimax_depth=1, num_iterations=2500, num_contestants=24, mutation_chance=0.5, mutation_range=(-1.2, 1.2), crossover_chance=0.9, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=100)
 
 """
