@@ -9,8 +9,10 @@ from tqdm import tqdm
 
 
 class Agent:
+    
+    DEFAULT_WEIGHTS = [23.837258798632046, 2.212159190686706e-05, 0.7049882779332708, -6.525600079068667e-08, 2.6761812420029147e-12, -3.059426684982831e-12, 0.12994498468350724, -4.231145281098476e-21, 6.159790004564181e-14, -6.68506448280828e-13]
 
-    def __init__(self, board_manager, is_white=True, weights_override=None):
+    def __init__(self, board_manager, is_white=True, weights_override=DEFAULT_WEIGHTS):
         self.is_white = is_white
         self.board_manager = board_manager
         self.actions_performed = []
@@ -282,6 +284,10 @@ class MinimaxAI(Agent):
         return random_action[0], random_action[1], random_piece
 
     def get_action_selection(self):
+        action, _ = self.get_action_selection_with_eval()
+        return action
+
+    def get_action_selection_with_eval(self):
         # Check if we have seen this list of actions before
         action_list = tuple(self.board_manager.get_action_list())
         if action_list in self.sorted_action_lists:
@@ -296,7 +302,7 @@ class MinimaxAI(Agent):
         if action_number <= 2:
             chosen_action = self.get_opening_move(actions, action_number)
             if chosen_action is not None:
-                return chosen_action
+                return chosen_action, None
         elif action_number <= 4:
             better_action_list = []
 
@@ -313,6 +319,9 @@ class MinimaxAI(Agent):
         # If there is only one move, play it
         if len(actions) == 1:
             return actions.pop()
+        
+        best_action = actions[0]
+        best_action_eval = -float('inf')
 
         # Run iterative deepening
         start_time = timer()
@@ -333,16 +342,18 @@ class MinimaxAI(Agent):
                     action_evaluations[action] = -self.winning_value
                 if action_eval is None or timer() - start_time >= self.max_time:
                     # Return the best action that was found
-                    actions = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
-                    return self._select_best_from_actions(actions, action_evaluations)
+                    return best_action, best_action_eval
 
                 # If a winning move was found, play it
                 if action_eval >= self.winning_value:
-                    return action
+                    return action, action_eval
 
                 # Store evaluation
-                action_evaluations[action] = action_eval
                 alpha = max(alpha, action_eval)
+                action_evaluations[action] = action_eval
+                if action_eval > best_action_eval:
+                    best_action_eval = action_eval
+                    best_action = action
 
                 # pbar.update()
 
@@ -351,30 +362,18 @@ class MinimaxAI(Agent):
             self.sorted_action_lists[action_list] = actions, self.maximizing
 
             # If a forced win was found, exit the loop to return the best move
-            if action_evaluations[actions[0]] >= self.winning_value - 1:
+            if best_action_eval >= self.winning_value - 1 - self.max_depth:
                 break
+        
+        return best_action, best_action_eval
 
-        return self._select_best_from_actions(actions, action_evaluations)
-
-    @staticmethod
-    def _select_best_from_actions(action_list, action_evaluations):
-        # Assumes action_list is already sorted based on evaluations high to low
-        best_value = action_evaluations[action_list[0]]
-        best_actions = []
-        for action in action_list:
-            if action_evaluations[action] >= best_value:
-                best_actions.append(action)
-            else:
-                break
-
-        return random.choice(best_actions)
-
+    # Used to evaluate this agent's actions
     def max_value(self, board_state, alpha, beta, depth, start_time):
         if board_state.determine_winner() is not None:
             return self.get_evaluation()
         elif self.find_win(board_state, white_to_move=self.is_white):
             # Found a forced win, but returning (winning_value - 1) in case there is a faster win
-            return self.winning_value - 1
+            return self.winning_value - (self.max_depth - depth)
         elif depth <= 0:
             return self.get_evaluation()
 
@@ -387,33 +386,34 @@ class MinimaxAI(Agent):
         else:
             actions = action_list
 
-        value = -float("inf")
+        max_eval = -float("inf")
         action_evaluations = dict()
         for action in actions:
             # Get the evaluation of the next action
             next_board_state = self.board_manager.get_successor(action)
-            min_val = self.min_value(next_board_state, alpha, beta, depth - 1, start_time)
+            new_eval = self.min_value(next_board_state, alpha, beta, depth - 1, start_time)
             self.board_manager.get_predecessor()
 
             # Check if time has run out
-            if min_val is None or timer() - start_time >= self.max_time:
+            if new_eval is None or timer() - start_time >= self.max_time:
                 return None
 
             # Set the maximum so far
-            value = max(value, min_val)
+            max_eval = max(max_eval, new_eval)
 
-            if value >= beta:
-                return value
+            if max_eval >= beta:
+                return max_eval
 
-            alpha = max(value, alpha)
-            action_evaluations[action] = value
+            alpha = max(max_eval, alpha)
+            action_evaluations[action] = max_eval
 
         # Sort high to low evaluations
         sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda item: -item[1])]
         self.sorted_action_lists[action_list] = sorted_action_list, self.maximizing
 
-        return value
+        return max_eval
 
+    # Used to evaluate opponent's actions
     def min_value(self, board_state, alpha, beta, depth, start_time):
         if board_state.determine_winner() is not None:
             return self.get_evaluation()
@@ -429,32 +429,32 @@ class MinimaxAI(Agent):
         else:
             actions = action_list
 
-        value = float("inf")
+        min_eval = float("inf")
         action_evaluations = dict()
         for action in actions:
             # Get the evaluation of the next action
             next_board_state = self.board_manager.get_successor(action)
-            max_val = self.max_value(next_board_state, alpha, beta, depth - 1, start_time)
+            new_eval = self.max_value(next_board_state, alpha, beta, depth - 1, start_time)
             self.board_manager.get_predecessor()
 
             # Check if time has run out
-            if max_val is None or timer() - start_time >= self.max_time:
+            if new_eval is None or timer() - start_time >= self.max_time:
                 return None
 
-            # Set the maximum so far
-            value = min(value, max_val)
+            # Set the minimum so far
+            min_eval = min(min_eval, new_eval)
 
-            if value <= alpha:
-                return value
+            if min_eval <= alpha:
+                return min_eval
 
-            beta = min(value, beta)
-            action_evaluations[action] = value
+            beta = min(min_eval, beta)
+            action_evaluations[action] = min_eval
 
         # Sort low to high evaluations
         sorted_action_list = [action for action, value in sorted(action_evaluations.items(), key=lambda item: item[1])]
         self.sorted_action_lists[action_list] = sorted_action_list, self.minimizing
 
-        return value
+        return min_eval
 
     @staticmethod
     # @lru_cache(maxsize=1000)
@@ -465,6 +465,11 @@ class MinimaxAI(Agent):
 
         :return bool: True if a checkmate is possible, False otherwise.
         """
+        if white_to_move and current_state.determine_winner() == board.HiveGameBoard.WHITE_WINNER:
+            return True
+        if not white_to_move and current_state.determine_winner() == board.HiveGameBoard.BLACK_WINNER:
+            return True
+        
         if current_state.black_queen_location is None or current_state.white_queen_location is None:
             return False
 
@@ -482,6 +487,11 @@ class MinimaxAI(Agent):
             if last_empty_space in locations_to_place:
                 return True
             for piece_location, moves in possible_moves.items():
+                if last_empty_space not in moves:
+                    continue
+                piece = current_state.pieces[piece_location]
+                if piece.name == spaces.Piece.BEETLE and piece.stacked_piece_obj is not None:
+                    return True
                 if last_empty_space in moves and piece_location not in queen_bee.connected_pieces:
                     return True
 
