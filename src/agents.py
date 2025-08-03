@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from functools import lru_cache
 from timeit import default_timer as timer
+import uuid
 import src.game.board as board
 import src.game.spaces as spaces
 import src.utils as utils
@@ -14,7 +15,7 @@ class Agent:
 
     def __init__(self, board_manager, is_white=True, weights_override=DEFAULT_WEIGHTS):
         self.is_white = is_white
-        self.board_manager = board_manager
+        self.board_manager: board.BoardManager = board_manager
         self.actions_performed = []
         self.weights_override = weights_override
         self.name = 'Agent'
@@ -241,7 +242,7 @@ class BestNextMoveAI(Agent):
 
 class MinimaxAI(Agent):
 
-    def __init__(self, board_manager, is_white=True, max_depth=4, max_time=float("inf"), winning_value=5000, weights_override=None):
+    def __init__(self, board_manager, is_white=True, max_depth=4, max_time=float("inf"), winning_value=5000, weights_override=None, display_progress=True, save_state_on_errors=True):
         super().__init__(board_manager, is_white, weights_override)
         self.max_depth = max_depth if max_depth >= 1 else 1
         self.max_time = max_time if max_time > 0 else 1
@@ -251,6 +252,8 @@ class MinimaxAI(Agent):
         self.sorted_action_lists = dict()
         self.maximizing = 'max'
         self.minimizing = 'min'
+        self.display_progress = display_progress
+        self.save_state_on_errors = save_state_on_errors
 
     def get_opening_move(self, actions, action_number):
         if action_number == 1:
@@ -318,7 +321,7 @@ class MinimaxAI(Agent):
 
         # If there is only one move, play it
         if len(actions) == 1:
-            return actions.pop()
+            return actions.pop(), None
         
         best_action = actions[0]
         best_action_eval = -float('inf')
@@ -331,11 +334,19 @@ class MinimaxAI(Agent):
             beta = self.winning_value
 
             # Check all the actions with maximum depth, d
-            # with tqdm(total=len(actions)) as pbar:
+            pbar = tqdm(total=len(actions)) if self.display_progress else None
             for i, action in enumerate(actions):
-                next_board_state = self.board_manager.get_successor(action)
-                action_eval = self.min_value(next_board_state, alpha, beta, (d * 2) + 1, start_time)
-                self.board_manager.get_predecessor()
+                try:
+                    next_board_state = self.board_manager.get_successor(action)
+                    action_eval = self.min_value(next_board_state, alpha, beta, (d * 2) + 1, start_time)
+                    self.board_manager.get_predecessor()
+                except RuntimeError as e:
+                    print(f'An error occurred while processing evaluations for the action {action}: {e}')
+                    print(f'Action {action} will not be evaluated and will be skipped.')
+                    self.board_manager.reset_board()
+                    if self.save_state_on_errors:
+                        self.board_manager.save_state(f'minimax-depth-{self.max_depth}_{uuid.uuid4()}.hv')
+                    action_eval = -self.winning_value
 
                 # Check if time has run out
                 if action_eval is None and action not in action_evaluations:
@@ -355,7 +366,10 @@ class MinimaxAI(Agent):
                     best_action_eval = action_eval
                     best_action = action
 
-                # pbar.update()
+                if self.display_progress:
+                    pbar.update()
+            if self.display_progress:
+                pbar.close()
 
             # Sort the action list based on the evaluations found during this iteration (high to low)
             actions = [action for action, value in sorted(action_evaluations.items(), key=lambda x: -x[1])]
