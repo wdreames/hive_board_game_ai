@@ -849,9 +849,11 @@ class HiveGameBoard:
         num_black_can_move_to_white_qb = 0
         num_black_cannot_move_to_white_qb = 0
 
-        black_beetle_on_white_qb = 0
         white_beetle_on_black_qb = 0
-        
+        white_beetle_on_hive = 0
+        black_beetle_on_white_qb = 0
+        black_beetle_on_hive = 0
+     
         total_around_white_qb = 0
         total_around_black_qb = 0
         
@@ -893,6 +895,9 @@ class HiveGameBoard:
                             num_white_can_move_to_black_qb += 1
                         else:
                             num_white_cannot_move_to_black_qb += 1
+                    
+                    if piece.name == Piece.BEETLE and piece.stacked_piece_obj is not None:
+                        white_beetle_on_hive = 1
                 else:
                     dist = abs(piece_location[0] - self.white_queen_location[0]) + \
                            abs(piece_location[1] - self.white_queen_location[1])
@@ -914,6 +919,8 @@ class HiveGameBoard:
                             num_black_can_move_to_white_qb += 1
                         else:
                             num_black_cannot_move_to_white_qb += 1
+                    if piece.name == Piece.BEETLE and piece.stacked_piece_obj is not None:
+                        black_beetle_on_hive = 1
 
             empty_spaces_around_black_qb = 6 - total_around_black_qb
             empty_spaces_around_white_qb = 6 - total_around_white_qb

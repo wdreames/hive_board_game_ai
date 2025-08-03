@@ -4,17 +4,21 @@ This is not meant to be used other than for development purposes.
 """
 import copy
 import itertools
-from multiprocessing import Queue, set_start_method
+from multiprocessing import Pool, Queue, cpu_count, set_start_method
 import random
 from timeit import default_timer as timer
 from multiprocessing import Array, Process, Lock
 
 import traceback
+from typing import Tuple
+import uuid
 
 import numpy as np
 import src.game.board as board
 import src.agents as agents
 
+thread_id_lock = Lock()
+thread_id_generator = itertools.count()
 
 class Contestant:
     
@@ -142,11 +146,13 @@ def get_next_generation_of_weights(contestants_list, mutation_chance=0.5, mutati
     return remaining_original_population + children
 
 
-def play_game(minimax_depth, contestant1: Contestant, contestant2: Contestant, results_queue, max_time_per_move=float("inf"), max_time_per_game=float("inf"), max_turns_per_game=float("inf")):
+def play_game(minimax_depth, contestant1: Contestant, contestant2: Contestant, max_time_per_move=float("inf"), max_time_per_game=float("inf"), max_turns_per_game=float("inf")):
     board_manager = board.BoardManager()
 
-    player1 = agents.MinimaxAI(board_manager, max_depth=minimax_depth, max_time=max_time_per_move, is_white=True, weights_override=contestant1.weights)
-    player2 = agents.MinimaxAI(board_manager, max_depth=minimax_depth, max_time=max_time_per_move, is_white=False, weights_override=contestant2.weights)
+    # print(f'Beginning game between contestants {contestant1.id} (white) and {contestant2.id} (black)')
+
+    player1 = agents.MinimaxAI(board_manager, max_depth=minimax_depth, max_time=max_time_per_move, is_white=True, weights_override=contestant1.weights, display_progress=False)
+    player2 = agents.MinimaxAI(board_manager, max_depth=minimax_depth, max_time=max_time_per_move, is_white=False, weights_override=contestant2.weights, display_progress=False)
 
     start_of_game = timer()
     
@@ -191,17 +197,23 @@ def play_game(minimax_depth, contestant1: Contestant, contestant2: Contestant, r
         print(f'An error occurred during a game between contestant {contestant1.id} and contestant {contestant2.id}. This result will not be counted.')
         contestant1.record_result(None)
         contestant2.record_result(None)
-    results_queue.put(contestant1)
-    results_queue.put(contestant2)
+    
+    return (contestant1, contestant2)
 
-def run_games_in_thread(thread_name, contestants, minimax_depth, results_queue,  max_time_per_move=float("inf"), max_time_per_game=float("inf"), max_turns_per_game=float("inf")):
+def run_games_in_thread(contestants, args):
+    thread_id = uuid.uuid4()
+    
+    minimax_depth,  max_time_per_move, max_time_per_game, max_turns_per_game = args
+    results = []
     for i in range(0, len(contestants), 2):
         contestant1 = contestants[i]
         contestant2 = contestants[i+1]
-        print(f'Starting {thread_name} game {i // 2 + 1}: Contestant {contestant1.id} (white) vs Contestant {contestant2.id} (black)')
-        play_game(minimax_depth, contestant1, contestant2, results_queue, max_time_per_move=max_time_per_move, max_time_per_game=max_time_per_game, max_turns_per_game=max_turns_per_game)
-    print(f'Completed games for {thread_name}')
-    
+        print(f'Starting game {i // 2 + 1} for thread_{thread_id}: Contestant {contestant1.id} (white) vs Contestant {contestant2.id} (black)')
+        contestant1, contestant2 = play_game(minimax_depth, contestant1, contestant2, max_time_per_move=max_time_per_move, max_time_per_game=max_time_per_game, max_turns_per_game=max_turns_per_game)
+        results.append(contestant1)
+        results.append(contestant2)
+    print(f'Completed games for thread_{thread_id}')
+    return results
 
 def run_tournament(num_threads=4, minimax_depth=1, num_iterations=10, num_contestants=10, mutation_chance=0.5, mutation_range=(-0.5, 0.5), crossover_chance=0.5, max_time_per_move=float("inf"), max_time_per_game=float("inf"), max_turns_per_game=float("inf")):
     initial_weights = get_initial_weights()
@@ -210,7 +222,6 @@ def run_tournament(num_threads=4, minimax_depth=1, num_iterations=10, num_contes
     for i in range(num_iterations):
         print(f'Beginning iteration {i+1} of the tournament.')
         random.shuffle(contestants)
-        results_queue = Queue(maxsize=len(contestants))
 
         # Setup each game of the tournament in its own thread
         group_size = num_contestants // num_threads
@@ -219,26 +230,20 @@ def run_tournament(num_threads=4, minimax_depth=1, num_iterations=10, num_contes
         num_games_per_thread = len(split_contestants[0])//2
         print(f'Starting {len(split_contestants)} threads with {num_games_per_thread} games per thread.')
 
-        threads = []
-        for i, thread_contestants in enumerate(split_contestants):
-            thread_name = f'thread_{i}'
-            threads.append(Process(target=run_games_in_thread, name=thread_name, args=(thread_name, thread_contestants, minimax_depth, results_queue, max_time_per_move, max_time_per_game, max_turns_per_game)))
+        # TODO:
+        pool = Pool(num_threads)
+        static_args = (minimax_depth, max_time_per_move, max_time_per_game, max_turns_per_game)
         
-        # Run all of the games
-        for thread in threads:
-            print(f'Starting {thread.name}')
-            thread.start()
-        for thread in threads:
-            print(f'Waiting for {thread.name} to join')
-            thread.join(timeout=max_time_per_game * num_games_per_thread + 5)
-            print(f'Closed {thread.name}')
+        # print([entry for entry in zip(contestant_pairings, itertools.repeat(static_args))])
         
-        results_list = []
-        while not results_queue.empty():
-            results_list.append(results_queue.get())
+        
+        # return
+        results_from_each_thread = pool.starmap(run_games_in_thread, zip(split_contestants, itertools.repeat(static_args)))
+        results = list(itertools.chain.from_iterable(results_from_each_thread))  # Flatten results
+
 
         # Results have been updated. Sort the winner and losers lists by the number of moves taken to win
-        sorted_results = sorted(results_list, reverse=True)
+        sorted_results = sorted(results, reverse=True)
         
         print()
         print('Results:')
@@ -251,10 +256,10 @@ def run_tournament(num_threads=4, minimax_depth=1, num_iterations=10, num_contes
 
 
 def get_initial_weights():
-    return [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    return [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 
 if __name__ == '__main__':
-    run_tournament(num_threads=6, minimax_depth=1, num_iterations=2500, num_contestants=24, mutation_chance=0.5, mutation_range=(-1.2, 1.2), crossover_chance=0.9, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=100)
+    run_tournament(num_threads=6, minimax_depth=1, num_iterations=2000, num_contestants=24, mutation_chance=0.5, mutation_range=(-1.2, 1.2), crossover_chance=0.9, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=120)
 
 """
 Original weights:
@@ -413,6 +418,10 @@ Contestant 3342:
 <Ignore errored games rather than treat them as draws>
 <Improved new population generation>
 
-Run 15 - starting with `1` for all weights (num_threads=6, minimax_depth=1, num_iterations=2500, num_contestants=24, mutation_chance=0.5, mutation_range=(-1.2, 1.2), crossover_chance=0.9, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=100)
-
+Run 15 - starting with `1` for all weights (num_threads=6, minimax_depth=1, num_iterations=2000, num_contestants=48, mutation_chance=0.5, mutation_range=(-1.2, 1.2), crossover_chance=0.9, max_time_per_move=60, max_time_per_game=300, max_turns_per_game=100)
+1) Contestant 7851:
+        weights: [1.0129445821543898e-08, -3.01864105155088e-10, -1.6488617747301558e-17, -5.030673089532278e-05, 8.144333675783797e-15, 18.38024685840446, 9.087471166744843, 0.0006254213913726109, -2.1503372201028943e-07, -4.0566607152405844e-10, 4.868093905083134, 7.613928915605404e-13, -1.2145813909076451e-05, 0.020531357273461205, -8.038302501635039e-06, -0.0032314905036451382, -2.8364713828027857e-12, -8.350363561427549e-12]
+        performance_history: [26, -47, 30, 52, 37, 0, 0, 58, -44, 67, 0, 67, 35, 31, 34, -38, -38, 28, 28, 28, 27, 34, 31, 51, 30, 75, 28]
+        median_performance: 30.0
+        winrate_value: 9.0
 """
